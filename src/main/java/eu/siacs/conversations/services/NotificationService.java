@@ -737,7 +737,7 @@ public class NotificationService {
         if (!publicVersion) {
             builder.setContentText(names.toString());
         }
-        builder.setSmallIcon(R.drawable.ic_notification);
+        builder.setSmallIcon(R.drawable.ic_missed_call_notification);
         builder.setGroupSummary(true);
         builder.setGroup(MISSED_CALLS_GROUP);
         builder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
@@ -775,7 +775,7 @@ public class NotificationService {
             }
             builder.setContentText(name);
         }
-        builder.setSmallIcon(R.drawable.ic_notification);
+        builder.setSmallIcon(R.drawable.ic_missed_call_notification);
         builder.setGroup(MISSED_CALLS_GROUP);
         builder.setCategory(NotificationCompat.CATEGORY_CALL);
         builder.setWhen(info.getLastTime());
