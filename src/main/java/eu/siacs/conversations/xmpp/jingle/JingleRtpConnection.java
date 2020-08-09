@@ -627,6 +627,7 @@ public class JingleRtpConnection extends AbstractJingleConnection implements Web
             final State target = this.state == State.PROCEED ? State.RETRACTED_RACED : State.RETRACTED;
             if (transition(target)) {
                 xmppConnectionService.getNotificationService().cancelIncomingCallNotification();
+                xmppConnectionService.getNotificationService().pushMissedCallNow(message);
                 Log.d(Config.LOGTAG, id.account.getJid().asBareJid() + ": session with " + id.with + " has been retracted (serverMsgId=" + serverMsgId + ")");
                 if (serverMsgId != null) {
                     this.message.setServerMsgId(serverMsgId);
