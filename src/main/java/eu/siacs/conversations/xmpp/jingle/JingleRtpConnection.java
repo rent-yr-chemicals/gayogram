@@ -585,6 +585,7 @@ public class JingleRtpConnection extends AbstractJingleConnection implements Web
                 rejectCallFromSessionInitiate();
                 break;
         }
+        xmppConnectionService.getNotificationService().pushMissedCallNow(message);
     }
 
     private void cancelRingingTimeout() {
