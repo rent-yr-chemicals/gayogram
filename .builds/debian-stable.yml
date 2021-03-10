@@ -1,0 +1,27 @@
+image: debian/stable
+sources:
+- https://git.sr.ht/~singpolyma/cheogram-android
+artifacts:
+- cheogram.apk
+packages:
+- wget
+- unzip
+- android-sdk
+environment:
+  ANDROID_SDK_ROOT: /home/build/android
+tasks:
+- sdk: |
+    wget -qO android.zip https://dl.google.com/android/repository/commandlinetools-linux-6987402_latest.zip
+    unzip -qq android.zip
+    mkdir -p android/cmdline-tools
+    mv cmdline-tools android/cmdline-tools/tools
+    echo y | android/cmdline-tools/tools/bin/sdkmanager "platforms;android-29"
+    echo y | android/cmdline-tools/tools/bin/sdkmanager "platform-tools"
+    echo y | android/cmdline-tools/tools/bin/sdkmanager "build-tools;29.0.2"
+    touch ~/.android/repositories.cfg
+    yes | android/cmdline-tools/tools/bin/sdkmanager --licenses
+- build: |
+    cd cheogram-android
+    ./gradlew assembleConversationsFreeCompatDebug
+- assets: |
+    mv cheogram-android/build/outputs/apk/conversationsFreeCompat/debug/*.apk cheogram.apk

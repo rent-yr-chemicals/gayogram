@@ -78,7 +78,7 @@ dependencies {
 
     implementation 'com.google.guava:guava:30.1.1-android'
     quicksyImplementation 'io.michaelrocks:libphonenumber-android:8.12.18'
-    implementation fileTree(include: ['libwebrtc-m90.aar'], dir: 'libs')
+    implementation 'org.webrtc:google-webrtc:1.0.32006'
 }
 
 ext {
@@ -103,12 +103,6 @@ android {
         buildConfigField "String", "APP_NAME", "\"$appName\"";
     }
 
-    splits {
-        abi {
-            universalApk true
-            enable true
-        }
-    }
 
     configurations {
         compile.exclude group: 'org.jetbrains' , module:'annotations'
@@ -259,6 +253,7 @@ android {
 
     lintOptions {
         disable 'MissingTranslation', 'InvalidPackage','AppCompatResource'
+        abortOnError false
     }
 
     subprojects {
@@ -269,6 +264,7 @@ android {
 
                 configure(android.lintOptions) {
                     disable 'AndroidGradlePluginVersion', 'MissingTranslation'
+                    abortOnError false
                 }
             }
 
@@ -280,13 +276,4 @@ android {
         exclude 'META-INF/BCKEY.SF'
     }
 
-    android.applicationVariants.all { variant ->
-        variant.outputs.each { output ->
-            def baseAbiVersionCode = project.ext.abiCodes.get(output.getFilter(OutputFile.ABI))
-            if (baseAbiVersionCode != null) {
-                output.versionCodeOverride = (100 * variant.versionCode) + baseAbiVersionCode
-            }
-        }
-
-    }
 }
