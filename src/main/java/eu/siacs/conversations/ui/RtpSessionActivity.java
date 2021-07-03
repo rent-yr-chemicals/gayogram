@@ -35,6 +35,7 @@ import com.google.common.util.concurrent.FutureCallback;
 import com.google.common.util.concurrent.Futures;
 
 import org.checkerframework.checker.nullness.compatqual.NullableDecl;
+import org.jetbrains.annotations.NotNull;
 import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoTrack;
@@ -138,6 +139,35 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
                 | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
         this.binding = DataBindingUtil.setContentView(this, R.layout.activity_rtp_session);
         setSupportActionBar(binding.toolbar);
+
+        //TODO: remove this - for testing dialpad input
+        //((DialpadView)findViewById(R.id.action_dialpad)).
+
+        findViewById(R.id.dialpad_1_holder).setOnClickListener(view -> dialpadPressed(view));
+        findViewById(R.id.dialpad_2_holder).setOnClickListener(view -> dialpadPressed(view));
+        findViewById(R.id.dialpad_3_holder).setOnClickListener(view -> dialpadPressed(view));
+        findViewById(R.id.dialpad_4_holder).setOnClickListener(view -> dialpadPressed(view));
+        findViewById(R.id.dialpad_5_holder).setOnClickListener(view -> dialpadPressed(view));
+        findViewById(R.id.dialpad_6_holder).setOnClickListener(view -> dialpadPressed(view));
+        findViewById(R.id.dialpad_7_holder).setOnClickListener(view -> dialpadPressed(view));
+        findViewById(R.id.dialpad_8_holder).setOnClickListener(view -> dialpadPressed(view));
+        findViewById(R.id.dialpad_9_holder).setOnClickListener(view -> dialpadPressed(view));
+        findViewById(R.id.dialpad_0_holder).setOnClickListener(view -> dialpadPressed(view));
+        findViewById(R.id.dialpad_asterisk_holder).setOnClickListener(view -> dialpadPressed(view));
+        findViewById(R.id.dialpad_pound_holder).setOnClickListener(view -> dialpadPressed(view));
+
+        if (savedInstanceState != null) {
+            int dialpad_visibility = savedInstanceState.getInt("dialpad_visibility");
+            System.out.println("dialpad_visibility onCreate = " + dialpad_visibility);
+            findViewById(R.id.dialpad).setVisibility(dialpad_visibility);
+        }
+    }
+
+
+
+    private void dialpadPressed(View dialpadKeyHolderView) {
+        JingleRtpConnection rtpConnection = requireRtpConnection();
+        rtpConnection.applyDtmfTone(dialpadKeyHolderView.getTag().toString());
     }
 
     @Override
@@ -145,8 +175,10 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
         getMenuInflater().inflate(R.menu.activity_rtp_session, menu);
         final MenuItem help = menu.findItem(R.id.action_help);
         final MenuItem gotoChat = menu.findItem(R.id.action_goto_chat);
+        final MenuItem dialpad = menu.findItem(R.id.action_dialpad);
         help.setVisible(isHelpButtonVisible());
         gotoChat.setVisible(isSwitchToConversationVisible());
+        dialpad.setVisible(isAudioOnlyConversation());
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -181,10 +213,27 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
         return connection != null && STATES_SHOWING_SWITCH_TO_CHAT.contains(connection.getEndUserState());
     }
 
+    private boolean isAudioOnlyConversation() {
+        final JingleRtpConnection connection =
+                this.rtpConnectionReference != null ? this.rtpConnectionReference.get() : null;
+        return connection != null &&
+                connection.getEndUserState() == RtpEndUserState.CONNECTED &&
+                !connection.isVideoEnabled();
+    }
+
     private void switchToConversation() {
         final Contact contact = getWith();
         final Conversation conversation = xmppConnectionService.findOrCreateConversation(contact.getAccount(), contact.getJid(), false, true);
         switchToConversation(conversation);
+    }
+
+    private void toggleDialpadVisibility() {
+        if (binding.dialpad.getVisibility() == View.VISIBLE) {
+            binding.dialpad.setVisibility(View.GONE);
+        }
+        else {
+            binding.dialpad.setVisibility(View.VISIBLE);
+        }
     }
 
     public boolean onOptionsItemSelected(final MenuItem item) {
@@ -194,6 +243,9 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
                 break;
             case R.id.action_goto_chat:
                 switchToConversation();
+                break;
+            case R.id.action_dialpad:
+                toggleDialpadVisibility();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -1157,6 +1209,14 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
         } catch (IllegalStateException e) {
             Log.d(Config.LOGTAG, "RTP connection was not available when audio device changed");
         }
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull @NotNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        int visibility = findViewById(R.id.action_dialpad).getVisibility();
+        System.out.println("visibility onSave = " + visibility);
+        outState.putInt("dialpad_visibility", visibility);
     }
 
     private void updateRtpSessionProposalState(final Account account, final Jid with, final RtpEndUserState state) {
