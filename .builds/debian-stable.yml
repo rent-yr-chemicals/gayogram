@@ -22,6 +22,6 @@ tasks:
     yes | android/cmdline-tools/tools/bin/sdkmanager --licenses
 - build: |
     cd cheogram-android
-    ./gradlew assembleConversationsFreeCompatDebug
+    ./gradlew assembleCheogramFreeSystemDebug
 - assets: |
-    mv cheogram-android/build/outputs/apk/conversationsFreeCompat/debug/*.apk cheogram.apk
+    mv cheogram-android/build/outputs/apk/cheogramFreeSystem/debug/*.apk cheogram.apk

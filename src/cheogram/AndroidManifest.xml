@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="eu.siacs.conversations">
+
+    <application tools:ignore="GoogleAppIndexingWarning">
+        <activity
+            android:name=".ui.ManageAccountActivity"
+            android:label="@string/title_activity_manage_accounts"
+            android:launchMode="singleTask" />
+        <activity
+            android:name=".ui.WelcomeActivity"
+            android:label="@string/app_name"
+            android:launchMode="singleTask" />
+        <activity
+            android:name=".ui.PickServerActivity"
+            android:label="@string/create_new_account"
+            android:launchMode="singleTask" />
+        <activity
+            android:name=".ui.MagicCreateActivity"
+            android:label="@string/create_new_account"
+            android:launchMode="singleTask" />
+        <activity
+            android:name=".ui.EasyOnboardingInviteActivity"
+            android:label="@string/invite_to_app"
+            android:launchMode="singleTask" />
+        <activity
+            android:name=".ui.ImportBackupActivity"
+            android:label="@string/restore_backup"
+            android:launchMode="singleTask">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="application/vnd.conversations.backup" />
+                <data android:scheme="content" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data android:mimeType="application/vnd.conversations.backup" />
+                <data android:scheme="file" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="content" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\..*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.ceb" />
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data android:scheme="file" />
+                <data android:host="*" />
+                <data android:mimeType="*/*" />
+                <data android:pathPattern=".*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\..*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\.ceb" />
+                <data android:pathPattern=".*\\..*\\..*\\..*\\..*\\..*\\..*\\.ceb" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

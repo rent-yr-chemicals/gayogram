@@ -141,6 +141,17 @@ android {
             dimension "mode"
         }
 
+        cheogram {
+            dimension "mode"
+
+            applicationId = "com.cheogram.android"
+            resValue "string", "applicationId", applicationId
+
+            def appName = "Cheogram"
+            resValue "string", "app_name", appName
+            buildConfigField "String", "APP_NAME", "\"$appName\"";
+        }
+
         playstore {
             dimension "distribution"
             versionNameSuffix "+p"
@@ -196,6 +207,17 @@ android {
             }
         }
         conversationsFreeSystem {
+            java {
+                srcDir 'src/conversationsFree/java'
+            }
+        }
+        cheogramFreeCompat {
+            java {
+                srcDir 'src/freeCompat/java'
+                srcDir 'src/conversationsFree/java'
+            }
+        }
+        cheogramFreeSystem {
             java {
                 srcDir 'src/conversationsFree/java'
             }
