@@ -414,6 +414,7 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
         } else if (asList(ACTION_MAKE_VIDEO_CALL, ACTION_MAKE_VOICE_CALL).contains(action)) {
             proposeJingleRtpSession(account, with, actionToMedia(action));
             binding.with.setText(account.getRoster().getContact(with).getDisplayName());
+            binding.withJid.setText(with.asBareJid());
         } else {
             throw new IllegalStateException("received onNewIntent without sessionId");
         }
@@ -438,6 +439,7 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
         } else if (asList(ACTION_MAKE_VIDEO_CALL, ACTION_MAKE_VOICE_CALL).contains(action)) {
             proposeJingleRtpSession(account, with, actionToMedia(action));
             binding.with.setText(account.getRoster().getContact(with).getDisplayName());
+            binding.withJid.setText(with.asBareJid());
         } else if (Intent.ACTION_VIEW.equals(action)) {
             final String extraLastState = intent.getStringExtra(EXTRA_LAST_REPORTED_STATE);
             final RtpEndUserState state = extraLastState == null ? null : RtpEndUserState.valueOf(extraLastState);
@@ -450,6 +452,7 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
                 invalidateOptionsMenu();
             }
             binding.with.setText(account.getRoster().getContact(with).getDisplayName());
+            binding.withJid.setText(with.asBareJid());
             if (xmppConnectionService.getJingleConnectionManager().fireJingleRtpConnectionStateUpdates()) {
                 return;
             }
@@ -627,6 +630,7 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
             putScreenInCallMode();
         }
         binding.with.setText(getWith().getDisplayName());
+        binding.withJid.setText(with.asBareJid());
         updateVideoViews(currentState);
         updateStateDisplay(currentState, media);
         updateVerifiedShield(verified && STATES_SHOWING_SWITCH_TO_CHAT.contains(currentState));
@@ -651,6 +655,7 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
         updateVerifiedShield(false);
         invalidateOptionsMenu();
         binding.with.setText(account.getRoster().getContact(with).getDisplayName());
+        binding.withJid.setText(with.asBareJid());
     }
 
     private void reInitializeActivityWithRunningRtpSession(final Account account, Jid with, String sessionId) {
