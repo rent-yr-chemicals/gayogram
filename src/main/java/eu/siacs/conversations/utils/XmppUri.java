@@ -174,6 +174,8 @@ public class XmppUri {
             } catch (final UnsupportedEncodingException ignored) {
                 jid = null;
             }
+        } else if ("tel".equalsIgnoreCase(scheme)) {
+            jid = uri.getSchemeSpecificPart().replaceAll("[^\\d\\+]+", "") + "@cheogram.com";
         } else {
             jid = null;
         }

@@ -205,6 +205,8 @@ public class UriHandlerActivity extends AppCompatActivity {
         switch (data.getAction()) {
             case Intent.ACTION_VIEW:
             case Intent.ACTION_SENDTO:
+            case Intent.ACTION_DIAL:
+            case Intent.ACTION_CALL:
                 handleUri(data.getData());
                 break;
             case ACTION_SCAN_QR_CODE:
