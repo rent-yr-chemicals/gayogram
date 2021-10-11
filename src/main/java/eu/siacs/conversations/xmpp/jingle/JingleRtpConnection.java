@@ -232,16 +232,9 @@ public class JingleRtpConnection extends AbstractJingleConnection implements Web
         }
     }
 
-    //TODO: remove - hack to test dtmfSending
-    public DtmfSender getDtmfSender() {
-        return webRTCWrapper.getDtmfSender();
-    }
-
-    //FIXME: possible implementation
     public boolean applyDtmfTone(String tone) {
         return webRTCWrapper.applyDtmfTone(tone);
     }
-
 
     private void receiveSessionTerminate(final JinglePacket jinglePacket) {
         respondOk(jinglePacket);
