@@ -91,7 +91,7 @@ android {
     compileSdkVersion 29
 
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 24
         targetSdkVersion 29
         versionCode 42015
         versionName "2.9.13"
