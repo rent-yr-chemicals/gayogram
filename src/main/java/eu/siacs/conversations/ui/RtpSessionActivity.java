@@ -147,7 +147,6 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
 
         if (savedInstanceState != null) {
             int dialpad_visibility = savedInstanceState.getInt("dialpad_visibility");
-            System.out.println("dialpad_visibility onCreate = " + dialpad_visibility);
             findViewById(R.id.dialpad).setVisibility(dialpad_visibility);
         }
     }
