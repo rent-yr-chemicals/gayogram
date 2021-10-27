@@ -233,6 +233,11 @@ public class XmppConnectionService extends Service {
                 }
             }
         }
+
+        if (contact.getPresences().size() > 0 &&
+            contact.getPresences().anyIdentity("gateway", "pstn")) {
+            contact.registerAsPhoneAccount(this);
+        }
     };
     private final PresenceGenerator mPresenceGenerator = new PresenceGenerator(this);
     private List<Account> accounts;
@@ -1968,6 +1973,7 @@ public class XmppConnectionService extends Service {
 
 
     public void syncRoster(final Account account) {
+        unregisterPhoneAccounts(account);
         mRosterSyncTaskManager.execute(account, () -> databaseBackend.writeRoster(account.getRoster()));
     }
 
@@ -3445,6 +3451,14 @@ public class XmppConnectionService extends Service {
             }
             if (contact.getOption(Contact.Options.DIRTY_DELETE)) {
                 deleteContactOnServer(contact);
+            }
+        }
+    }
+
+    protected void unregisterPhoneAccounts(final Account account) {
+        for (final Contact contact : account.getRoster().getContacts()) {
+            if (!contact.showInRoster()) {
+                contact.unregisterAsPhoneAccount(this);
             }
         }
     }
