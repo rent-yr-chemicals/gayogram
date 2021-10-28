@@ -7,6 +7,8 @@ packages:
 - wget
 - unzip
 - android-sdk
+secrets:
+- 7eed327c-05c7-49b4-baed-a4d8785588d5
 environment:
   ANDROID_SDK_ROOT: /home/build/android
 tasks:
