@@ -208,9 +208,8 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
     private boolean isAudioOnlyConversation() {
         final JingleRtpConnection connection =
                 this.rtpConnectionReference != null ? this.rtpConnectionReference.get() : null;
-        return connection != null &&
-                connection.getEndUserState() == RtpEndUserState.CONNECTED &&
-                !connection.isVideoEnabled();
+
+        return connection != null && !connection.getMedia().contains(Media.VIDEO);
     }
 
     private void switchToConversation() {
