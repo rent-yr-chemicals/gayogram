@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -14,6 +15,7 @@ import android.text.format.DateUtils;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
+import android.text.style.URLSpan;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.ViewGroup;
@@ -41,11 +43,13 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.crypto.axolotl.FingerprintStatus;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Conversational;
 import eu.siacs.conversations.entities.DownloadableFile;
-import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.entities.Message.FileParams;
+import eu.siacs.conversations.entities.Message;
+import eu.siacs.conversations.entities.Roster;
 import eu.siacs.conversations.entities.RtpSessionStatus;
 import eu.siacs.conversations.entities.Transferable;
 import eu.siacs.conversations.persistance.FileBackend;
@@ -493,6 +497,18 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 StylingHelper.highlight(activity, body, highlightedTerm, StylingHelper.isDarkText(viewHolder.messageBody));
             }
             MyLinkify.addLinks(body, true);
+            Roster roster = message.getConversation().getAccount().getRoster();
+            for (final URLSpan urlspan : body.getSpans(0, body.length() - 1, URLSpan.class)) {
+                Uri uri = Uri.parse(urlspan.getURL());
+                if ("xmpp".equals(uri.getScheme())) {
+                    Contact contact = roster.getContact(Jid.of(uri.getSchemeSpecificPart()));
+                    body.replace(
+                        body.getSpanStart(urlspan),
+                        body.getSpanEnd(urlspan),
+                        contact.getDisplayName()
+                    );
+                }
+            }
             viewHolder.messageBody.setAutoLinkMask(0);
             viewHolder.messageBody.setText(EmojiWrapper.transform(body));
             viewHolder.messageBody.setMovementMethod(ClickableMovementMethod.getInstance());
