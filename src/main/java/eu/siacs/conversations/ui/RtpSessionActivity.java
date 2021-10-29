@@ -157,8 +157,8 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
         });
 
         if (savedInstanceState != null) {
-            int dialpad_visibility = savedInstanceState.getInt("dialpad_visibility");
-            findViewById(R.id.dialpad).setVisibility(dialpad_visibility);
+            boolean dialpadVisible = savedInstanceState.getBoolean("dialpad_visible");
+            binding.dialpad.setVisibility(dialpadVisible ? View.VISIBLE : View.GONE);
         }
     }
 
@@ -1223,8 +1223,7 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
     @Override
     protected void onSaveInstanceState(@NonNull @NotNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        int visibility = findViewById(R.id.dialpad).getVisibility();
-        outState.putInt("dialpad_visibility", visibility);
+        outState.putBoolean("dialpad_visible", binding.dialpad.getVisibility() == View.VISIBLE);
     }
 
     private void updateRtpSessionProposalState(final Account account, final Jid with, final RtpEndUserState state) {
