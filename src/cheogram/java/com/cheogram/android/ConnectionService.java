@@ -37,7 +37,9 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		// TODO: jabber:iq:gateway
 		String tel = request.getAddress().getSchemeSpecificPart().
 		           replaceAll("[^\\+0-9]", "");
-		if (!tel.startsWith("+1")) {
+		if (tel.startsWith("1")) {
+			tel = "+" + tel;
+		} else if (!tel.startsWith("+")) {
 			tel = "+1" + tel;
 		}
 
