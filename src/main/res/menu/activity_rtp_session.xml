@@ -18,6 +18,4 @@
         android:icon="?attr/icon_goto_chat"
         android:title="@string/switch_to_conversation"
         app:showAsAction="ifRoom" />
-
-
 </menu>

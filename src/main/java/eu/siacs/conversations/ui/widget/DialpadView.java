@@ -19,15 +19,17 @@ package eu.siacs.conversations.ui.widget;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.View;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.databinding.DataBindingUtil;
+import eu.siacs.conversations.databinding.DialpadBinding;
 import eu.siacs.conversations.R;
-import eu.siacs.conversations.xmpp.jingle.JingleRtpConnection;
 
 public class DialpadView extends ConstraintLayout implements View.OnClickListener {
 
-    protected java.util.function.Consumer<String> clickConsumer = null;
+    protected Consumer<String> clickConsumer = null;
 
     public DialpadView(Context context) {
         super(context);
@@ -44,28 +46,18 @@ public class DialpadView extends ConstraintLayout implements View.OnClickListene
         init();
     }
 
-    public void setClickConsumer(java.util.function.Consumer<String> clickConsumer) {
+    public void setClickConsumer(Consumer<String> clickConsumer) {
         this.clickConsumer = clickConsumer;
     }
 
     private void init() {
-        inflate(getContext(), R.layout.dialpad, this);
-        initViews();
-    }
-
-    private void initViews() {
-        findViewById(R.id.dialpad_1_holder).setOnClickListener(this);
-        findViewById(R.id.dialpad_2_holder).setOnClickListener(this);
-        findViewById(R.id.dialpad_3_holder).setOnClickListener(this);
-        findViewById(R.id.dialpad_4_holder).setOnClickListener(this);
-        findViewById(R.id.dialpad_5_holder).setOnClickListener(this);
-        findViewById(R.id.dialpad_6_holder).setOnClickListener(this);
-        findViewById(R.id.dialpad_7_holder).setOnClickListener(this);
-        findViewById(R.id.dialpad_8_holder).setOnClickListener(this);
-        findViewById(R.id.dialpad_9_holder).setOnClickListener(this);
-        findViewById(R.id.dialpad_0_holder).setOnClickListener(this);
-        findViewById(R.id.dialpad_asterisk_holder).setOnClickListener(this);
-        findViewById(R.id.dialpad_pound_holder).setOnClickListener(this);
+        DialpadBinding binding = DataBindingUtil.inflate(
+            LayoutInflater.from(getContext()),
+            R.layout.dialpad,
+            this,
+            true
+        );
+        binding.setDialpadView(this);
     }
 
     @Override
@@ -73,4 +65,8 @@ public class DialpadView extends ConstraintLayout implements View.OnClickListene
         clickConsumer.accept(v.getTag().toString());
     }
 
+	// Based on java.util.function.Consumer to avoid Android 24 dependency
+	public interface Consumer<T> {
+		void accept(T t);
+	}
 }
