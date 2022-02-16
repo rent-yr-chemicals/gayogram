@@ -1,9 +1,14 @@
 package eu.siacs.conversations.entities;
 
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
+import android.os.Bundle;
+import android.telecom.PhoneAccount;
+import android.telecom.PhoneAccountHandle;
+import android.telecom.TelecomManager;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -557,6 +562,38 @@ public class Contact implements ListItem, Blockable {
             changed |= setSystemName(null);
         }
         return changed;
+    }
+
+    protected String phoneAccountLabel() {
+        return account.getJid().asBareJid().toString() +
+            "/" + getJid().asBareJid().toString();
+    }
+
+    protected PhoneAccountHandle phoneAccountHandle() {
+        ComponentName componentName = new ComponentName(
+            "com.cheogram.android",
+            "com.cheogram.android.ConnectionService"
+        );
+        return new PhoneAccountHandle(componentName, phoneAccountLabel());
+    }
+
+    // This Contact is a gateway to use for voice calls, register it with OS
+    public void registerAsPhoneAccount(Context ctx) {
+        TelecomManager telecomManager = ctx.getSystemService(TelecomManager.class);
+
+        PhoneAccount phoneAccount = PhoneAccount.builder(
+            phoneAccountHandle(), phoneAccountLabel()
+        ).setCapabilities(
+            PhoneAccount.CAPABILITY_CALL_PROVIDER
+        ).build();
+
+        telecomManager.registerPhoneAccount(phoneAccount);
+    }
+
+    // Unregister any associated PSTN gateway integration
+    public void unregisterAsPhoneAccount(Context ctx) {
+        TelecomManager telecomManager = ctx.getSystemService(TelecomManager.class);
+        telecomManager.unregisterPhoneAccount(phoneAccountHandle());
     }
 
     public static int getOption(Class<? extends AbstractPhoneContact> clazz) {

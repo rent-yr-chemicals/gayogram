@@ -71,12 +71,18 @@ import eu.siacs.conversations.xmpp.jingle.JingleRtpConnection;
 import eu.siacs.conversations.xmpp.jingle.Media;
 import eu.siacs.conversations.xmpp.jingle.RtpEndUserState;
 
+import com.cheogram.android.ConnectionService.ConnectionBinder;
+
+import static eu.siacs.conversations.utils.PermissionUtils.getFirstDenied;
+import static java.util.Arrays.asList;
+
 public class RtpSessionActivity extends XmppActivity implements XmppConnectionService.OnJingleRtpConnectionUpdate, eu.siacs.conversations.ui.widget.SurfaceViewRenderer.OnAspectRatioChanged {
 
     public static final String EXTRA_WITH = "with";
     public static final String EXTRA_SESSION_ID = "session_id";
     public static final String EXTRA_LAST_REPORTED_STATE = "last_reported_state";
     public static final String EXTRA_LAST_ACTION = "last_action";
+    public static final String EXTRA_CONNECTION_BINDER = "connection_binder";
     public static final String ACTION_ACCEPT_CALL = "action_accept_call";
     public static final String ACTION_MAKE_VOICE_CALL = "action_make_voice_call";
     public static final String ACTION_MAKE_VIDEO_CALL = "action_make_video_call";
@@ -142,6 +148,8 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
         }
     }
 
+    protected android.os.IBinder connectionBinder = null;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -160,6 +168,8 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
             boolean dialpadVisible = savedInstanceState.getBoolean("dialpad_visible");
             binding.dialpad.setVisibility(dialpadVisible ? View.VISIBLE : View.GONE);
         }
+
+        this.connectionBinder = getIntent().getExtras().getBinder(EXTRA_CONNECTION_BINDER);
     }
 
     @Override
@@ -262,6 +272,29 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
         } else {
             requireRtpConnection().endCall();
         }
+        disconnectConnectionBinder();
+    }
+
+    private void disconnectConnectionBinder() {
+        if (connectionBinder != null) {
+            android.os.Parcel args = android.os.Parcel.obtain();
+            try {
+                connectionBinder.transact(ConnectionBinder.TRANSACT_DISCONNECT, args, null, 0);
+            } catch (android.os.RemoteException e) {}
+            args.recycle();
+        }
+    }
+
+    private void activateConnectionBinder() {
+        // If we do this, the other UI takes over and kills our call
+        // So we can't activate that UI unless we are going to use it.
+        /*if (connectionBinder != null) {
+            android.os.Parcel args = android.os.Parcel.obtain();
+            try {
+                connectionBinder.transact(ConnectionBinder.TRANSACT_ACTIVE, args, null, 0);
+            } catch (android.os.RemoteException e) {}
+            args.recycle();
+        }*/
     }
 
     private void retractSessionProposal() {
@@ -1153,10 +1186,14 @@ public class RtpSessionActivity extends XmppActivity implements XmppConnectionSe
     @Override
     public void onJingleRtpConnectionUpdate(Account account, Jid with, final String sessionId, RtpEndUserState state) {
         Log.d(Config.LOGTAG, "onJingleRtpConnectionUpdate(" + state + ")");
+        if (state == RtpEndUserState.CONNECTED) {
+            activateConnectionBinder();
+        }
         if (END_CARD.contains(state)) {
             Log.d(Config.LOGTAG, "end card reached");
             releaseProximityWakeLock();
             runOnUiThread(() -> getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON));
+            disconnectConnectionBinder();
         }
         if (with.isBareJid()) {
             updateRtpSessionProposalState(account, with, state);

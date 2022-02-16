@@ -3,7 +3,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="eu.siacs.conversations">
 
+    <uses-permission android:name="android.permission.BIND_TELECOM_CONNECTION_SERVICE" />
+
     <application tools:ignore="GoogleAppIndexingWarning">
+
+        <service android:name="com.cheogram.android.ConnectionService"
+            android:label="Cheogram"
+            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE">
+            <intent-filter>
+                <action android:name="android.telecom.ConnectionService" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".ui.ManageAccountActivity"
             android:label="@string/title_activity_manage_accounts"

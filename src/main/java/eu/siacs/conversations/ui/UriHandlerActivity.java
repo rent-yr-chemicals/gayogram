@@ -260,8 +260,6 @@ public class UriHandlerActivity extends AppCompatActivity {
                 break;
             case Intent.ACTION_VIEW:
             case Intent.ACTION_SENDTO:
-            case Intent.ACTION_DIAL:
-            case Intent.ACTION_CALL:
                 if (handleUri(data.getData())) {
                     finish();
                 }
