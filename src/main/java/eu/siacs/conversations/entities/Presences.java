@@ -152,7 +152,8 @@ public class Presences {
     public boolean anyIdentity(final String category, final String type) {
         synchronized (this.presences) {
             if (this.presences.size() == 0) {
-                return true;
+                // https://github.com/iNPUTmice/Conversations/issues/4230
+                return false;
             }
             for (Presence presence : this.presences.values()) {
                 ServiceDiscoveryResult disco = presence.getServiceDiscoveryResult();

@@ -234,8 +234,7 @@ public class XmppConnectionService extends Service {
             }
         }
 
-        if (contact.getPresences().size() > 0 &&
-            contact.getPresences().anyIdentity("gateway", "pstn")) {
+        if (contact.getPresences().anyIdentity("gateway", "pstn")) {
             contact.registerAsPhoneAccount(this);
         }
     };
