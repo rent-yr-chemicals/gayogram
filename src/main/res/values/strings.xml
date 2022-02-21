@@ -71,7 +71,7 @@
     <string name="save">Save</string>
     <string name="ok">OK</string>
     <string name="crash_report_title">%1$s has crashed</string>
-    <string name="crash_report_message">Using your XMPP account to send in stack traces helps the ongoing development of %1$s.</string>
+    <string name="crash_report_message">Using your Jabber ID to send in stack traces helps the ongoing development of %1$s.</string>
     <string name="send_now">Send now</string>
     <string name="send_never">Never ask again</string>
     <string name="problem_connecting_to_account">Could not connect to account</string>
@@ -186,11 +186,11 @@
     <string name="mgmt_account_are_you_sure">Are you sure?</string>
     <string name="mgmt_account_delete_confirm_text">Deleting your account erases your entire conversation history</string>
     <string name="attach_record_voice">Record voice</string>
-    <string name="account_settings_jabber_id">XMPP address</string>
-    <string name="block_jabber_id">Block XMPP address</string>
+    <string name="account_settings_jabber_id">Jabber ID</string>
+    <string name="block_jabber_id">Block Jabber ID</string>
     <string name="account_settings_example_jabber_id">username@example.com</string>
     <string name="password">Password</string>
-    <string name="invalid_jid">This is not a valid XMPP address</string>
+    <string name="invalid_jid">This is not a valid Jabber ID</string>
     <string name="error_out_of_memory">Out of memory. Image too big</string>
     <string name="add_phone_book_text">Do you want to add %s to your address book?</string>
     <string name="server_info_show_more">Server info</string>
@@ -315,7 +315,7 @@
     <string name="send_again">Send again</string>
     <string name="file_url">File URL</string>
     <string name="url_copied_to_clipboard">Copied URL to clipboard</string>
-    <string name="jabber_id_copied_to_clipboard">Copied XMPP address to clipboard</string>
+    <string name="jabber_id_copied_to_clipboard">Copied Jabber ID to clipboard</string>
     <string name="error_message_copied_to_clipboard">Copied error message to clipboard</string>
     <string name="web_address">web address</string>
     <string name="scan_qr_code">Scan 2D Barcode</string>
@@ -397,7 +397,7 @@
     <string name="conference_options">Private group chat configuration</string>
     <string name="channel_options">Public channel configuration</string>
     <string name="members_only">Private, members only</string>
-    <string name="non_anonymous">Make XMPP addresses visible to anyone</string>
+    <string name="non_anonymous">Make Jabber IDs visible to anyone</string>
     <string name="moderated">Make channel moderated</string>
     <string name="you_are_not_participating">You are not participating</string>
     <string name="modified_conference_options">Modified group chat options!</string>
@@ -487,7 +487,7 @@
     <string name="captcha_required">CAPTCHA required</string>
     <string name="captcha_hint">Enter the text from the image above</string>
     <string name="certificate_chain_is_not_trusted">Untrusted certificate chain</string>
-    <string name="jid_does_not_match_certificate">XMPP address does not match certificate</string>
+    <string name="jid_does_not_match_certificate">Jabber ID does not match certificate</string>
     <string name="action_renew_certificate">Renew certificate</string>
     <string name="error_fetching_omemo_key">Error fetching OMEMO key!</string>
     <string name="verified_omemo_key_with_certificate">Verified OMEMO key with certificate!</string>
@@ -513,7 +513,7 @@
     <string name="no_storage_permission">Grant %1$s access to external storage</string>
     <string name="no_camera_permission">Grant %1$s access to the camera</string>
     <string name="sync_with_contacts">Synchronize with contacts</string>
-    <string name="sync_with_contacts_long">%1$s wants permission to access your address book to match it with your XMPP contact list.\nThis will display your contacts’ full names and avatars.\n\n%1$s will only read your address book and match it locally without uploading anything to your server.</string>
+    <string name="sync_with_contacts_long">%1$s wants permission to access your address book to match it with your Jabber contact list.\nThis will display your contacts’ full names and avatars.\n\n%1$s will only read your address book and match it locally without uploading anything to your server.</string>
     <string name="sync_with_contacts_quicksy"><![CDATA[Quicksy needs access to your contacts’ phone numbers to make suggestions about possible contacts who are already on Quicksy.<br><br>We will not store a copy of those phone numbers.\n\nFor more information read our <a href="https://quicksy.im/#privacy">privacy policy</a>.<br><br>You will now be asked to grant permission to access your contacts.]]></string>
     <string name="notify_on_all_messages">Notify on all messages</string>
     <string name="notify_only_when_highlighted">Notify only when mentioned</string>
@@ -541,8 +541,8 @@
     <string name="welcome_header_quicksy" translatable="false">Have some Quick Conversations</string>
     <string name="welcome_text_quicksy"><![CDATA[Quicksy is a spin off of the popular XMPP client Conversations with automatic contact discovery.<br><br>You sign up with your phone number and Quicksy will automatically—based on the phone numbers in your address book—suggest possible contacts to you.<br><br>By signing up you agree to our <a href="https://quicksy.im/#privacy">privacy policy</a>.]]></string>
     <string name="agree_and_continue">Agree and continue</string>
-    <string name="magic_create_text">A guide is set up for account creation on conversations.im.¹\nWhen picking conversations.im as a provider you will be able to communicate with users of other providers by giving them your full XMPP address.</string>
-    <string name="your_full_jid_will_be">Your full XMPP address will be: %s</string>
+    <string name="magic_create_text">A guide is set up for account creation on conversations.im.¹\nWhen picking conversations.im as a provider you will be able to communicate with users of other providers by giving them your full Jabber ID.</string>
+    <string name="your_full_jid_will_be">Your full Jabber ID will be: %s</string>
     <string name="create_account">Create Account</string>
     <string name="use_own_provider">Use my own provider</string>
     <string name="pick_your_username">Pick your username</string>
@@ -591,7 +591,7 @@
     <string name="remote_server_not_found">Remote server not found</string>
     <string name="remote_server_timeout">Remote server timeout</string>
     <string name="unable_to_update_account">Could not update account</string>
-    <string name="report_jid_as_spammer">Report this XMPP address for spamming.</string>
+    <string name="report_jid_as_spammer">Report this Jabber ID for spamming.</string>
     <string name="pref_delete_omemo_identities">Delete OMEMO identities</string>
     <string name="pref_delete_omemo_identities_summary">Regenerate your OMEMO keys. All your contacts will have to verify you again. Only use this as a last resort.</string>
     <string name="delete_selected_keys">Delete selected keys</string>
@@ -679,7 +679,7 @@
     <string name="yesterday">Yesterday</string>
     <string name="pref_validate_hostname">Validate hostname with DNSSEC</string>
     <string name="pref_validate_hostname_summary">Server certificates that contain the validated hostname are considered verified</string>
-    <string name="certificate_does_not_contain_jid">Certificate does not contain a XMPP address</string>
+    <string name="certificate_does_not_contain_jid">Certificate does not contain a Jabber ID</string>
     <string name="server_info_partial">partial</string>
     <string name="attach_record_video">Record video</string>
     <string name="copy_to_clipboard">Copy to clipboard</string>
@@ -741,7 +741,7 @@
     <string name="pref_use_share_location_plugin">Share Location Plugin</string>
     <string name="pref_use_share_location_plugin_summary">Use the Share Location Plugin instead of the built-in map</string>
     <string name="copy_link">Copy web address</string>
-    <string name="copy_jabber_id">Copy XMPP address</string>
+    <string name="copy_jabber_id">Copy Jabber ID</string>
     <string name="p1_s3_filetransfer">HTTP File Sharing for S3</string>
     <string name="pref_start_search">Direct Search</string>
     <string name="pref_start_search_summary">At ‘Start Conversation’ screen open keyboard and place cursor in search field</string>
@@ -832,7 +832,7 @@
     <string name="install_orbot">Install Orbot</string>
     <string name="start_orbot">Start Orbot</string>
     <string name="no_market_app_installed">No market app installed.</string>
-    <string name="group_chat_will_make_your_jabber_id_public">This channel will make your XMPP address public</string>
+    <string name="group_chat_will_make_your_jabber_id_public">This channel will make your Jabber ID public</string>
     <string name="ebook">e-book</string>
     <string name="video_original">Original (uncompressed)</string>
     <string name="open_with">Open with…</string>
@@ -845,16 +845,16 @@
     <string name="unable_to_restore_backup">Could not restore backup.</string>
     <string name="unable_to_decrypt_backup">Could not decrypt backup. Is the password correct?</string>
     <string name="backup_channel_name">Backup &amp; Restore</string>
-    <string name="enter_jabber_id">Enter XMPP address</string>
+    <string name="enter_jabber_id">Enter Jabber ID</string>
     <string name="create_group_chat">Create group chat</string>
     <string name="join_public_channel">Join public channel</string>
     <string name="create_private_group_chat">Create private group chat</string>
     <string name="create_public_channel">Create public channel</string>
     <string name="create_dialog_channel_name">Channel name</string>
-    <string name="xmpp_address">XMPP address</string>
+    <string name="xmpp_address">Jabber ID</string>
     <string name="please_enter_name">Please provide a name for the channel</string>
-    <string name="please_enter_xmpp_address">Please provide an XMPP address</string>
-    <string name="this_is_an_xmpp_address">This is an XMPP address. Please provide a name.</string>
+    <string name="please_enter_xmpp_address">Please provide a Jabber ID</string>
+    <string name="this_is_an_xmpp_address">This is a Jabber ID. Please provide a name.</string>
     <string name="creating_channel">Creating public channel…</string>
     <string name="channel_already_exists">This channel already exists</string>
     <string name="joined_an_existing_channel">You’ve joined an existing channel</string>
@@ -866,9 +866,9 @@
     <string name="admins_can_edit_subject">Admins can edit the topic.</string>
     <string name="owners_can_invite_others">Owners can invite others.</string>
     <string name="anyone_can_invite_others">Anyone can invite others.</string>
-    <string name="jabber_ids_are_visible_to_admins">XMPP addresses are visible to admins.</string>
-    <string name="jabber_ids_are_visible_to_anyone">XMPP addresses are visible to anyone.</string>
-    <string name="no_users_hint_channel">This public channel has no participants. Invite your contacts or use the share button to distribute its XMPP address.</string>
+    <string name="jabber_ids_are_visible_to_admins">Jabber IDs are visible to admins.</string>
+    <string name="jabber_ids_are_visible_to_anyone">Jabber IDs are visible to anyone.</string>
+    <string name="no_users_hint_channel">This public channel has no participants. Invite your contacts or use the share button to distribute its Jabber ID.</string>
     <string name="no_users_hint_group_chat">This private group chat has no participants.</string>
     <string name="manage_permission">Manage privileges</string>
     <string name="search_participants">Search participants</string>
@@ -897,7 +897,7 @@
     <string name="group_chats_and_channels"><![CDATA[Group Chats & Channels]]></string>
     <string name="jabber_network">jabber.network</string>
     <string name="local_server">Local server</string>
-    <string name="pref_channel_discovery_summary">Most users should choose ‘jabber.network’ for better suggestions from the entirety of the public XMPP ecosystem.</string>
+    <string name="pref_channel_discovery_summary">Most users should choose ‘jabber.network’ for better suggestions from the entirety of the public Jabber ecosystem.</string>
     <string name="pref_channel_discovery">Channel discovery method</string>
     <string name="backup">Backup</string>
     <string name="category_about">About</string>
@@ -975,6 +975,6 @@
     <string name="unable_to_enable_video">Unable to enable video.</string>
     <string name="plain_text_document">Plain text document</string>
     <string name="account_registrations_are_not_supported">Account registrations are not supported</string>
-    <string name="no_xmpp_adddress_found">No XMPP address found</string>
+    <string name="no_xmpp_adddress_found">No Jabber ID found</string>
 
 </resources>
