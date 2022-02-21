@@ -22,6 +22,9 @@ tasks:
     echo y | android/cmdline-tools/tools/bin/sdkmanager "build-tools;29.0.2"
     touch ~/.android/repositories.cfg
     yes | android/cmdline-tools/tools/bin/sdkmanager --licenses
+- sentry: |
+    cd cheogram-android
+    sed -ie 's/<!-- INSERT -->/<meta-data android:name="io.sentry.dsn" android:value="https:\/\/680d470d348a4cc494bf2198eed30c49@o559641.ingest.sentry.io\/6221823" \/>/' src/cheogram/AndroidManifest.xml
 - build: |
     cd cheogram-android
     ./gradlew assembleCheogramFreeSystemDebug
