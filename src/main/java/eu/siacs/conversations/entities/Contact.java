@@ -4,6 +4,7 @@ import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Bundle;
 import android.telecom.PhoneAccount;
@@ -30,7 +31,9 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.android.AbstractPhoneContact;
 import eu.siacs.conversations.android.JabberIdContact;
+import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.QuickConversationsService;
+import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.xml.Element;
@@ -578,11 +581,20 @@ public class Contact implements ListItem, Blockable {
     }
 
     // This Contact is a gateway to use for voice calls, register it with OS
-    public void registerAsPhoneAccount(Context ctx) {
+    public void registerAsPhoneAccount(XmppConnectionService ctx) {
         TelecomManager telecomManager = ctx.getSystemService(TelecomManager.class);
 
         PhoneAccount phoneAccount = PhoneAccount.builder(
-            phoneAccountHandle(), phoneAccountLabel()
+            phoneAccountHandle(),
+            account.getJid().asBareJid().toString()
+        ).setAddress(
+            Uri.fromParts("xmpp", account.getJid().asBareJid().toString(), null)
+        ).setIcon(
+            Icon.createWithBitmap(ctx.getAvatarService().get(this, AvatarService.getSystemUiAvatarSize(ctx) / 2, false))
+        ).setHighlightColor(
+            0x7401CF
+        ).setShortDescription(
+            getJid().asBareJid().toString()
         ).setCapabilities(
             PhoneAccount.CAPABILITY_CALL_PROVIDER
         ).build();
