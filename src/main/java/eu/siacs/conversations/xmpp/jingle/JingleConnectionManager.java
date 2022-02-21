@@ -94,7 +94,7 @@ public class JingleConnectionManager extends AbstractConnectionManager {
             } else if (Namespace.JINGLE_APPS_RTP.equals(descriptionNamespace) && isUsingClearNet(account)) {
                 final boolean sessionEnded = this.terminatedSessions.asMap().containsKey(PersistableSessionId.of(id));
                 final boolean stranger = isWithStrangerAndStrangerNotificationsAreOff(account, id.with);
-                if (isBusy() || sessionEnded || stranger) {
+                if (isBusy() != null || sessionEnded || stranger) {
                     Log.d(Config.LOGTAG, id.account.getJid().asBareJid() + ": rejected session with " + id.with + " because busy. sessionEnded=" + sessionEnded + ", stranger=" + stranger);
                     mXmppConnectionService.sendIqPacket(account, packet.generateResponse(IqPacket.TYPE.RESULT), null);
                     final JinglePacket sessionTermination = new JinglePacket(JinglePacket.Action.SESSION_TERMINATE, id.sessionId);
@@ -121,22 +121,23 @@ public class JingleConnectionManager extends AbstractConnectionManager {
         return !account.isOnion() && !mXmppConnectionService.useTorToConnect();
     }
 
-    public boolean isBusy() {
+    public String isBusy() {
         if (mXmppConnectionService.isPhoneInCall()) {
-            return true;
+            return "isPhoneInCall";
         }
         for (AbstractJingleConnection connection : this.connections.values()) {
             if (connection instanceof JingleRtpConnection) {
                 if (((JingleRtpConnection) connection).isTerminated()) {
                     continue;
                 }
-                return true;
+                return "connection !isTerminated";
             }
         }
         synchronized (this.rtpSessionProposals) {
-            return this.rtpSessionProposals.containsValue(DeviceDiscoveryState.DISCOVERED)
-                    || this.rtpSessionProposals.containsValue(DeviceDiscoveryState.SEARCHING)
-                    || this.rtpSessionProposals.containsValue(DeviceDiscoveryState.SEARCHING_ACKNOWLEDGED);
+            if (this.rtpSessionProposals.containsValue(DeviceDiscoveryState.DISCOVERED)) return "discovered";
+            if (this.rtpSessionProposals.containsValue(DeviceDiscoveryState.SEARCHING)) return "searching";
+            if (this.rtpSessionProposals.containsValue(DeviceDiscoveryState.SEARCHING_ACKNOWLEDGED)) return "searching_acknolwedged";
+            return null;
         }
     }
 
@@ -305,7 +306,7 @@ public class JingleConnectionManager extends AbstractConnectionManager {
                     return;
                 }
                 final boolean stranger = isWithStrangerAndStrangerNotificationsAreOff(account, id.with);
-                if (isBusy() || stranger) {
+                if (isBusy() != null || stranger) {
                     writeLogMissedIncoming(account, id.with.asBareJid(), id.sessionId, serverMsgId, timestamp);
                     if (stranger) {
                         Log.d(Config.LOGTAG, id.account.getJid().asBareJid() + ": ignoring call proposal from stranger " + id.with);
@@ -591,12 +592,13 @@ public class JingleConnectionManager extends AbstractConnectionManager {
                     }
                 }
             }
-            if (isBusy()) {
+            String busyCode = isBusy();
+            if (busyCode != null) {
                 if (hasMatchingRtpSession(account, with, media)) {
                     Log.d(Config.LOGTAG, "ignoring request to propose jingle session because the other party already created one for us");
                     return;
                 }
-                throw new IllegalStateException("There is already a running RTP session. This should have been caught by the UI");
+                throw new IllegalStateException("There is already a running RTP session: " + busyCode);
             }
             final RtpSessionProposal proposal = RtpSessionProposal.of(account, with.asBareJid(), media);
             this.rtpSessionProposals.put(proposal, DeviceDiscoveryState.SEARCHING);
