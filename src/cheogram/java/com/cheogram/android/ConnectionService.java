@@ -1,106 +1,202 @@
 package com.cheogram.android;
 
+import java.lang.ref.WeakReference;
+import java.util.Collections;
+import java.util.Set;
+import java.util.Stack;
+
+import com.google.common.collect.ImmutableSet;
+
+import android.telecom.CallAudioState;
 import android.telecom.Connection;
 import android.telecom.ConnectionRequest;
+import android.telecom.DisconnectCause;
 import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.StatusHints;
 import android.telecom.TelecomManager;
-import android.telecom.DisconnectCause;
+import android.telephony.PhoneNumberUtils;
 
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.os.Parcel;
+import android.util.Log;
 
-import eu.siacs.conversations.xmpp.Jid;
+import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.services.AppRTCAudioManager;
+import eu.siacs.conversations.services.XmppConnectionService.XmppConnectionBinder;
+import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.ui.RtpSessionActivity;
+import eu.siacs.conversations.xmpp.Jid;
+import eu.siacs.conversations.xmpp.jingle.JingleRtpConnection;
+import eu.siacs.conversations.xmpp.jingle.Media;
+import eu.siacs.conversations.xmpp.jingle.RtpEndUserState;
 
 public class ConnectionService extends android.telecom.ConnectionService {
+	public XmppConnectionService xmppConnectionService = null;
+	protected ServiceConnection mConnection = new ServiceConnection() {
+		@Override
+			public void onServiceConnected(ComponentName className, IBinder service) {
+				XmppConnectionBinder binder = (XmppConnectionBinder) service;
+				xmppConnectionService = binder.getService();
+			}
+
+		@Override
+		public void onServiceDisconnected(ComponentName arg0) {
+			xmppConnectionService = null;
+		}
+	};
+
+	@Override
+	public void onCreate() {
+		// From XmppActivity.connectToBackend
+		Intent intent = new Intent(this, XmppConnectionService.class);
+		intent.setAction("ui");
+		try {
+			startService(intent);
+		} catch (IllegalStateException e) {
+			Log.w("com.cheogram.android.ConnectionService", "unable to start service from " + getClass().getSimpleName());
+		}
+		bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+	}
+
+	@Override
+	public void onDestroy() {
+		unbindService(mConnection);
+	}
+
 	@Override
 	public Connection onCreateOutgoingConnection(
 		PhoneAccountHandle phoneAccountHandle,
 		ConnectionRequest request
 	) {
 		String[] gateway = phoneAccountHandle.getId().split("/", 2);
-		Connection connection = new CheogramConnection();
-		connection.setAddress(
-			request.getAddress(),
-			TelecomManager.PRESENTATION_ALLOWED
-		);
-		connection.setAudioModeIsVoip(true);
-		connection.setDialing();
-		connection.setRingbackRequested(true);
-		connection.setConnectionCapabilities(
-			Connection.CAPABILITY_CAN_SEND_RESPONSE_VIA_CONNECTION
-		);
+
+		String rawTel = request.getAddress().getSchemeSpecificPart();
+		String postDial = PhoneNumberUtils.extractPostDialPortion(rawTel);
 
 		// TODO: jabber:iq:gateway
-		String tel = request.getAddress().getSchemeSpecificPart().
-		           replaceAll("[^\\+0-9]", "");
+		String tel = PhoneNumberUtils.extractNetworkPortion(rawTel);
 		if (tel.startsWith("1")) {
 			tel = "+" + tel;
 		} else if (!tel.startsWith("+")) {
 			tel = "+1" + tel;
 		}
 
-		// Instead of wiring the call up to the Android call UI,
-		// just show our UI for now.  This means both are showing during a call.
-		final Intent intent = new Intent(this, RtpSessionActivity.class);
-		intent.setAction(RtpSessionActivity.ACTION_MAKE_VOICE_CALL);
-		Bundle extras = new Bundle();
-		extras.putString(
-			RtpSessionActivity.EXTRA_ACCOUNT,
-			Jid.of(gateway[0]).toEscapedString()
+		if (xmppConnectionService.getJingleConnectionManager().isBusy() != null) {
+			return Connection.createFailedConnection(
+				new DisconnectCause(DisconnectCause.BUSY)
+			);
+		}
+
+		Account account = xmppConnectionService.findAccountByJid(Jid.of(gateway[0]));
+		Jid with = Jid.ofLocalAndDomain(tel, gateway[1]);
+		String sessionId = xmppConnectionService.getJingleConnectionManager().proposeJingleRtpSession(
+			account,
+			with,
+			ImmutableSet.of(Media.AUDIO)
 		);
-		extras.putString(
-			RtpSessionActivity.EXTRA_WITH,
-			Jid.ofLocalAndDomain(tel, gateway[1]).toEscapedString()
+
+		Connection connection = new CheogramConnection(account, with, sessionId, postDial);
+		connection.setAddress(
+			Uri.fromParts("tel", tel, null), // Normalized tel as tel: URI
+			TelecomManager.PRESENTATION_ALLOWED
 		);
-		extras.putBinder(
-			RtpSessionActivity.EXTRA_CONNECTION_BINDER,
-			new ConnectionBinder(connection)
+		connection.setCallerDisplayName(
+			account.getDisplayName(),
+			TelecomManager.PRESENTATION_ALLOWED
 		);
-		intent.putExtras(extras);
-		intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-		intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-		startActivity(intent);
+		connection.setAudioModeIsVoip(true);
+		connection.setRingbackRequested(true);
+		connection.setDialing();
+		connection.setConnectionCapabilities(
+			Connection.CAPABILITY_CAN_SEND_RESPONSE_VIA_CONNECTION
+		);
+
+		xmppConnectionService.setOnRtpConnectionUpdateListener(
+			(XmppConnectionService.OnJingleRtpConnectionUpdate) connection
+		);
 
 		return connection;
 	}
 
-	public class ConnectionBinder extends android.os.Binder {
-		protected Connection connection;
+	public class CheogramConnection extends Connection implements XmppConnectionService.OnJingleRtpConnectionUpdate {
+		protected Account account;
+		protected Jid with;
+		protected String sessionId;
+		protected Stack<String> postDial = new Stack();
+		protected WeakReference<JingleRtpConnection> rtpConnection = null;
 
-		public static final int TRANSACT_ACTIVE = android.os.IBinder.FIRST_CALL_TRANSACTION + 1;
-		public static final int TRANSACT_DISCONNECT = TRANSACT_ACTIVE + 1;
-
-		ConnectionBinder(Connection connection) {
+		CheogramConnection(Account account, Jid with, String sessionId, String postDialString) {
 			super();
-			this.connection = connection;
-		}
+			this.account = account;
+			this.with = with;
+			this.sessionId = sessionId;
 
-		@Override
-		protected boolean onTransact(int code, Parcel data, Parcel reply, int flags) {
-			switch(code) {
-				case TRANSACT_ACTIVE:
-					this.connection.setActive();
-					connection.setRingbackRequested(false);
-					return true;
-				case TRANSACT_DISCONNECT:
-					this.connection.setDisconnected(
-						new DisconnectCause(DisconnectCause.UNKNOWN)
-					);
-					return true;
-				default:
-					return false;
+			if (postDialString != null) {
+				for (int i = postDialString.length() - 1; i >= 0; i--) {
+					postDial.push("" + postDialString.charAt(i));
+				}
 			}
 		}
-	}
 
-	public class CheogramConnection extends Connection {
+		@Override
+		public void onJingleRtpConnectionUpdate(final Account account, final Jid with, final String sessionId, final RtpEndUserState state) {
+			if (!sessionId.equals(this.sessionId)) return;
+			if (rtpConnection == null) {
+				this.with = with; // Store full JID of connection
+				rtpConnection = xmppConnectionService.getJingleConnectionManager().findJingleRtpConnection(account, with, sessionId);
+			}
+
+			if (state == RtpEndUserState.CONNECTED) {
+				xmppConnectionService.setDiallerIntegrationActive(true);
+				setActive();
+
+				postDial();
+			} else if (state == RtpEndUserState.DECLINED_OR_BUSY) {
+				setDisconnected(new DisconnectCause(DisconnectCause.BUSY));
+			} else if (state == RtpEndUserState.ENDED) {
+				setDisconnected(new DisconnectCause(DisconnectCause.LOCAL));
+			} else if (state == RtpEndUserState.RETRACTED) {
+				setDisconnected(new DisconnectCause(DisconnectCause.CANCELED));
+			} else if (RtpSessionActivity.END_CARD.contains(state)) {
+				setDisconnected(new DisconnectCause(DisconnectCause.ERROR));
+			}
+		}
+
+		@Override
+		public void onAudioDeviceChanged(AppRTCAudioManager.AudioDevice selectedAudioDevice, Set<AppRTCAudioManager.AudioDevice> availableAudioDevices) {
+			switch(selectedAudioDevice) {
+				case SPEAKER_PHONE:
+					setAudioRoute(CallAudioState.ROUTE_SPEAKER);
+				case WIRED_HEADSET:
+					setAudioRoute(CallAudioState.ROUTE_WIRED_HEADSET);
+				case EARPIECE:
+					setAudioRoute(CallAudioState.ROUTE_EARPIECE);
+				case BLUETOOTH:
+					setAudioRoute(CallAudioState.ROUTE_BLUETOOTH);
+				default:
+					setAudioRoute(CallAudioState.ROUTE_WIRED_OR_EARPIECE);
+			}
+		}
+
 		@Override
 		public void onDisconnect() {
+			if (rtpConnection == null || rtpConnection.get() == null) {
+				xmppConnectionService.getJingleConnectionManager().retractSessionProposal(account, with.asBareJid());
+			} else {
+				rtpConnection.get().endCall();
+			}
 			destroy();
+			xmppConnectionService.setDiallerIntegrationActive(false);
+			xmppConnectionService.removeRtpConnectionUpdateListener(
+				(XmppConnectionService.OnJingleRtpConnectionUpdate) this
+			);
 		}
 
 		@Override
@@ -110,7 +206,37 @@ public class ConnectionService extends android.telecom.ConnectionService {
 
 		@Override
 		public void onPlayDtmfTone(char c) {
-			// TODO
+			rtpConnection.get().applyDtmfTone("" + c);
+		}
+
+		@Override
+		public void onPostDialContinue(boolean c) {
+			if (c) postDial();
+		}
+
+		protected void sleep(int ms) {
+			try {
+				Thread.sleep(ms);
+			} catch (InterruptedException ex) {
+				Thread.currentThread().interrupt();
+			}
+		}
+
+		protected void postDial() {
+			while (!postDial.empty()) {
+				String next = postDial.pop();
+				if (next.equals(";")) {
+					Stack v = (Stack) postDial.clone();
+					Collections.reverse(v);
+					setPostDialWait(String.join("", v));
+					return;
+				} else if (next.equals(",")) {
+					sleep(2000);
+				} else {
+					rtpConnection.get().applyDtmfTone(next);
+					sleep(100);
+				}
+			}
 		}
 	}
 }

@@ -286,15 +286,21 @@ public class XmppConnectionService extends Service {
         }
     };
     private final AtomicBoolean isPhoneInCall = new AtomicBoolean(false);
+    private final AtomicBoolean diallerIntegrationActive = new AtomicBoolean(false);
     private final PhoneStateListener phoneStateListener = new PhoneStateListener() {
         @Override
         public void onCallStateChanged(final int state, final String phoneNumber) {
+            if (diallerIntegrationActive.get()) return;
             isPhoneInCall.set(state != TelephonyManager.CALL_STATE_IDLE);
             if (state == TelephonyManager.CALL_STATE_OFFHOOK) {
                 mJingleConnectionManager.notifyPhoneCallStarted();
             }
         }
     };
+
+    public void setDiallerIntegrationActive(boolean active) {
+      diallerIntegrationActive.set(active);
+    }
 
     private boolean destroyed = false;
 
