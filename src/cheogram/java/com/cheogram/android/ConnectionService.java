@@ -21,6 +21,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.graphics.drawable.Icon;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -29,6 +30,7 @@ import android.util.Log;
 
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.services.AppRTCAudioManager;
+import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.XmppConnectionService.XmppConnectionBinder;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.ui.RtpSessionActivity;
@@ -130,6 +132,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		protected Jid with;
 		protected String sessionId;
 		protected Stack<String> postDial = new Stack();
+		protected Icon gatewayIcon;
 		protected WeakReference<JingleRtpConnection> rtpConnection = null;
 
 		CheogramConnection(Account account, Jid with, String sessionId, String postDialString) {
@@ -137,6 +140,12 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			this.account = account;
 			this.with = with;
 			this.sessionId = sessionId;
+
+			gatewayIcon = Icon.createWithBitmap(xmppConnectionService.getAvatarService().get(
+				account.getRoster().getContact(Jid.of(with.getDomain())),
+				AvatarService.getSystemUiAvatarSize(xmppConnectionService),
+				false
+			));
 
 			if (postDialString != null) {
 				for (int i = postDialString.length() - 1; i >= 0; i--) {
@@ -152,6 +161,8 @@ public class ConnectionService extends android.telecom.ConnectionService {
 				this.with = with; // Store full JID of connection
 				rtpConnection = xmppConnectionService.getJingleConnectionManager().findJingleRtpConnection(account, with, sessionId);
 			}
+
+			setStatusHints(new StatusHints(null, gatewayIcon, null));
 
 			if (state == RtpEndUserState.CONNECTED) {
 				xmppConnectionService.setDiallerIntegrationActive(true);
