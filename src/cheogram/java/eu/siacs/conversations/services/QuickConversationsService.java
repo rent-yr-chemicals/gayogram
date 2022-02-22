@@ -3,6 +3,7 @@ package eu.siacs.conversations.services;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Objects;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -116,7 +117,7 @@ public class QuickConversationsService extends AbstractQuickConversationsService
     }
 
     protected boolean considerSync(final Account account, final List<String> gateways, final Map<String, PhoneNumberContact> contacts, final boolean forced) {
-        final int hash = contacts.keySet().hashCode();
+        final int hash = Objects.hash(contacts.keySet(), gateways);
         Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": consider sync of " + hash);
         if (!mLastSyncAttempt.retry(hash) && !forced) {
             Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": do not attempt sync");
