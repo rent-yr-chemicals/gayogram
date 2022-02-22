@@ -13,6 +13,7 @@ import eu.siacs.conversations.entities.Presence;
 import eu.siacs.conversations.entities.Presences;
 import eu.siacs.conversations.entities.ServiceDiscoveryResult;
 import eu.siacs.conversations.xml.Namespace;
+import eu.siacs.conversations.xmpp.Jid;
 
 public class RtpCapability {
 
@@ -62,7 +63,13 @@ public class RtpCapability {
 
     public static Capability check(final Contact contact, final boolean allowFallback) {
         final Presences presences = contact.getPresences();
+
         if (presences.size() == 0 && allowFallback && contact.getAccount().isEnabled()) {
+            Contact gateway = contact.getAccount().getRoster().getContact(Jid.of(contact.getJid().getDomain()));
+            if (gateway.showInRoster() && gateway.getPresences().anyIdentity("gateway", "pstn")) {
+                return Capability.AUDIO;
+            }
+
             return contact.getRtpCapability();
         }
         Capability result = Capability.NONE;
