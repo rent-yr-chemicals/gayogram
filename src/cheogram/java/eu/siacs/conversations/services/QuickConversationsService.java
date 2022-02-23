@@ -2,6 +2,7 @@ package eu.siacs.conversations.services;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Objects;
 import java.util.ArrayList;
@@ -132,7 +133,8 @@ public class QuickConversationsService extends AbstractQuickConversationsService
             for(String gateway : gateways) {
                 final Jid jid = Jid.ofLocalAndDomain(phoneContact.getPhoneNumber(), gateway);
                 final Contact contact = account.getRoster().getContact(jid);
-                final boolean needsCacheClean = contact.setPhoneContact(phoneContact);
+                boolean needsCacheClean = contact.setPhoneContact(phoneContact);
+                needsCacheClean |= contact.setSystemTags(Collections.singleton(phoneContact.getTypeLabel()));
                 if (needsCacheClean) {
                     service.getAvatarService().clear(contact);
                 }
