@@ -2,6 +2,7 @@ package com.cheogram.android;
 
 import java.lang.ref.WeakReference;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 
@@ -17,9 +18,12 @@ import android.telecom.StatusHints;
 import android.telecom.TelecomManager;
 import android.telephony.PhoneNumberUtils;
 
+import android.Manifest;
+import androidx.core.content.ContextCompat;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.ServiceConnection;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
@@ -27,6 +31,9 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Parcel;
 import android.util.Log;
+
+import com.intentfilter.androidpermissions.PermissionManager;
+import com.intentfilter.androidpermissions.models.DeniedPermissions;
 
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.services.AppRTCAudioManager;
@@ -98,13 +105,27 @@ public class ConnectionService extends android.telecom.ConnectionService {
 
 		Account account = xmppConnectionService.findAccountByJid(Jid.of(gateway[0]));
 		Jid with = Jid.ofLocalAndDomain(tel, gateway[1]);
-		String sessionId = xmppConnectionService.getJingleConnectionManager().proposeJingleRtpSession(
-			account,
-			with,
-			ImmutableSet.of(Media.AUDIO)
-		);
+		CheogramConnection connection = new CheogramConnection(account, with, postDial);
 
-		Connection connection = new CheogramConnection(account, with, sessionId, postDial);
+		PermissionManager permissionManager = PermissionManager.getInstance(this);
+		Set<String> permissions = new HashSet();
+		permissions.add(Manifest.permission.RECORD_AUDIO);
+		permissionManager.checkPermissions(permissions, new PermissionManager.PermissionRequestListener() {
+			@Override
+			public void onPermissionGranted() {
+				connection.setSessionId(xmppConnectionService.getJingleConnectionManager().proposeJingleRtpSession(
+					account,
+					with,
+					ImmutableSet.of(Media.AUDIO)
+				));
+			}
+
+			@Override
+			public void onPermissionDenied(DeniedPermissions deniedPermissions) {
+				connection.setDisconnected(new DisconnectCause(DisconnectCause.ERROR));
+			}
+		});
+
 		connection.setAddress(
 			Uri.fromParts("tel", tel, null), // Normalized tel as tel: URI
 			TelecomManager.PRESENTATION_ALLOWED
@@ -130,16 +151,15 @@ public class ConnectionService extends android.telecom.ConnectionService {
 	public class CheogramConnection extends Connection implements XmppConnectionService.OnJingleRtpConnectionUpdate {
 		protected Account account;
 		protected Jid with;
-		protected String sessionId;
+		protected String sessionId = null;
 		protected Stack<String> postDial = new Stack();
 		protected Icon gatewayIcon;
 		protected WeakReference<JingleRtpConnection> rtpConnection = null;
 
-		CheogramConnection(Account account, Jid with, String sessionId, String postDialString) {
+		CheogramConnection(Account account, Jid with, String postDialString) {
 			super();
 			this.account = account;
 			this.with = with;
-			this.sessionId = sessionId;
 
 			gatewayIcon = Icon.createWithBitmap(xmppConnectionService.getAvatarService().get(
 				account.getRoster().getContact(Jid.of(with.getDomain())),
@@ -154,9 +174,13 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			}
 		}
 
+		public void setSessionId(final String sessionId) {
+			this.sessionId = sessionId;
+		}
+
 		@Override
 		public void onJingleRtpConnectionUpdate(final Account account, final Jid with, final String sessionId, final RtpEndUserState state) {
-			if (!sessionId.equals(this.sessionId)) return;
+			if (sessionId == null || !sessionId.equals(this.sessionId)) return;
 			if (rtpConnection == null) {
 				this.with = with; // Store full JID of connection
 				rtpConnection = xmppConnectionService.getJingleConnectionManager().findJingleRtpConnection(account, with, sessionId);
