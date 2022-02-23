@@ -184,6 +184,8 @@ public final class Config {
                 "irc.cheogram.com",
                 "smtp.cheogram.com",
                 "cheogram.com",
+                "aria-net.org",
+                "matrix.org",
                 "*.covid.monal.im"
         );
 
