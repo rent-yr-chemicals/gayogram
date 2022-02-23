@@ -200,6 +200,9 @@ public class Contact implements ListItem, Blockable {
         if (isBlocked()) {
             tags.add(new Tag(context.getString(R.string.blocked), 0xff2e2f3b));
         }
+        if (!showInRoster() && getSystemAccount() != null) {
+            tags.add(new Tag("Android", UIHelper.getColorForName("Android")));
+        }
         return tags;
     }
 
