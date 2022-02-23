@@ -9,7 +9,7 @@
     <bool name="treat_vibrate_as_silent">false</bool>
     <bool name="confirm_messages">true</bool>
     <bool name="chat_states">true</bool>
-    <bool name="last_activity">false</bool>
+    <bool name="last_activity">true</bool>
     <bool name="vibrate_on_notification">true</bool>
     <bool name="led">true</bool>
     <bool name="enable_quiet_hours">false</bool>
@@ -29,7 +29,7 @@
     <bool name="show_connection_options">false</bool>
     <bool name="display_enter_key">false</bool>
     <bool name="manually_change_presence">false</bool>
-    <bool name="away_when_screen_off">false</bool>
+    <bool name="away_when_screen_off">true</bool>
     <bool name="autojoin">true</bool>
     <bool name="enable_foreground_service">true</bool>
     <bool name="never_send">false</bool>
@@ -38,10 +38,10 @@
     <bool name="show_individual_search_options">true</bool>
     <bool name="show_combined_search_options">false</bool>
     <bool name="scroll_to_bottom">true</bool>
-    <string name="omemo_setting_default">default_on</string>
+    <string name="omemo_setting_default">default_off</string>
     <string name="default_font_size">small</string>
     <bool name="use_share_location_plugin">false</bool>
-    <bool name="start_searching">false</bool>
+    <bool name="start_searching">true</bool>
     <string name="video_compression">360</string>
     <string name="default_channel_discovery">JABBER_NETWORK</string>
     <bool name="prevent_screenshots">false</bool>
