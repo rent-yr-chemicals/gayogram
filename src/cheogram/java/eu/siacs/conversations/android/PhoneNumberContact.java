@@ -23,15 +23,25 @@ import io.michaelrocks.libphonenumber.android.NumberParseException;
 public class PhoneNumberContact extends AbstractPhoneContact {
 
     private final String phoneNumber;
+    private final String typeLabel;
 
     public String getPhoneNumber() {
         return phoneNumber;
+    }
+
+    public String getTypeLabel() {
+        return typeLabel;
     }
 
     private PhoneNumberContact(Context context, Cursor cursor) throws IllegalArgumentException {
         super(cursor);
         try {
             this.phoneNumber = PhoneNumberUtilWrapper.normalize(context, cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER)));
+            this.typeLabel = ContactsContract.CommonDataKinds.Phone.getTypeLabel(
+                context.getResources(),
+                cursor.getInt(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE)),
+                cursor.getString(cursor.getColumnIndex(ContactsContract.CommonDataKinds.Phone.LABEL))
+            ).toString();
         } catch (NumberParseException | NullPointerException e) {
             throw new IllegalArgumentException(e);
         }
@@ -45,6 +55,8 @@ public class PhoneNumberContact extends AbstractPhoneContact {
                 ContactsContract.Data.DISPLAY_NAME,
                 ContactsContract.Data.PHOTO_URI,
                 ContactsContract.Data.LOOKUP_KEY,
+                ContactsContract.CommonDataKinds.Phone.TYPE,
+                ContactsContract.CommonDataKinds.Phone.LABEL,
                 ContactsContract.CommonDataKinds.Phone.NUMBER};
         final HashMap<String, PhoneNumberContact> contacts = new HashMap<>();
         try (final Cursor cursor = context.getContentResolver().query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, PROJECTION, null, null, null)){

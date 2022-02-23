@@ -69,6 +69,7 @@ public class Contact implements ListItem, Blockable {
     private String photoUri;
     private final JSONObject keys;
     private JSONArray groups = new JSONArray();
+    private JSONArray systemTags = new JSONArray();
     private final Presences presences = new Presences();
     protected Account account;
     protected Avatar avatar;
@@ -193,6 +194,9 @@ public class Contact implements ListItem, Blockable {
         for (final String group : getGroups(true)) {
             tags.add(new Tag(group, UIHelper.getColorForName(group)));
         }
+        for (final String tag : getSystemTags(true)) {
+            tags.add(new Tag(tag, UIHelper.getColorForName(tag)));
+        }
         Presence.Status status = getShownStatus();
         if (status != Presence.Status.OFFLINE) {
             tags.add(UIHelper.getTagForStatus(context, status));
@@ -309,6 +313,15 @@ public class Contact implements ListItem, Blockable {
         return !old.equals(getDisplayName());
     }
 
+    public boolean setSystemTags(Collection<String> systemTags) {
+        final JSONArray old = this.systemTags;
+        this.systemTags = new JSONArray();
+        for(String tag : systemTags) {
+            this.systemTags.put(tag);
+        }
+        return !old.equals(this.systemTags);
+    }
+
     public boolean setPresenceName(String presenceName) {
         final String old = getDisplayName();
         this.presenceName = presenceName;
@@ -332,6 +345,17 @@ public class Contact implements ListItem, Blockable {
             }
         }
         return groups;
+    }
+
+    private Collection<String> getSystemTags(final boolean unique) {
+        final Collection<String> tags = unique ? new HashSet<>() : new ArrayList<>();
+        for (int i = 0; i < this.systemTags.length(); ++i) {
+            try {
+                tags.add(this.systemTags.getString(i));
+            } catch (final JSONException ignored) {
+            }
+        }
+        return tags;
     }
 
     public long getPgpKeyId() {
