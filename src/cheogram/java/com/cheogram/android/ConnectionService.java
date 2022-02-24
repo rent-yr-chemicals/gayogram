@@ -34,6 +34,7 @@ import android.util.Log;
 
 import com.intentfilter.androidpermissions.PermissionManager;
 import com.intentfilter.androidpermissions.models.DeniedPermissions;
+import io.michaelrocks.libphonenumber.android.NumberParseException;
 
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.services.AppRTCAudioManager;
@@ -41,6 +42,7 @@ import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.XmppConnectionService.XmppConnectionBinder;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.ui.RtpSessionActivity;
+import eu.siacs.conversations.utils.PhoneNumberUtilWrapper;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.jingle.JingleRtpConnection;
 import eu.siacs.conversations.xmpp.jingle.Media;
@@ -89,12 +91,13 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		String rawTel = request.getAddress().getSchemeSpecificPart();
 		String postDial = PhoneNumberUtils.extractPostDialPortion(rawTel);
 
-		// TODO: jabber:iq:gateway
 		String tel = PhoneNumberUtils.extractNetworkPortion(rawTel);
-		if (tel.startsWith("1")) {
-			tel = "+" + tel;
-		} else if (!tel.startsWith("+")) {
-			tel = "+1" + tel;
+		try {
+			tel = PhoneNumberUtilWrapper.normalize(this, tel);
+		} catch (NumberParseException e) {
+			return Connection.createFailedConnection(
+				new DisconnectCause(DisconnectCause.ERROR)
+			);
 		}
 
 		if (xmppConnectionService.getJingleConnectionManager().isBusy() != null) {
