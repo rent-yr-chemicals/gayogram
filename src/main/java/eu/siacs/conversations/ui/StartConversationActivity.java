@@ -97,8 +97,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
     private final PendingItem<Intent> pendingViewIntent = new PendingItem<>();
     private final PendingItem<String> mInitialSearchValue = new PendingItem<>();
     private final AtomicBoolean oneShotKeyboardSuppress = new AtomicBoolean();
-    public int conference_context_id;
-    public int contact_context_id;
+    public ListItem contextItem;
     private ListPagerAdapter mListPagerAdapter;
     private final List<ListItem> contacts = new ArrayList<>();
     private ListItemAdapter mContactsAdapter;
@@ -194,7 +193,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
             int pos = binding.startConversationViewPager.getCurrentItem();
             if (pos == 0) {
                 if (contacts.size() == 1) {
-                    openConversationForContact((Contact) contacts.get(0));
+                    openConversation(contacts.get(0));
                     return true;
                 } else if (contacts.size() == 0 && conferences.size() == 1) {
                     openConversationsForBookmark((Bookmark) conferences.get(0));
@@ -205,7 +204,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
                     openConversationsForBookmark((Bookmark) conferences.get(0));
                     return true;
                 } else if (conferences.size() == 0 && contacts.size() == 1) {
-                    openConversationForContact((Contact) contacts.get(0));
+                    openConversation(contacts.get(0));
                     return true;
                 }
             }
@@ -406,8 +405,15 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
     }
 
     protected void openConversationForContact(int position) {
-        Contact contact = (Contact) contacts.get(position);
-        openConversationForContact(contact);
+        openConversation(contacts.get(position));
+    }
+
+    protected void openConversation(ListItem item) {
+        if (item instanceof Contact) {
+            openConversationForContact((Contact) item);
+        } else {
+            openConversationsForBookmark((Bookmark) item);
+        }
     }
 
     protected void openConversationForContact(Contact contact) {
@@ -422,7 +428,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
     }
 
     protected void shareBookmarkUri() {
-        shareBookmarkUri(conference_context_id);
+        shareAsChannel(this, contextItem.getJid().asBareJid().toEscapedString());
     }
 
     protected void shareBookmarkUri(int position) {
@@ -459,25 +465,19 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
     }
 
     protected void openDetailsForContact() {
-        int position = contact_context_id;
-        Contact contact = (Contact) contacts.get(position);
-        switchToContactDetails(contact);
+        switchToContactDetails((Contact) contextItem);
     }
 
     protected void showQrForContact() {
-        int position = contact_context_id;
-        Contact contact = (Contact) contacts.get(position);
-        showQrCode("xmpp:" + contact.getJid().asBareJid().toEscapedString());
+        showQrCode("xmpp:" + contextItem.getJid().asBareJid().toEscapedString());
     }
 
     protected void toggleContactBlock() {
-        final int position = contact_context_id;
-        BlockContactDialog.show(this, (Contact) contacts.get(position));
+        BlockContactDialog.show(this, (Contact) contextItem);
     }
 
     protected void deleteContact() {
-        final int position = contact_context_id;
-        final Contact contact = (Contact) contacts.get(position);
+        final Contact contact = (Contact) contextItem;
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setNegativeButton(R.string.cancel, null);
         builder.setTitle(R.string.action_delete_contact);
@@ -490,8 +490,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
     }
 
     protected void deleteConference() {
-        int position = conference_context_id;
-        final Bookmark bookmark = (Bookmark) conferences.get(position);
+        final Bookmark bookmark = (Bookmark) contextItem;
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setNegativeButton(R.string.cancel, null);
@@ -972,8 +971,15 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
                         this.contacts.add(contact);
                     }
                 }
+
+                for (Bookmark bookmark : account.getBookmarks()) {
+                    if (bookmark.match(this, needle)) {
+                        this.contacts.add(bookmark);
+                    }
+                }
             }
         }
+
         Collections.sort(this.contacts);
         mContactsAdapter.notifyDataSetChanged();
     }
@@ -1183,17 +1189,22 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
             if (activity == null) {
                 return;
             }
-            activity.getMenuInflater().inflate(mResContextMenu, menu);
             final AdapterView.AdapterContextMenuInfo acmi = (AdapterContextMenuInfo) menuInfo;
-            if (mResContextMenu == R.menu.conference_context) {
-                activity.conference_context_id = acmi.position;
-                final Bookmark bookmark = (Bookmark) activity.conferences.get(acmi.position);
+            activity.contextItem = null;
+            if (mResContextMenu == R.menu.contact_context) {
+                activity.contextItem = activity.contacts.get(acmi.position);
+            } else if (mResContextMenu == R.menu.conference_context) {
+                activity.contextItem = activity.conferences.get(acmi.position);
+            }
+            if (activity.contextItem instanceof Bookmark) {
+                activity.getMenuInflater().inflate(R.menu.conference_context, menu);
+                final Bookmark bookmark = (Bookmark) activity.contextItem;
                 final Conversation conversation = bookmark.getConversation();
                 final MenuItem share = menu.findItem(R.id.context_share_uri);
                 share.setVisible(conversation == null || !conversation.isPrivateAndNonAnonymous());
-            } else if (mResContextMenu == R.menu.contact_context) {
-                activity.contact_context_id = acmi.position;
-                final Contact contact = (Contact) activity.contacts.get(acmi.position);
+            } else if (activity.contextItem instanceof Contact) {
+                activity.getMenuInflater().inflate(R.menu.contact_context, menu);
+                final Contact contact = (Contact) activity.contextItem;
                 final MenuItem blockUnblockItem = menu.findItem(R.id.context_contact_block_unblock);
                 final MenuItem showContactDetailsItem = menu.findItem(R.id.context_contact_details);
                 final MenuItem deleteContactMenuItem = menu.findItem(R.id.context_delete_contact);
