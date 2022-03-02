@@ -571,6 +571,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                 }
             }
 
+            message.setSubject(original.findChildContent("subject"));
             message.setCounterpart(counterpart);
             message.setRemoteMsgId(remoteMsgId);
             message.setServerMsgId(serverMsgId);

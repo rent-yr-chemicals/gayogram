@@ -93,6 +93,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     protected Jid counterpart;
     protected Jid trueCounterpart;
     protected String body;
+    protected String subject;
     protected String encryptedBody;
     protected long timeSent;
     protected int encryption;
@@ -152,6 +153,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 null,
                 false,
                 false,
+                null,
                 null);
     }
 
@@ -177,6 +179,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 null,
                 false,
                 false,
+                null,
                 null);
     }
 
@@ -186,7 +189,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                       final String remoteMsgId, final String relativeFilePath,
                       final String serverMsgId, final String fingerprint, final boolean read,
                       final String edited, final boolean oob, final String errorMessage, final Set<ReadByMarker> readByMarkers,
-                      final boolean markable, final boolean deleted, final String bodyLanguage) {
+                      final boolean markable, final boolean deleted, final String bodyLanguage, final String subject) {
         this.conversation = conversation;
         this.uuid = uuid;
         this.conversationUuid = conversationUUid;
@@ -210,6 +213,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         this.markable = markable;
         this.deleted = deleted;
         this.bodyLanguage = bodyLanguage;
+        this.subject = subject;
     }
 
     public static Message fromCursor(Cursor cursor, Conversation conversation) {
@@ -235,7 +239,8 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 ReadByMarker.fromJsonString(cursor.getString(cursor.getColumnIndex(READ_BY_MARKERS))),
                 cursor.getInt(cursor.getColumnIndex(MARKABLE)) > 0,
                 cursor.getInt(cursor.getColumnIndex(DELETED)) > 0,
-                cursor.getString(cursor.getColumnIndex(BODY_LANGUAGE))
+                cursor.getString(cursor.getColumnIndex(BODY_LANGUAGE)),
+                cursor.getString(cursor.getColumnIndex("subject"))
         );
     }
 
@@ -263,6 +268,13 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         message.setType(Message.TYPE_STATUS);
         message.body = "LOAD_MORE";
         return message;
+    }
+
+    public ContentValues getCheogramContentValues() {
+        ContentValues values = new ContentValues();
+        values.put(UUID, uuid);
+        values.put("subject", subject);
+        return values;
     }
 
     @Override
@@ -347,6 +359,14 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         this.isEmojisOnly = null;
         this.treatAsDownloadable = null;
         this.fileParams = null;
+    }
+
+    public String getSubject() {
+        return subject;
+    }
+
+    public synchronized void setSubject(String subject) {
+        this.subject = subject;
     }
 
     public void setMucUser(MucOptions.User user) {
@@ -632,6 +652,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                         message.getEncryption() != Message.ENCRYPTION_PGP &&
                         message.getEncryption() != Message.ENCRYPTION_DECRYPTION_FAILED &&
                         this.getType() == message.getType() &&
+                        this.getSubject() != null &&
                         //this.getStatus() == message.getStatus() &&
                         isStatusMergeable(this.getStatus(), message.getStatus()) &&
                         this.getEncryption() == message.getEncryption() &&

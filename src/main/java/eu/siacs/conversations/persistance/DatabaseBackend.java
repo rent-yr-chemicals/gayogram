@@ -180,8 +180,11 @@ public class DatabaseBackend extends SQLiteOpenHelper {
     private static final String CREATE_MESSAGE_DELETE_TRIGGER = "CREATE TRIGGER after_message_delete AFTER DELETE ON " + Message.TABLENAME + " BEGIN DELETE FROM messages_index WHERE rowid=OLD.rowid; END;";
     private static final String COPY_PREEXISTING_ENTRIES = "INSERT INTO messages_index(messages_index) VALUES('rebuild');";
 
+    protected Context context;
+
     private DatabaseBackend(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context;
     }
 
     private static ContentValues createFingerprintStatusContentValues(FingerprintStatus.Trust trust, boolean active) {
@@ -209,10 +212,38 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         return instance;
     }
 
+    protected void cheogramMigrate(SQLiteDatabase db) {
+        db.beginTransaction();
+
+        try {
+            Cursor cursor = db.rawQuery("PRAGMA cheogram.user_version", null);
+            cursor.moveToNext();
+            int cheogramVersion = cursor.getInt(0);
+            cursor.close();
+
+            if(cheogramVersion < 1) {
+                // No cross-DB foreign keys unfortunately
+                db.execSQL(
+                    "CREATE TABLE cheogram." + Message.TABLENAME + "(" +
+                    Message.UUID + " TEXT PRIMARY KEY, " +
+                    "subject TEXT" +
+                    ")"
+                );
+                db.execSQL("PRAGMA cheogram.user_version = 1");
+            }
+
+            db.setTransactionSuccessful();
+        } finally {
+            db.endTransaction();
+        }
+    }
+
     @Override
     public void onConfigure(SQLiteDatabase db) {
         db.execSQL("PRAGMA foreign_keys=ON");
         db.rawQuery("PRAGMA secure_delete=ON", null).close();
+        db.execSQL("ATTACH DATABASE ? AS cheogram", new Object[]{context.getDatabasePath("cheogram").getPath()});
+        cheogramMigrate(db);
     }
 
     @Override
@@ -678,6 +709,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
     public void createMessage(Message message) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(Message.TABLENAME, null, message.getContentValues());
+        db.insert("cheogram." + Message.TABLENAME, null, message.getCheogramContentValues());
     }
 
     public void createAccount(Account account) {
@@ -787,16 +819,28 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         Cursor cursor;
         if (timestamp == -1) {
             String[] selectionArgs = {conversation.getUuid()};
-            cursor = db.query(Message.TABLENAME, null, Message.CONVERSATION
-                    + "=?", selectionArgs, null, null, Message.TIME_SENT
-                    + " DESC", String.valueOf(limit));
+            cursor = db.rawQuery(
+                "SELECT * FROM " + Message.TABLENAME + " " +
+                "LEFT JOIN cheogram." + Message.TABLENAME +
+                "  USING (" + Message.UUID + ")" +
+                "WHERE " + Message.CONVERSATION + "=? " +
+                "ORDER BY " + Message.TIME_SENT + " DESC " +
+                "LIMIT " + String.valueOf(limit),
+                selectionArgs
+            );
         } else {
             String[] selectionArgs = {conversation.getUuid(),
                     Long.toString(timestamp)};
-            cursor = db.query(Message.TABLENAME, null, Message.CONVERSATION
-                            + "=? and " + Message.TIME_SENT + "<?", selectionArgs,
-                    null, null, Message.TIME_SENT + " DESC",
-                    String.valueOf(limit));
+            cursor = db.rawQuery(
+                "SELECT * FROM " + Message.TABLENAME + " " +
+                "LEFT JOIN cheogram." + Message.TABLENAME +
+                "  USING (" + Message.UUID + ")" +
+                "WHERE " + Message.CONVERSATION + "=? AND " +
+                Message.TIME_SENT + "<? " +
+                "ORDER BY " + Message.TIME_SENT + " DESC " +
+                "LIMIT " + String.valueOf(limit),
+                selectionArgs
+            );
         }
         CursorUtils.upgradeCursorWindowSize(cursor);
         while (cursor.moveToNext()) {
