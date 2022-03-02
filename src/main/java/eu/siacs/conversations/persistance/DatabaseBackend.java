@@ -232,6 +232,18 @@ public class DatabaseBackend extends SQLiteOpenHelper {
                 db.execSQL("PRAGMA cheogram.user_version = 1");
             }
 
+            if(cheogramVersion < 2) {
+                db.execSQL(
+                    "ALTER TABLE cheogram." + Message.TABLENAME + " " +
+                    "ADD COLUMN oobUri TEXT"
+                );
+                db.execSQL(
+                    "ALTER TABLE cheogram." + Message.TABLENAME + " " +
+                    "ADD COLUMN fileParams TEXT"
+                );
+                db.execSQL("PRAGMA cheogram.user_version = 2");
+            }
+
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
@@ -1063,13 +1075,15 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         if (!includeBody) {
             contentValues.remove(Message.BODY);
         }
-        return db.update(Message.TABLENAME, message.getContentValues(), Message.UUID + "=?", args) == 1;
+        return db.update(Message.TABLENAME, message.getContentValues(), Message.UUID + "=?", args) == 1 &&
+               db.update("cheogram." + Message.TABLENAME, message.getCheogramContentValues(), Message.UUID + "=?", args) == 1;
     }
 
     public boolean updateMessage(Message message, String uuid) {
         SQLiteDatabase db = this.getWritableDatabase();
         String[] args = {uuid};
-        return db.update(Message.TABLENAME, message.getContentValues(), Message.UUID + "=?", args) == 1;
+        return db.update(Message.TABLENAME, message.getContentValues(), Message.UUID + "=?", args) == 1 &&
+               db.update("cheogram." + Message.TABLENAME, message.getCheogramContentValues(), Message.UUID + "=?", args) == 1;
     }
 
     public void readRoster(Roster roster) {

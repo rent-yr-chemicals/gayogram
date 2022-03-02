@@ -82,6 +82,8 @@ public class MessageUtils {
     }
 
     public static boolean treatAsDownloadable(final String body, final boolean oob) {
+        if (oob) return true;
+
         final String[] lines = body.split("\n");
         if (lines.length == 0) {
             return false;
