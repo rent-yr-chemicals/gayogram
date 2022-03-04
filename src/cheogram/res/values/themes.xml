@@ -2,7 +2,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
     <style name="ConversationsTheme" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimary">#7401CF</item>
+        <item name="colorPrimary">@color/perpy</item>
         <item name="colorPrimaryDark">#1E0036</item>
         <item name="colorAccent">#1E0036</item>
         <item name="popupOverlayStyle">@style/ThemeOverlay.AppCompat.Light</item>
@@ -70,7 +70,7 @@
             @drawable/message_bubble_received
         </item>
 
-        <item name="unread_count">@color/green700_desaturated</item>
+        <item name="unread_count">@color/perpy</item>
 
         <item name="conversations_overview_background">@color/green700</item>
 
@@ -149,7 +149,7 @@
     </style>
 
     <style name="ConversationsTheme.Dark" parent="Theme.AppCompat.NoActionBar">
-        <item name="colorPrimary">#7401CF</item>
+        <item name="colorPrimary">@color/perpy</item>
         <item name="colorPrimaryDark">#1E0036</item>
         <item name="colorAccent">#FFC700</item>
         <item name="popupOverlayStyle">@style/ThemeOverlay.AppCompat.Dark</item>
@@ -226,7 +226,7 @@
             @drawable/message_bubble_received_dark
         </item>
 
-        <item name="unread_count">@color/green900_desaturated</item>
+        <item name="unread_count">@color/perpy</item>
 
         <item name="conversations_overview_background">@color/green900</item>
 

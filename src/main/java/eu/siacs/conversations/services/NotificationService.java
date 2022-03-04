@@ -687,7 +687,7 @@ public class NotificationService {
     }
 
     private void setNotificationColor(final Builder mBuilder) {
-        mBuilder.setColor(ContextCompat.getColor(mXmppConnectionService, R.color.green600));
+        mBuilder.setColor(ContextCompat.getColor(mXmppConnectionService, R.color.perpy));
     }
 
     public void updateNotification() {
