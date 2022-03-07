@@ -33,8 +33,10 @@ import android.os.Parcel;
 import android.util.Log;
 
 import com.intentfilter.androidpermissions.PermissionManager;
+import com.intentfilter.androidpermissions.NotificationSettings;
 import com.intentfilter.androidpermissions.models.DeniedPermissions;
 
+import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.services.AppRTCAudioManager;
 import eu.siacs.conversations.services.AvatarService;
@@ -108,6 +110,12 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		CheogramConnection connection = new CheogramConnection(account, with, postDial);
 
 		PermissionManager permissionManager = PermissionManager.getInstance(this);
+		permissionManager.setNotificationSettings(
+			new NotificationSettings.Builder()
+				.withMessage(R.string.microphone_permission_for_call)
+				.withSmallIcon(R.drawable.ic_notification).build()
+		);
+
 		Set<String> permissions = new HashSet();
 		permissions.add(Manifest.permission.RECORD_AUDIO);
 		permissionManager.checkPermissions(permissions, new PermissionManager.PermissionRequestListener() {

@@ -985,5 +985,6 @@
     <string name="plain_text_document">Plain text document</string>
     <string name="account_registrations_are_not_supported">Account registrations are not supported</string>
     <string name="no_xmpp_adddress_found">No Jabber ID found</string>
+    <string name="microphone_permission_for_call">Microphone permission required to complete call</string>
 
 </resources>
