@@ -10,6 +10,10 @@ buildscript {
     }
 }
 
+plugins {
+    id 'org.ajoberstar.grgit' version '4.1.1'
+}
+
 apply plugin: 'com.android.application'
 
 repositories {
@@ -108,8 +112,8 @@ android {
     defaultConfig {
         minSdkVersion 24
         targetSdkVersion 29
-        versionCode 42024
-        versionName "2.10.3-beta"
+        versionCode 42024 + grgit.tag.list().size()
+        versionName grgit.describe(tags: true, always: true)
         archivesBaseName += "-$versionName"
         applicationId "eu.siacs.conversations"
         resValue "string", "applicationId", applicationId
