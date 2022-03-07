@@ -43,7 +43,7 @@ import eu.siacs.conversations.ui.adapter.KnownHostsAdapter;
 import eu.siacs.conversations.ui.interfaces.OnBackendConnected;
 import eu.siacs.conversations.ui.util.DelayedHintHelper;
 import eu.siacs.conversations.xmpp.Jid;
-import eu.siacs.conversations.xmpp.OnGatewayPromptResult;
+import eu.siacs.conversations.xmpp.OnGatewayResult;
 
 public class EnterJidDialog extends DialogFragment implements OnBackendConnected, TextWatcher {
 
@@ -161,7 +161,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
 
                 for (final Contact contact : account.getRoster().getContacts()) {
                     if (contact.showInRoster() && (contact.getPresences().anyIdentity("gateway", null) || contact.getPresences().anySupport("jabber:iq:gateway"))) {
-                        context.xmppConnectionService.fetchGatewayPrompt(account, contact.getJid(), (final String prompt, String errorMessage) -> {
+                        context.xmppConnectionService.fetchFromGateway(account, contact.getJid(), null, (final String prompt, String errorMessage) -> {
                             if (prompt == null) return;
 
                             context.runOnUiThread(() -> {
@@ -216,41 +216,67 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
             return;
         }
         final Jid accountJid = accountJid();
-        final Jid contactJid;
-        try {
-            contactJid = Jid.ofEscaped(binding.jid.getText().toString());
-        } catch (final IllegalArgumentException e) {
-            binding.jidLayout.setError(getActivity().getString(R.string.invalid_jid));
-            return;
-        }
-
-        if (!issuedWarning && sanityCheckJid) {
-            if (contactJid.isDomainJid()) {
-                binding.jidLayout.setError(
-                        getActivity().getString(R.string.this_looks_like_a_domain));
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
-                issuedWarning = true;
-                return;
-            }
-            if (suspiciousSubDomain(contactJid.getDomain().toEscapedString())) {
-                binding.jidLayout.setError(
-                        getActivity().getString(R.string.this_looks_like_channel));
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
-                issuedWarning = true;
-                return;
-            }
-        }
-
-        if (mListener != null) {
-            try {
-                if (mListener.onEnterJidDialogPositive(accountJid, contactJid)) {
-                    dialog.dismiss();
+        final OnGatewayResult finish = (final String jidString, final String errorMessage) -> {
+            getActivity().runOnUiThread(() -> {
+                if (errorMessage != null) {
+                    binding.jidLayout.setError(errorMessage);
+                    return;
                 }
-            } catch (JidError error) {
-                binding.jidLayout.setError(error.toString());
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add);
-                issuedWarning = false;
-            }
+                if (jidString == null) {
+                    binding.jidLayout.setError(getActivity().getString(R.string.invalid_jid));
+                    return;
+                }
+
+                final Jid contactJid;
+                try {
+                    contactJid = Jid.ofEscaped(jidString);
+                } catch (final IllegalArgumentException e) {
+                    binding.jidLayout.setError(getActivity().getString(R.string.invalid_jid));
+                    return;
+                }
+
+                if (!issuedWarning && sanityCheckJid) {
+                    if (contactJid.isDomainJid()) {
+                        binding.jidLayout.setError(getActivity().getString(R.string.this_looks_like_a_domain));
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
+                        issuedWarning = true;
+                        return;
+                    }
+                    if (suspiciousSubDomain(contactJid.getDomain().toEscapedString())) {
+                        binding.jidLayout.setError(getActivity().getString(R.string.this_looks_like_channel));
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
+                        issuedWarning = true;
+                        return;
+                    }
+                }
+
+                if (mListener != null) {
+                    try {
+                        if (mListener.onEnterJidDialogPositive(accountJid, contactJid)) {
+                            dialog.dismiss();
+                        }
+                    } catch (JidError error) {
+                        binding.jidLayout.setError(error.toString());
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add);
+                        issuedWarning = false;
+                    }
+                }
+            });
+        };
+
+        Pair<String,Pair<Jid,Presence>> p = gatewayListAdapter.getSelected();
+
+        if (p == null) {
+            finish.onGatewayResult(binding.jid.getText().toString(), null);
+        } else if (p.first != null) { // Gateway already responsed to jabber:iq:gateway once
+            final Account acct = ((XmppActivity) getActivity()).xmppConnectionService.findAccountByJid(accountJid);
+            ((XmppActivity) getActivity()).xmppConnectionService.fetchFromGateway(acct, p.second.first, binding.jid.getText().toString(), finish);
+        } else if (p.second.first.isDomainJid() && p.second.second.getServiceDiscoveryResult().getFeatures().contains("jid\\20escaping")) {
+            finish.onGatewayResult(Jid.ofLocalAndDomain(binding.jid.getText().toString(), p.second.first.getDomain().toString()).toString(), null);
+        } else if (p.second.first.isDomainJid()) {
+            finish.onGatewayResult(Jid.ofLocalAndDomain(binding.jid.getText().toString().replace("@", "%"), p.second.first.getDomain().toString()).toString(), null);
+        } else {
+            finish.onGatewayResult(null, null);
         }
     }
 
