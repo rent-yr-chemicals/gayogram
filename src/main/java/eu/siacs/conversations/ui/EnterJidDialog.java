@@ -29,6 +29,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+
+import io.michaelrocks.libphonenumber.android.NumberParseException;
 import org.solovyev.android.views.llm.LinearLayoutManager;
 
 import eu.siacs.conversations.Config;
@@ -42,6 +44,7 @@ import eu.siacs.conversations.entities.ServiceDiscoveryResult;
 import eu.siacs.conversations.ui.adapter.KnownHostsAdapter;
 import eu.siacs.conversations.ui.interfaces.OnBackendConnected;
 import eu.siacs.conversations.ui.util.DelayedHintHelper;
+import eu.siacs.conversations.utils.PhoneNumberUtilWrapper;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.OnGatewayResult;
 
@@ -265,6 +268,14 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         };
 
         Pair<String,Pair<Jid,Presence>> p = gatewayListAdapter.getSelected();
+        final String type = gatewayListAdapter.getSelectedType();
+
+        // Resolve based on local settings before submission
+        if (type.equals("pstn") || type.equals("sms")) {
+            try {
+                binding.jid.setText(PhoneNumberUtilWrapper.normalize(getActivity(), binding.jid.getText().toString()));
+            } catch (NumberParseException | NullPointerException e) { }
+        }
 
         if (p == null) {
             finish.onGatewayResult(binding.jid.getText().toString(), null);
@@ -470,6 +481,10 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
             }
 
             return null;
+        }
+
+        public String getSelectedType() {
+            return getType(selected);
         }
 
         public Pair<String, Pair<Jid,Presence>> getSelected() {
