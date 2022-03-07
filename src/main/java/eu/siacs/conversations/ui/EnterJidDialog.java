@@ -405,7 +405,16 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                 binding.jidLayout.setHint(R.string.account_settings_jabber_id);
             } else {
                 binding.jid.setThreshold(999999); // do not autocomplete
-                binding.jid.setInputType(InputType.TYPE_CLASS_TEXT);
+
+                String type = getType(i);
+                if (type.equals("pstn") || type.equals("sms")) {
+                    binding.jid.setInputType(InputType.TYPE_CLASS_PHONE);
+                } else if (type.equals("email") || type.equals("sip")) {
+                    binding.jid.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+                } else {
+                    binding.jid.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+                }
+
                 binding.jidLayout.setHint(this.gateways.get(i-1).second);
                 binding.jid.setHint(null);
                 binding.jid.setOnFocusChangeListener((v, hasFocus) -> {});
@@ -418,6 +427,15 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         public String getLabel(int i) {
             if (i == 0) return null;
 
+            String type = getType(i);
+            if (type != null) return type;
+
+            return gateways.get(i-1).first.getDisplayName();
+        }
+
+        public String getType(int i) {
+            if (i == 0) return null;
+
             for(Presence p : this.gateways.get(i-1).first.getPresences().getPresences()) {
                 ServiceDiscoveryResult.Identity id;
                 if(p.getServiceDiscoveryResult() != null && (id = p.getServiceDiscoveryResult().getIdentity("gateway", null)) != null) {
@@ -425,11 +443,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                 }
             }
 
-            return gateways.get(i-1).first.getDisplayName();
-        }
-
-        public String getSelectedLabel() {
-            return getLabel(selected);
+            return null;
         }
 
         public Pair<String, Pair<Jid,Presence>> getSelected() {
