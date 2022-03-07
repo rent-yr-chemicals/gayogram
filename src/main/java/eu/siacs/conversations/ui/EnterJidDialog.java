@@ -150,6 +150,34 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         binding.gatewayList.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false));
         binding.gatewayList.setAdapter(gatewayListAdapter);
 
+        binding.account.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView accountSpinner, View view, int position, long id) {
+                XmppActivity context = (XmppActivity) getActivity();
+                if (context.xmppConnectionService == null || accountJid() == null) return;
+
+                gatewayListAdapter.clear();
+                final Account account = context.xmppConnectionService.findAccountByJid(accountJid());
+
+                for (final Contact contact : account.getRoster().getContacts()) {
+                    if (contact.showInRoster() && (contact.getPresences().anyIdentity("gateway", null) || contact.getPresences().anySupport("jabber:iq:gateway"))) {
+                        context.xmppConnectionService.fetchGatewayPrompt(account, contact.getJid(), (final String prompt, String errorMessage) -> {
+                            if (prompt == null) return;
+
+                            context.runOnUiThread(() -> {
+                                gatewayListAdapter.add(contact, prompt);
+                            });
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView accountSpinner) {
+                gatewayListAdapter.clear();
+            }
+        });
+
         builder.setView(binding.getRoot());
         builder.setNegativeButton(R.string.cancel, null);
         builder.setPositiveButton(getArguments().getString(POSITIVE_BUTTON_KEY), null);
@@ -171,20 +199,23 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         return dialog;
     }
 
+    protected Jid accountJid() {
+        try {
+            if (Config.DOMAIN_LOCK != null) {
+                return Jid.ofEscaped((String) binding.account.getSelectedItem(), Config.DOMAIN_LOCK, null);
+            } else {
+                return Jid.ofEscaped((String) binding.account.getSelectedItem());
+            }
+        } catch (final IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     private void handleEnter(EnterJidDialogBinding binding, String account) {
-        final Jid accountJid;
         if (!binding.account.isEnabled() && account == null) {
             return;
         }
-        try {
-            if (Config.DOMAIN_LOCK != null) {
-                accountJid = Jid.ofEscaped((String) binding.account.getSelectedItem(), Config.DOMAIN_LOCK, null);
-            } else {
-                accountJid = Jid.ofEscaped((String) binding.account.getSelectedItem());
-            }
-        } catch (final IllegalArgumentException e) {
-            return;
-        }
+        final Jid accountJid = accountJid();
         final Jid contactJid;
         try {
             contactJid = Jid.ofEscaped(binding.jid.getText().toString());
