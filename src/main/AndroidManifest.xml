@@ -50,6 +50,10 @@
         android:name="android.hardware.microphone"
         android:required="false" />
 
+    <queries>
+        <package android:name="org.sufficientlysecure.keychain"/>
+    </queries>
+
 
     <application
         android:allowBackup="true"
@@ -61,6 +65,7 @@
         android:largeHeap="true"
         android:networkSecurityConfig="@xml/network_security_configuration"
         android:requestLegacyExternalStorage="true"
+        android:preserveLegacyExternalStorage="true"
         android:theme="@style/ConversationsTheme"
         tools:replace="android:label"
         tools:targetApi="q">

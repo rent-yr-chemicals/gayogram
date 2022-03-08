@@ -55,23 +55,21 @@
                 android:layout_marginLeft="16dp"
                 android:layout_marginTop="0dp"
                 android:layout_marginRight="16dp"
-                android:layout_marginBottom="16dp"
+                android:layout_marginBottom="8dp"
                 android:textAppearance="@style/TextAppearance.Conversations.Display2"
                 android:textColor="@color/white"
                 tools:text="Juliet Capulet" />
-
             <TextView
                 android:id="@+id/with_jid"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/with"
+                android:layout_below="@id/status"
                 android:layout_marginLeft="16dp"
-                android:layout_marginTop="0dp"
                 android:layout_marginRight="16dp"
                 android:layout_marginBottom="32dp"
-                android:textAppearance="@style/TextAppearance.Conversations.Title"
+                android:textAppearance="@style/TextAppearance.Conversations.Body1"
                 android:textColor="@color/white"
-                tools:text="juliet@capulet.lit" />
+                tools:text="jcapulet@example.com" />
 
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -255,6 +253,16 @@
                 app:fabSize="mini"
                 app:tint="?attr/icon_tint" />
         </RelativeLayout>
+
+        <TextView
+            android:id="@+id/using_account"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentEnd="true"
+            android:layout_margin="8dp"
+            android:text="@string/using_account"
+            android:textAppearance="@style/TextAppearance.Conversations.Caption"/>
 
     </RelativeLayout>
 </layout>

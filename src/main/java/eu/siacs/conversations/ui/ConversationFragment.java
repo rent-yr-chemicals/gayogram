@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.PendingIntent;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -1183,8 +1184,8 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                 cancelTransmission.setVisible(true);
             }
             if (m.isFileOrImage() && !deleted && !cancelable) {
-                String path = m.getRelativeFilePath();
-                if (path == null || !path.startsWith("/") || FileBackend.isInDirectoryThatShouldNotBeScanned(getActivity(), path)) {
+                final String path = m.getRelativeFilePath();
+                if (path == null || !path.startsWith("/")) {
                     deleteFile.setVisible(true);
                     deleteFile.setTitle(activity.getString(R.string.delete_x_file, UIHelper.getFileDescriptionString(activity, m)));
                 }
@@ -1744,7 +1745,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         if (context == null) {
             return;
         }
-        if (intent.resolveActivity(context.getPackageManager()) != null) {
+        try {
             if (chooser) {
                 startActivityForResult(
                         Intent.createChooser(intent, getString(R.string.perform_action_with)),
@@ -1752,7 +1753,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             } else {
                 startActivityForResult(intent, attachmentChoice);
             }
-        } else {
+        } catch (final ActivityNotFoundException e) {
             Toast.makeText(context, R.string.no_application_found, Toast.LENGTH_LONG).show();
         }
     }
@@ -2254,10 +2255,10 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
     }
 
     private List<Uri> cleanUris(final List<Uri> uris) {
-        Iterator<Uri> iterator = uris.iterator();
+        final Iterator<Uri> iterator = uris.iterator();
         while (iterator.hasNext()) {
             final Uri uri = iterator.next();
-            if (FileBackend.weOwnFile(getActivity(), uri)) {
+            if (FileBackend.weOwnFile(uri)) {
                 iterator.remove();
                 Toast.makeText(getActivity(), R.string.security_violation_not_attaching_file, Toast.LENGTH_SHORT).show();
             }

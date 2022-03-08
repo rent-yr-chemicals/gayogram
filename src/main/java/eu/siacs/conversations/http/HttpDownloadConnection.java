@@ -96,11 +96,8 @@ public class HttpDownloadConnection implements Transferable {
                 this.message.setEncryption(Message.ENCRYPTION_NONE);
             }
             final String ext = extension.getExtension();
-            if (ext != null) {
-                message.setRelativeFilePath(String.format("%s.%s", message.getUuid(), ext));
-            } else if (Strings.isNullOrEmpty(message.getRelativeFilePath())) {
-                message.setRelativeFilePath(message.getUuid());
-            }
+            final String filename = Strings.isNullOrEmpty(ext) ? message.getUuid() : String.format("%s.%s", message.getUuid(), ext);
+            mXmppConnectionService.getFileBackend().setupRelativeFilePath(message, filename);
             setupFile();
             if (this.message.getEncryption() == Message.ENCRYPTION_AXOLOTL && this.file.getKey() == null) {
                 this.message.setEncryption(Message.ENCRYPTION_NONE);
@@ -122,7 +119,7 @@ public class HttpDownloadConnection implements Transferable {
     private void setupFile() {
         final String reference = mUrl.fragment();
         if (reference != null && AesGcmURL.IV_KEY.matcher(reference).matches()) {
-            this.file = new DownloadableFile(mXmppConnectionService.getCacheDir().getAbsolutePath() + "/" + message.getUuid());
+            this.file = new DownloadableFile(mXmppConnectionService.getCacheDir(), message.getUuid());
             this.file.setKeyAndIv(CryptoHelper.hexToBytes(reference));
             Log.d(Config.LOGTAG, "create temporary OMEMO encrypted file: " + this.file.getAbsolutePath() + "(" + message.getMimeType() + ")");
         } else {
@@ -326,7 +323,7 @@ public class HttpDownloadConnection implements Transferable {
                 if (Strings.isNullOrEmpty(extension.getExtension()) && contentType != null) {
                     final String fileExtension = MimeUtils.guessExtensionFromMimeType(contentType);
                     if (fileExtension != null) {
-                        message.setRelativeFilePath(String.format("%s.%s", message.getUuid(), fileExtension));
+                        mXmppConnectionService.getFileBackend().setupRelativeFilePath(message, String.format("%s.%s", message.getUuid(), fileExtension), contentType);
                         Log.d(Config.LOGTAG, "rewriting name after not finding extension in url but in content type");
                         setupFile();
                     }
@@ -419,8 +416,9 @@ public class HttpDownloadConnection implements Transferable {
                     Log.d(Config.LOGTAG, "content-length reported on GET (" + size + ") did not match Content-Length reported on HEAD (" + expected + ")");
                 }
                 file.getParentFile().mkdirs();
+                Log.d(Config.LOGTAG,"creating file: "+file.getAbsolutePath());
                 if (!file.exists() && !file.createNewFile()) {
-                    throw new FileWriterException();
+                    throw new FileWriterException(file);
                 }
                 outputStream = AbstractConnectionManager.createOutputStream(file, false, false);
             }
@@ -431,7 +429,7 @@ public class HttpDownloadConnection implements Transferable {
                 try {
                     outputStream.write(buffer, 0, count);
                 } catch (IOException e) {
-                    throw new FileWriterException();
+                    throw new FileWriterException(file);
                 }
                 updateProgress(Math.round(((double) transmitted / expected) * 100));
             }
