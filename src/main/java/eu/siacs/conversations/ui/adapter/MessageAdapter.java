@@ -818,8 +818,6 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         } else {
             if (message.isGeoUri()) {
                 displayLocationMessage(viewHolder, message, darkBackground, type);
-            } else if (message.bodyIsOnlyEmojis() && message.getType() != Message.TYPE_PRIVATE) {
-                displayEmojiMessage(viewHolder, message.getBody().trim(), darkBackground);
             } else if (message.treatAsDownloadable()) {
                 try {
                     final URI uri = message.getOob();
@@ -836,6 +834,8 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                                     UIHelper.getFileDescriptionString(activity, message)),
                             darkBackground, type);
                 }
+            } else if (message.bodyIsOnlyEmojis() && message.getType() != Message.TYPE_PRIVATE) {
+                displayEmojiMessage(viewHolder, message.getBody().trim(), darkBackground);
             } else {
                 displayTextMessage(viewHolder, message, darkBackground, type);
             }

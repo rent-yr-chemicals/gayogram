@@ -857,7 +857,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 
     public synchronized boolean bodyIsOnlyEmojis() {
         if (isEmojisOnly == null) {
-            isEmojisOnly = Emoticons.isOnlyEmoji(body.replaceAll("\\s", ""));
+            isEmojisOnly = Emoticons.isOnlyEmoji(getBody().replaceAll("\\s", ""));
         }
         return isEmojisOnly;
     }
