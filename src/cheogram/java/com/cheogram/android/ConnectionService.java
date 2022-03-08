@@ -35,6 +35,7 @@ import android.util.Log;
 import com.intentfilter.androidpermissions.PermissionManager;
 import com.intentfilter.androidpermissions.NotificationSettings;
 import com.intentfilter.androidpermissions.models.DeniedPermissions;
+import io.michaelrocks.libphonenumber.android.NumberParseException;
 
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
@@ -43,6 +44,7 @@ import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.XmppConnectionService.XmppConnectionBinder;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.ui.RtpSessionActivity;
+import eu.siacs.conversations.utils.PhoneNumberUtilWrapper;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.jingle.JingleRtpConnection;
 import eu.siacs.conversations.xmpp.jingle.Media;
@@ -91,12 +93,13 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		String rawTel = request.getAddress().getSchemeSpecificPart();
 		String postDial = PhoneNumberUtils.extractPostDialPortion(rawTel);
 
-		// TODO: jabber:iq:gateway
 		String tel = PhoneNumberUtils.extractNetworkPortion(rawTel);
-		if (tel.startsWith("1")) {
-			tel = "+" + tel;
-		} else if (!tel.startsWith("+")) {
-			tel = "+1" + tel;
+		try {
+			tel = PhoneNumberUtilWrapper.normalize(this, tel);
+		} catch (NumberParseException e) {
+			return Connection.createFailedConnection(
+				new DisconnectCause(DisconnectCause.ERROR)
+			);
 		}
 
 		if (xmppConnectionService.getJingleConnectionManager().isBusy() != null) {
@@ -134,19 +137,10 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			}
 		});
 
+		connection.setInitializing();
 		connection.setAddress(
 			Uri.fromParts("tel", tel, null), // Normalized tel as tel: URI
 			TelecomManager.PRESENTATION_ALLOWED
-		);
-		connection.setCallerDisplayName(
-			account.getDisplayName(),
-			TelecomManager.PRESENTATION_ALLOWED
-		);
-		connection.setAudioModeIsVoip(true);
-		connection.setRingbackRequested(true);
-		connection.setDialing();
-		connection.setConnectionCapabilities(
-			Connection.CAPABILITY_CAN_SEND_RESPONSE_VIA_CONNECTION
 		);
 
 		xmppConnectionService.setOnRtpConnectionUpdateListener(
@@ -180,6 +174,15 @@ public class ConnectionService extends android.telecom.ConnectionService {
 					postDial.push("" + postDialString.charAt(i));
 				}
 			}
+
+			setCallerDisplayName(
+				account.getDisplayName(),
+				TelecomManager.PRESENTATION_ALLOWED
+			);
+			setAudioModeIsVoip(true);
+			setConnectionCapabilities(
+				Connection.CAPABILITY_CAN_SEND_RESPONSE_VIA_CONNECTION
+			);
 		}
 
 		public void setSessionId(final String sessionId) {
@@ -196,7 +199,11 @@ public class ConnectionService extends android.telecom.ConnectionService {
 
 			setStatusHints(new StatusHints(null, gatewayIcon, null));
 
-			if (state == RtpEndUserState.CONNECTED) {
+			if (state == RtpEndUserState.FINDING_DEVICE) {
+				setInitialized();
+			} else if (state == RtpEndUserState.RINGING) {
+				setDialing();
+			} else if (state == RtpEndUserState.CONNECTED) {
 				xmppConnectionService.setDiallerIntegrationActive(true);
 				setActive();
 
