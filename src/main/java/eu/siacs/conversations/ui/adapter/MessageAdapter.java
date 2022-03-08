@@ -655,6 +655,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                     viewHolder.image = view.findViewById(R.id.message_image);
                     viewHolder.messageBody = view.findViewById(R.id.message_body);
                     viewHolder.time = view.findViewById(R.id.message_time);
+                    viewHolder.subject = view.findViewById(R.id.message_subject);
                     viewHolder.indicatorReceived = view.findViewById(R.id.indicator_received);
                     viewHolder.audioPlayer = view.findViewById(R.id.audio_player);
                     break;
@@ -668,6 +669,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                     viewHolder.image = view.findViewById(R.id.message_image);
                     viewHolder.messageBody = view.findViewById(R.id.message_body);
                     viewHolder.time = view.findViewById(R.id.message_time);
+                    viewHolder.subject = view.findViewById(R.id.message_subject);
                     viewHolder.indicatorReceived = view.findViewById(R.id.indicator_received);
                     viewHolder.encryption = view.findViewById(R.id.message_encryption);
                     viewHolder.audioPlayer = view.findViewById(R.id.audio_player);
@@ -860,6 +862,15 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             }
         }
 
+        if (type == RECEIVED || type == SENT) {
+            if (message.getSubject() == null) {
+                viewHolder.subject.setVisibility(View.GONE);
+            } else {
+                viewHolder.subject.setVisibility(View.VISIBLE);
+                viewHolder.subject.setText(message.getSubject());
+            }
+        }
+
         displayStatus(viewHolder, message, type, darkBackground);
 
         return view;
@@ -934,6 +945,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         protected ImageView indicator;
         protected ImageView indicatorReceived;
         protected TextView time;
+        protected TextView subject;
         protected TextView messageBody;
         protected ImageView contact_picture;
         protected TextView status_message;
