@@ -22,6 +22,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.DialogFragment;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -31,7 +32,6 @@ import java.util.List;
 import java.util.Map;
 
 import io.michaelrocks.libphonenumber.android.NumberParseException;
-import org.solovyev.android.views.llm.LinearLayoutManager;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
