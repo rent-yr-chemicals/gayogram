@@ -28,6 +28,6 @@ tasks:
     sed -ie 's/\/\/ INSERT/implementation "io.sentry:sentry-android:5.6.1"/' build.gradle
 - build: |
     cd cheogram-android
-    ./gradlew assembleCheogramFreeSystemDebug
+    ./gradlew assembleCheogramFreeCompatDebug
 - assets: |
-    mv cheogram-android/build/outputs/apk/cheogramFreeSystem/debug/*.apk cheogram.apk
+    mv cheogram-android/build/outputs/apk/cheogramFreeCompat/debug/*.apk cheogram.apk

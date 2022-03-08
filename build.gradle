@@ -40,6 +40,7 @@ configurations {
     playstoreImplementation
     compatImplementation
     conversationsFreeCompatImplementation
+    cheogramFreeCompatImplementation
     conversationsPlaystoreCompatImplementation
     conversationsPlaystoreSystemImplementation
     quicksyPlaystoreCompatImplementation
@@ -70,6 +71,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.4.0'
     compatImplementation 'androidx.emoji:emoji-appcompat:1.1.0'
     conversationsFreeCompatImplementation 'androidx.emoji:emoji-bundled:1.1.0'
+    cheogramFreeCompatImplementation 'androidx.emoji:emoji-bundled:1.1.0'
     quicksyFreeCompatImplementation 'androidx.emoji:emoji-bundled:1.1.0'
     implementation 'org.bouncycastle:bcmail-jdk15on:1.64'
     //zxing stopped supporting Java 7 so we have to stick with 3.3.3
