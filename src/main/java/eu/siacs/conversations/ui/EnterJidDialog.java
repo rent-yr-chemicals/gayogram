@@ -461,19 +461,27 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
             notifyItemChanged(i);
         }
 
+        public String getLabel(Contact gateway) {
+            String type = getType(gateway);
+            if (type != null) return type;
+
+            return gateway.getDisplayName();
+        }
+
         public String getLabel(int i) {
             if (i == 0) return null;
 
-            String type = getType(i);
-            if (type != null) return type;
-
-            return gateways.get(i-1).first.getDisplayName();
+            return getLabel(this.gateways.get(i-1).first);
         }
 
         public String getType(int i) {
             if (i == 0) return null;
 
-            for(Presence p : this.gateways.get(i-1).first.getPresences().getPresences()) {
+            return getType(this.gateways.get(i-1).first);
+        }
+
+        public String getType(Contact gateway) {
+            for(Presence p : gateway.getPresences().getPresences()) {
                 ServiceDiscoveryResult.Identity id;
                 if(p.getServiceDiscoveryResult() != null && (id = p.getServiceDiscoveryResult().getIdentity("gateway", null)) != null) {
                     return id.getType();
@@ -528,6 +536,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         public void add(Contact gateway, String prompt) {
             binding.gatewayList.setVisibility(View.VISIBLE);
             this.gateways.add(new Pair<>(gateway, prompt));
+            Collections.sort(this.gateways, (x, y) -> getLabel(x.first).compareTo(getLabel(y.first)));
             notifyDataSetChanged();
         }
     }
