@@ -402,9 +402,10 @@ public class FileBackend {
     }
 
     public static void updateFileParams(Message message, String url, long size) {
-        final StringBuilder body = new StringBuilder();
-        body.append(url).append('|').append(size);
-        message.setBody(body.toString());
+        Message.FileParams fileParams = new Message.FileParams();
+        fileParams.url = url;
+        fileParams.size = size;
+        message.setFileParams(fileParams);
     }
 
     public Bitmap getPreviewForUri(Attachment attachment, int size, boolean cacheOnly) {
@@ -1466,11 +1467,11 @@ public class FileBackend {
         final boolean video = mime != null && mime.startsWith("video/");
         final boolean audio = mime != null && mime.startsWith("audio/");
         final boolean pdf = "application/pdf".equals(mime);
-        final StringBuilder body = new StringBuilder();
+        Message.FileParams fileParams = new Message.FileParams();
         if (url != null) {
-            body.append(url);
+            fileParams.url = url;
         }
-        body.append('|').append(file.getSize());
+        fileParams.size = file.getSize();
         if (image || video || (pdf && Compatibility.runsTwentyOne())) {
             try {
                 final Dimensions dimensions;
@@ -1482,7 +1483,8 @@ public class FileBackend {
                     dimensions = getImageDimensions(file);
                 }
                 if (dimensions.valid()) {
-                    body.append('|').append(dimensions.width).append('|').append(dimensions.height);
+                    fileParams.width = dimensions.width;
+                    fileParams.height = dimensions.height;
                 }
             } catch (NotAVideoFile notAVideoFile) {
                 Log.d(
@@ -1491,9 +1493,9 @@ public class FileBackend {
                 // fall threw
             }
         } else if (audio) {
-            body.append("|0|0|").append(getMediaRuntime(file));
+            fileParams.runtime = getMediaRuntime(file);
         }
-        message.setBody(body.toString());
+        message.setFileParams(fileParams);
         message.setDeleted(false);
         message.setType(
                 privateMessage
