@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<!-- Created with Inkscape (http://www.inkscape.org/) -->
-
 <svg
    xmlns:dc="http://purl.org/dc/elements/1.1/"
    xmlns:cc="http://creativecommons.org/ns#"
@@ -13,7 +11,7 @@
    height="26"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.5 r10040"
+   inkscape:version="1.0.2 (e86c870879, 2021-01-15)"
    sodipodi:docname="message_bubble_received.svg">
   <defs
      id="defs4">
@@ -52,6 +50,21 @@
          result="composite2"
          id="feComposite3821" />
     </filter>
+    <linearGradient
+       id="paint0_linear"
+       x1="1260"
+       y1="1570.41"
+       x2="618.987"
+       y2="488.325"
+       gradientUnits="userSpaceOnUse">
+      <stop
+         stop-color="#7D01DD"
+         id="stop1226" />
+      <stop
+         offset="1"
+         stop-color="#8301E9"
+         id="stop1228" />
+    </linearGradient>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -60,21 +73,23 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="16"
-     inkscape:cx="25.745257"
-     inkscape:cy="9.618802"
+     inkscape:zoom="22.627417"
+     inkscape:cx="19.480239"
+     inkscape:cy="15.902718"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="layer"
      showgrid="true"
-     inkscape:window-width="989"
-     inkscape:window-height="755"
-     inkscape:window-x="22"
-     inkscape:window-y="16"
+     inkscape:window-width="1656"
+     inkscape:window-height="1060"
+     inkscape:window-x="1088"
+     inkscape:window-y="1092"
      inkscape:window-maximized="0"
      showguides="true"
      inkscape:guide-bbox="true"
      guidecolor="#000000"
-     guideopacity="0.49803922">
+     guideopacity="0.49803922"
+     inkscape:document-rotation="0"
+     inkscape:snap-global="true">
     <inkscape:grid
        type="xygrid"
        id="grid2985"
@@ -82,10 +97,10 @@
        visible="true"
        enabled="true"
        snapvisiblegridlinesonly="true"
-       spacingx="1px"
-       spacingy="1px"
-       originx="0px"
-       originy="0px"
+       spacingx="1"
+       spacingy="1"
+       originx="0"
+       originy="0"
        color="#0000ff"
        opacity="0.03137255" />
     <sodipodi:guide
@@ -140,9 +155,9 @@
      transform="translate(0,-2)">
     <g
        id="g3759"
-       style="fill:#4d8e50;fill-opacity:1;stroke:none;fill-rule:nonzero;filter:url(#filter3811)">
+       style="fill:#7401cf;fill-opacity:1;stroke:none;fill-rule:nonzero;filter:url(#filter3811)">
       <path
-         style="display:none"
+         style="display:none;fill:#7401cf;fill-opacity:1"
          d="m 8,6 c 2,2 4,6 4,10 L 16,6 z"
          id="path3805"
          inkscape:connector-curvature="0"
@@ -152,14 +167,16 @@
          inkscape:connector-curvature="0"
          id="path2989"
          d="M 4,4 16,16 16,4 z"
-         sodipodi:nodetypes="cccc" />
+         sodipodi:nodetypes="cccc"
+         style="fill:#7401cf;fill-opacity:1" />
       <rect
          ry="2"
          y="4"
          x="12"
          height="20"
          width="20"
-         id="rect2987" />
+         id="rect2987"
+         style="fill:#7401cf;fill-opacity:1" />
     </g>
   </g>
 </svg>

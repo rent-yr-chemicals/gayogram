@@ -573,8 +573,8 @@
     <string name="pref_theme_automatic">Automatic</string>
     <string name="pref_theme_light">Light</string>
     <string name="pref_theme_dark">Dark</string>
-    <string name="pref_use_green_background">Green Background</string>
-    <string name="pref_use_green_background_summary">Use green background for received messages</string>
+    <string name="pref_use_green_background">Purple Background</string>
+    <string name="pref_use_green_background_summary">Use purple background for received messages</string>
     <string name="unable_to_connect_to_keychain">Could not connect to OpenKeychain</string>
     <string name="this_device_is_no_longer_in_use">This device is no longer in use</string>
     <string name="type_pc">Computer</string>
