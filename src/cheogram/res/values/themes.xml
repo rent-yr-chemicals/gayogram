@@ -151,7 +151,7 @@
     <style name="ConversationsTheme.Dark" parent="Theme.AppCompat.NoActionBar">
         <item name="colorPrimary">@color/perpy</item>
         <item name="colorPrimaryDark">#1E0036</item>
-        <item name="colorAccent">#FFC700</item>
+        <item name="colorAccent">@color/yeller</item>
         <item name="popupOverlayStyle">@style/ThemeOverlay.AppCompat.Dark</item>
         <item name="android:navigationBarColor" tools:targetApi="21">@color/black</item>
 

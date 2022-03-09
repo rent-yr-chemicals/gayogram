@@ -3,7 +3,8 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="?attr/color_background_primary"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <include layout="@layout/toolbar" />
 
@@ -14,5 +15,58 @@
         android:divider="@android:color/transparent"
         android:dividerHeight="0dp" >
     </ListView>
+
+    <RelativeLayout
+        android:id="@+id/phone_accounts"
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?selectableItemBackground"
+        android:paddingLeft="8dp"
+        android:paddingBottom="8dp"
+        android:paddingTop="8dp">
+
+        <com.makeramen.roundedimageview.RoundedImageView
+            android:id="@+id/phone_accounts_image"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentLeft="true"
+            android:src="@drawable/ic_call_white_48dp"
+            android:background="@color/yeller"
+            app:riv_corner_radius="2dp" />
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/phone_accounts_image"
+            android:orientation="vertical"
+            android:paddingLeft="@dimen/avatar_item_distance">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scrollHorizontally="false"
+                android:singleLine="true"
+                android:text="Manage Phone Accounts"
+                android:textAppearance="@style/TextAppearance.Conversations.Subhead" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Android system dialler integration"
+                android:textAppearance="@style/TextAppearance.Conversations.Body2" />
+        </LinearLayout>
+
+        <com.makeramen.roundedimageview.RoundedImageView
+            android:id="@+id/phone_accounts_settings"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:paddingRight="16dp"
+            android:src="?attr/icon_settings"
+            app:riv_corner_radius="2dp" />
+    </RelativeLayout>
 
 </LinearLayout>
