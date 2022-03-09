@@ -960,6 +960,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
     protected void filterContacts(String needle) {
         this.contacts.clear();
         final List<Account> accounts = xmppConnectionService.getAccounts();
+        boolean foundSopranica = false;
         for (Account account : accounts) {
             if (account.getStatus() != Account.State.DISABLED) {
                 for (Contact contact : account.getRoster().getContacts()) {
@@ -974,6 +975,9 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 
                 for (Bookmark bookmark : account.getBookmarks()) {
                     if (bookmark.match(this, needle)) {
+                        if (bookmark.getJid().toString().equals("discuss@conference.soprani.ca")) {
+                            foundSopranica = true;
+                        }
                         this.contacts.add(bookmark);
                     }
                 }
@@ -981,6 +985,17 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
         }
 
         Collections.sort(this.contacts);
+
+        if (!foundSopranica && (needle == null || needle.equals(""))) {
+            Bookmark bookmark = new Bookmark(
+                xmppConnectionService.getAccounts().get(0),
+                Jid.of("discuss@conference.soprani.ca")
+            );
+            bookmark.setBookmarkName("Soprani.ca / Cheogram Discussion");
+            bookmark.addChild("group").setContent("support");
+            this.contacts.add(0, bookmark);
+        }
+
         mContactsAdapter.notifyDataSetChanged();
     }
 
