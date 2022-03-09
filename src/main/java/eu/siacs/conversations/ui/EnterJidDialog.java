@@ -440,21 +440,32 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                 binding.jid.setThreshold(1);
                 binding.jid.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS | InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
                 binding.jidLayout.setHint(R.string.account_settings_jabber_id);
+
+                if(binding.jid.hasFocus()) {
+                    binding.jid.setHint(R.string.account_settings_example_jabber_id);
+                } else {
+                    DelayedHintHelper.setHint(R.string.account_settings_example_jabber_id, binding.jid);
+                }
             } else {
                 binding.jid.setThreshold(999999); // do not autocomplete
+                binding.jid.setHint(null);
+                binding.jid.setOnFocusChangeListener((v, hasFocus) -> {});
+                binding.jidLayout.setHint(this.gateways.get(i-1).second);
 
                 String type = getType(i);
                 if (type.equals("pstn") || type.equals("sms")) {
                     binding.jid.setInputType(InputType.TYPE_CLASS_PHONE);
                 } else if (type.equals("email") || type.equals("sip")) {
                     binding.jid.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+
+                    if(binding.jid.hasFocus()) {
+                        binding.jid.setHint(R.string.account_settings_example_jabber_id);
+                    } else {
+                        DelayedHintHelper.setHint(R.string.account_settings_example_jabber_id, binding.jid);
+                    }
                 } else {
                     binding.jid.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
                 }
-
-                binding.jidLayout.setHint(this.gateways.get(i-1).second);
-                binding.jid.setHint(null);
-                binding.jid.setOnFocusChangeListener((v, hasFocus) -> {});
             }
 
             notifyItemChanged(old);
