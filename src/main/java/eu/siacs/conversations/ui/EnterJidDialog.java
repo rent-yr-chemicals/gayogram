@@ -273,7 +273,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         final String type = gatewayListAdapter.getSelectedType();
 
         // Resolve based on local settings before submission
-        if (type.equals("pstn") || type.equals("sms")) {
+        if (type != null && (type.equals("pstn") || type.equals("sms"))) {
             try {
                 binding.jid.setText(PhoneNumberUtilWrapper.normalize(getActivity(), binding.jid.getText().toString()));
             } catch (NumberParseException | NullPointerException e) { }
