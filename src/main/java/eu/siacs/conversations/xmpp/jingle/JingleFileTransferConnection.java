@@ -590,7 +590,6 @@ public class JingleFileTransferConnection extends AbstractJingleConnection imple
             content.addChild(security);
         }
         content.setDescription(this.description);
-        message.resetFileParams();
         try {
             this.mFileInputStream = new FileInputStream(file);
         } catch (FileNotFoundException e) {
