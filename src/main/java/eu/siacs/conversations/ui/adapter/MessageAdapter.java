@@ -501,12 +501,14 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             for (final URLSpan urlspan : body.getSpans(0, body.length() - 1, URLSpan.class)) {
                 Uri uri = Uri.parse(urlspan.getURL());
                 if ("xmpp".equals(uri.getScheme())) {
-                    Contact contact = roster.getContact(Jid.of(uri.getSchemeSpecificPart()));
-                    body.replace(
-                        body.getSpanStart(urlspan),
-                        body.getSpanEnd(urlspan),
-                        contact.getDisplayName()
-                    );
+                    try {
+                        Contact contact = roster.getContact(Jid.of(uri.getSchemeSpecificPart()));
+                        body.replace(
+                            body.getSpanStart(urlspan),
+                            body.getSpanEnd(urlspan),
+                            contact.getDisplayName()
+                        );
+                    } catch (final IllegalArgumentException e) { /* bad JID */ }
                 }
             }
             viewHolder.messageBody.setAutoLinkMask(0);
