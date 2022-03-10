@@ -2,31 +2,51 @@ package eu.siacs.conversations.ui;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.Pair;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.TextView;
+import android.widget.ToggleButton;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.DialogFragment;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+
+import io.michaelrocks.libphonenumber.android.NumberParseException;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.EnterJidDialogBinding;
 import eu.siacs.conversations.services.XmppConnectionService;
+import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.entities.Contact;
+import eu.siacs.conversations.entities.Presence;
+import eu.siacs.conversations.entities.ServiceDiscoveryResult;
 import eu.siacs.conversations.ui.adapter.KnownHostsAdapter;
 import eu.siacs.conversations.ui.interfaces.OnBackendConnected;
 import eu.siacs.conversations.ui.util.DelayedHintHelper;
+import eu.siacs.conversations.utils.PhoneNumberUtilWrapper;
 import eu.siacs.conversations.xmpp.Jid;
+import eu.siacs.conversations.xmpp.OnGatewayResult;
 
 public class EnterJidDialog extends DialogFragment implements OnBackendConnected, TextWatcher {
 
@@ -51,6 +71,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
     private boolean sanityCheckJid = false;
 
     private boolean issuedWarning = false;
+    private GatewayListAdapter gatewayListAdapter = new GatewayListAdapter();
 
     public static EnterJidDialog newInstance(
             final List<String> activatedAccounts,
@@ -129,6 +150,39 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
             binding.account.setAdapter(adapter);
         }
 
+        binding.gatewayList.setLayoutManager(new LinearLayoutManager(getActivity(), LinearLayoutManager.HORIZONTAL, false));
+        binding.gatewayList.setAdapter(gatewayListAdapter);
+        gatewayListAdapter.setOnEmpty(() -> binding.gatewayList.setVisibility(View.GONE));
+        gatewayListAdapter.setOnNonEmpty(() -> binding.gatewayList.setVisibility(View.VISIBLE));
+
+        binding.account.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView accountSpinner, View view, int position, long id) {
+                XmppActivity context = (XmppActivity) getActivity();
+                if (context.xmppConnectionService == null || accountJid() == null) return;
+
+                gatewayListAdapter.clear();
+                final Account account = context.xmppConnectionService.findAccountByJid(accountJid());
+
+                for (final Contact contact : account.getRoster().getContacts()) {
+                    if (contact.showInRoster() && (contact.getPresences().anyIdentity("gateway", null) || contact.getPresences().anySupport("jabber:iq:gateway"))) {
+                        context.xmppConnectionService.fetchFromGateway(account, contact.getJid(), null, (final String prompt, String errorMessage) -> {
+                            if (prompt == null && !contact.getPresences().anyIdentity("gateway", null)) return;
+
+                            context.runOnUiThread(() -> {
+                                gatewayListAdapter.add(contact, prompt);
+                            });
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView accountSpinner) {
+                gatewayListAdapter.clear();
+            }
+        });
+
         builder.setView(binding.getRoot());
         builder.setNegativeButton(R.string.cancel, null);
         builder.setPositiveButton(getArguments().getString(POSITIVE_BUTTON_KEY), null);
@@ -150,59 +204,92 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         return dialog;
     }
 
+    protected Jid accountJid() {
+        try {
+            if (Config.DOMAIN_LOCK != null) {
+                return Jid.ofEscaped((String) binding.account.getSelectedItem(), Config.DOMAIN_LOCK, null);
+            } else {
+                return Jid.ofEscaped((String) binding.account.getSelectedItem());
+            }
+        } catch (final IllegalArgumentException e) {
+            return null;
+        }
+    }
+
     private void handleEnter(EnterJidDialogBinding binding, String account) {
-        final Jid accountJid;
         if (!binding.account.isEnabled() && account == null) {
             return;
         }
-        try {
-            if (Config.DOMAIN_LOCK != null) {
-                accountJid =
-                        Jid.ofEscaped(
-                                (String) binding.account.getSelectedItem(),
-                                Config.DOMAIN_LOCK,
-                                null);
-            } else {
-                accountJid = Jid.ofEscaped((String) binding.account.getSelectedItem());
-            }
-        } catch (final IllegalArgumentException e) {
-            return;
-        }
-        final Jid contactJid;
-        try {
-            contactJid = Jid.ofEscaped(binding.jid.getText().toString());
-        } catch (final IllegalArgumentException e) {
-            binding.jidLayout.setError(getActivity().getString(R.string.invalid_jid));
-            return;
-        }
-
-        if (!issuedWarning && sanityCheckJid) {
-            if (contactJid.isDomainJid()) {
-                binding.jidLayout.setError(
-                        getActivity().getString(R.string.this_looks_like_a_domain));
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
-                issuedWarning = true;
-                return;
-            }
-            if (suspiciousSubDomain(contactJid.getDomain().toEscapedString())) {
-                binding.jidLayout.setError(
-                        getActivity().getString(R.string.this_looks_like_channel));
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
-                issuedWarning = true;
-                return;
-            }
-        }
-
-        if (mListener != null) {
-            try {
-                if (mListener.onEnterJidDialogPositive(accountJid, contactJid)) {
-                    dialog.dismiss();
+        final Jid accountJid = accountJid();
+        final OnGatewayResult finish = (final String jidString, final String errorMessage) -> {
+            getActivity().runOnUiThread(() -> {
+                if (errorMessage != null) {
+                    binding.jidLayout.setError(errorMessage);
+                    return;
                 }
-            } catch (JidError error) {
-                binding.jidLayout.setError(error.toString());
-                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add);
-                issuedWarning = false;
-            }
+                if (jidString == null) {
+                    binding.jidLayout.setError(getActivity().getString(R.string.invalid_jid));
+                    return;
+                }
+
+                final Jid contactJid;
+                try {
+                    contactJid = Jid.ofEscaped(jidString);
+                } catch (final IllegalArgumentException e) {
+                    binding.jidLayout.setError(getActivity().getString(R.string.invalid_jid));
+                    return;
+                }
+
+                if (!issuedWarning && sanityCheckJid) {
+                    if (contactJid.isDomainJid()) {
+                        binding.jidLayout.setError(getActivity().getString(R.string.this_looks_like_a_domain));
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
+                        issuedWarning = true;
+                        return;
+                    }
+                    if (suspiciousSubDomain(contactJid.getDomain().toEscapedString())) {
+                        binding.jidLayout.setError(getActivity().getString(R.string.this_looks_like_channel));
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
+                        issuedWarning = true;
+                        return;
+                    }
+                }
+
+                if (mListener != null) {
+                    try {
+                        if (mListener.onEnterJidDialogPositive(accountJid, contactJid)) {
+                            dialog.dismiss();
+                        }
+                    } catch (JidError error) {
+                        binding.jidLayout.setError(error.toString());
+                        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add);
+                        issuedWarning = false;
+                    }
+                }
+            });
+        };
+
+        Pair<String,Pair<Jid,Presence>> p = gatewayListAdapter.getSelected();
+        final String type = gatewayListAdapter.getSelectedType();
+
+        // Resolve based on local settings before submission
+        if (type.equals("pstn") || type.equals("sms")) {
+            try {
+                binding.jid.setText(PhoneNumberUtilWrapper.normalize(getActivity(), binding.jid.getText().toString()));
+            } catch (NumberParseException | NullPointerException e) { }
+        }
+
+        if (p == null) {
+            finish.onGatewayResult(binding.jid.getText().toString(), null);
+        } else if (p.first != null) { // Gateway already responsed to jabber:iq:gateway once
+            final Account acct = ((XmppActivity) getActivity()).xmppConnectionService.findAccountByJid(accountJid);
+            ((XmppActivity) getActivity()).xmppConnectionService.fetchFromGateway(acct, p.second.first, binding.jid.getText().toString(), finish);
+        } else if (p.second.first.isDomainJid() && p.second.second.getServiceDiscoveryResult().getFeatures().contains("jid\\20escaping")) {
+            finish.onGatewayResult(Jid.ofLocalAndDomain(binding.jid.getText().toString(), p.second.first.getDomain().toString()).toString(), null);
+        } else if (p.second.first.isDomainJid()) {
+            finish.onGatewayResult(Jid.ofLocalAndDomain(binding.jid.getText().toString().replace("@", "%"), p.second.first.getDomain().toString()).toString(), null);
+        } else {
+            finish.onGatewayResult(null, null);
         }
     }
 
@@ -275,5 +362,202 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         }
         final String[] parts = domain.split("\\.");
         return parts.length >= 3 && SUSPICIOUS_DOMAINS.contains(parts[0]);
+    }
+
+    protected class GatewayListAdapter extends RecyclerView.Adapter<GatewayListAdapter.ViewHolder> {
+        protected class ViewHolder extends RecyclerView.ViewHolder {
+            protected ToggleButton button;
+            protected int index;
+
+            public ViewHolder(View view, int i) {
+                super(view);
+                this.button = (ToggleButton) view.findViewById(R.id.button);
+                setIndex(i);
+                button.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        button.setChecked(true); // Force visual not to flap to unchecked
+                        setSelected(index);
+                    }
+                });
+            }
+
+            public void setIndex(int i) {
+                this.index = i;
+                button.setChecked(selected == i);
+            }
+
+            public void useButton(int res) {
+                button.setText(res);
+                button.setTextOff(button.getText());
+                button.setTextOn(button.getText());
+                button.setChecked(selected == this.index);
+                binding.gatewayList.setVisibility(View.VISIBLE);
+                button.setVisibility(View.VISIBLE);
+            }
+
+            public void useButton(String txt) {
+                button.setTextOff(txt);
+                button.setTextOn(txt);
+                button.setChecked(selected == this.index);
+                binding.gatewayList.setVisibility(View.VISIBLE);
+                button.setVisibility(View.VISIBLE);
+            }
+        }
+
+        protected List<Pair<Contact,String>> gateways = new ArrayList();
+        protected int selected = 0;
+        protected Runnable onEmpty = () -> {};
+        protected Runnable onNonEmpty = () -> {};
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.enter_jid_dialog_gateway_list_item, null);
+            return new ViewHolder(view, i);
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder viewHolder, int i) {
+            viewHolder.setIndex(i);
+
+            if(i == 0) {
+                viewHolder.useButton(R.string.account_settings_jabber_id);
+            } else {
+                viewHolder.useButton(getLabel(i));
+            }
+        }
+
+        @Override
+        public int getItemCount() {
+            return this.gateways.size() + 1;
+        }
+
+        public void setSelected(int i) {
+            int old = this.selected;
+            this.selected = i;
+
+            if(i == 0) {
+                binding.jid.setThreshold(1);
+                binding.jid.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS | InputType.TYPE_TEXT_FLAG_AUTO_COMPLETE);
+                binding.jidLayout.setHint(R.string.account_settings_jabber_id);
+
+                if(binding.jid.hasFocus()) {
+                    binding.jid.setHint(R.string.account_settings_example_jabber_id);
+                } else {
+                    DelayedHintHelper.setHint(R.string.account_settings_example_jabber_id, binding.jid);
+                }
+            } else {
+                binding.jid.setThreshold(999999); // do not autocomplete
+                binding.jid.setHint(null);
+                binding.jid.setOnFocusChangeListener((v, hasFocus) -> {});
+                binding.jidLayout.setHint(this.gateways.get(i-1).second);
+
+                String type = getType(i);
+                if (type.equals("pstn") || type.equals("sms")) {
+                    binding.jid.setInputType(InputType.TYPE_CLASS_PHONE);
+                } else if (type.equals("email") || type.equals("sip")) {
+                    binding.jid.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+
+                    if(binding.jid.hasFocus()) {
+                        binding.jid.setHint(R.string.account_settings_example_jabber_id);
+                    } else {
+                        DelayedHintHelper.setHint(R.string.account_settings_example_jabber_id, binding.jid);
+                    }
+                } else {
+                    binding.jid.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS);
+                }
+            }
+
+            notifyItemChanged(old);
+            notifyItemChanged(i);
+        }
+
+        public String getLabel(Contact gateway) {
+            String type = getType(gateway);
+            if (type != null) return type;
+
+            return gateway.getDisplayName();
+        }
+
+        public String getLabel(int i) {
+            if (i == 0) return null;
+
+            return getLabel(this.gateways.get(i-1).first);
+        }
+
+        public String getType(int i) {
+            if (i == 0) return null;
+
+            return getType(this.gateways.get(i-1).first);
+        }
+
+        public String getType(Contact gateway) {
+            for(Presence p : gateway.getPresences().getPresences()) {
+                ServiceDiscoveryResult.Identity id;
+                if(p.getServiceDiscoveryResult() != null && (id = p.getServiceDiscoveryResult().getIdentity("gateway", null)) != null) {
+                    return id.getType();
+                }
+            }
+
+            return null;
+        }
+
+        public String getSelectedType() {
+            return getType(selected);
+        }
+
+        public Pair<String, Pair<Jid,Presence>> getSelected() {
+            if(this.selected == 0) {
+                return null; // No gateway, just use direct JID entry
+            }
+
+            Pair<Contact,String> gateway = this.gateways.get(this.selected - 1);
+
+            Pair<Jid,Presence> presence = null;
+            for (Map.Entry<String,Presence> e : gateway.first.getPresences().getPresencesMap().entrySet()) {
+                Presence p = e.getValue();
+                if (p.getServiceDiscoveryResult() != null) {
+                    if (p.getServiceDiscoveryResult().getFeatures().contains("jabber:iq:gateway")) {
+                        if (e.getKey().equals("")) {
+                            presence = new Pair<>(gateway.first.getJid(), p);
+                        } else {
+                            presence = new Pair<>(gateway.first.getJid().withResource(e.getKey()), p);
+                        }
+                        break;
+                    }
+                    if (p.getServiceDiscoveryResult().hasIdentity("gateway", null)) {
+                        if (e.getKey().equals("")) {
+                            presence = new Pair<>(gateway.first.getJid(), p);
+                        } else {
+                            presence = new Pair<>(gateway.first.getJid().withResource(e.getKey()), p);
+                        }
+                    }
+                }
+            }
+
+            return presence == null ? null : new Pair(gateway.second, presence);
+        }
+
+        public void setOnEmpty(Runnable r) {
+            onEmpty = r;
+        }
+
+        public void setOnNonEmpty(Runnable r) {
+            onNonEmpty = r;
+        }
+
+        public void clear() {
+            gateways.clear();
+            onEmpty.run();
+            notifyDataSetChanged();
+            setSelected(0);
+        }
+
+        public void add(Contact gateway, String prompt) {
+            if (getItemCount() < 2) onNonEmpty.run();
+            this.gateways.add(new Pair<>(gateway, prompt));
+            Collections.sort(this.gateways, (x, y) -> getLabel(x.first).compareTo(getLabel(y.first)));
+            notifyDataSetChanged();
+        }
     }
 }

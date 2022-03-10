@@ -168,15 +168,19 @@ public class ServiceDiscoveryResult {
 		return this.features;
 	}
 
-	public boolean hasIdentity(String category, String type) {
+	public Identity getIdentity(String category, String type) {
 		for (Identity id : this.getIdentities()) {
 			if ((category == null || id.getCategory().equals(category)) &&
 					(type == null || id.getType().equals(type))) {
-				return true;
+				return id;
 			}
 		}
 
-		return false;
+		return null;
+	}
+
+	public boolean hasIdentity(String category, String type) {
+		return getIdentity(category, type) != null;
 	}
 
 	public String getExtendedDiscoInformation(String formType, String name) {
