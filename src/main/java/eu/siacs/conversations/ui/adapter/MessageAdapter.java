@@ -416,7 +416,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         viewHolder.download_button.setVisibility(View.GONE);
         viewHolder.image.setVisibility(View.GONE);
         viewHolder.audioPlayer.setVisibility(View.GONE);
-        viewHolder.messageBody.setVisibility(View.VISIBLE);
+        viewHolder.messageBody.setVisibility(View.GONE);
 
         if (darkBackground) {
             viewHolder.messageBody.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Body1_OnDark);
@@ -427,7 +427,8 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 ? (type == SENT || !mUseGreenBackground ? R.color.black26 : R.color.grey800) : R.color.grey500));
         viewHolder.messageBody.setTypeface(null, Typeface.NORMAL);
 
-        if (message.getBody() != null) {
+        if (message.getBody() != null && !message.getBody().equals("")) {
+            viewHolder.messageBody.setVisibility(View.VISIBLE);
             final String nick = UIHelper.getMessageDisplayName(message);
             SpannableStringBuilder body = message.getMergedBody();
             boolean hasMeCommand = message.hasMeCommand();
