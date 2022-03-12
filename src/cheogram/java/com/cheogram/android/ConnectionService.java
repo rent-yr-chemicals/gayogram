@@ -275,6 +275,13 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		}
 
 		@Override
+		public void onReject() {
+			this.rtpConnection = xmppConnectionService.getJingleConnectionManager().findJingleRtpConnection(account, with, sessionId);
+			rtpConnection.get().rejectCall();
+			setDisconnected(new DisconnectCause(DisconnectCause.LOCAL));
+		}
+
+		@Override
 		public void onDisconnect() {
 			if (rtpConnection == null || rtpConnection.get() == null) {
 				xmppConnectionService.getJingleConnectionManager().retractSessionProposal(account, with.asBareJid());
