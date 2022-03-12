@@ -150,6 +150,29 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		return connection;
 	}
 
+	@Override
+	public Connection onCreateIncomingConnection(PhoneAccountHandle handle, ConnectionRequest request) {
+		Bundle extras = request.getExtras();
+		String accountJid = extras.getString("account");
+		String withJid = extras.getString("with");
+		String sessionId = extras.getString("sessionId");
+
+		Account account = xmppConnectionService.findAccountByJid(Jid.of(accountJid));
+		Jid with = Jid.of(withJid);
+
+		CheogramConnection connection = new CheogramConnection(account, with, null);
+		connection.setSessionId(sessionId);
+		connection.setAddress(
+			Uri.fromParts("tel", with.getLocal(), null),
+			TelecomManager.PRESENTATION_ALLOWED
+		);
+		connection.setRinging();
+
+		xmppConnectionService.setOnRtpConnectionUpdateListener(connection);
+
+		return connection;
+	}
+
 	public class CheogramConnection extends Connection implements XmppConnectionService.OnJingleRtpConnectionUpdate {
 		protected Account account;
 		protected Jid with;
@@ -203,6 +226,8 @@ public class ConnectionService extends android.telecom.ConnectionService {
 				setInitialized();
 			} else if (state == RtpEndUserState.RINGING) {
 				setDialing();
+			} else if (state == RtpEndUserState.INCOMING_CALL) {
+				setRinging();
 			} else if (state == RtpEndUserState.CONNECTED) {
 				xmppConnectionService.setDiallerIntegrationActive(true);
 				setActive();
@@ -233,6 +258,15 @@ public class ConnectionService extends android.telecom.ConnectionService {
 				default:
 					setAudioRoute(CallAudioState.ROUTE_WIRED_OR_EARPIECE);
 			}
+		}
+
+		@Override
+		public void onAnswer() {
+			// For incoming calls, a connection update may not have been triggered before answering
+			// so we have to acquire the rtp connection object here
+			this.rtpConnection = xmppConnectionService.getJingleConnectionManager().findJingleRtpConnection(account, with, sessionId);
+
+			rtpConnection.get().acceptCall();
 		}
 
 		@Override
