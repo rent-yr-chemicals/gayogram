@@ -119,7 +119,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 				.withSmallIcon(R.drawable.ic_notification).build()
 		);
 
-		Set<String> permissions = new HashSet();
+		Set<String> permissions = new HashSet<>();
 		permissions.add(Manifest.permission.RECORD_AUDIO);
 		permissionManager.checkPermissions(permissions, new PermissionManager.PermissionRequestListener() {
 			@Override
@@ -154,7 +154,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		protected Account account;
 		protected Jid with;
 		protected String sessionId = null;
-		protected Stack<String> postDial = new Stack();
+		protected Stack<String> postDial = new Stack<>();
 		protected Icon gatewayIcon;
 		protected WeakReference<JingleRtpConnection> rtpConnection = null;
 
