@@ -5,9 +5,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
+import java.util.Vector;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
+import android.os.Build;
 import android.telecom.CallAudioState;
 import android.telecom.Connection;
 import android.telecom.ConnectionRequest;
@@ -246,6 +249,8 @@ public class ConnectionService extends android.telecom.ConnectionService {
 
 		@Override
 		public void onAudioDeviceChanged(AppRTCAudioManager.AudioDevice selectedAudioDevice, Set<AppRTCAudioManager.AudioDevice> availableAudioDevices) {
+			if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O) return;
+
 			switch(selectedAudioDevice) {
 				case SPEAKER_PHONE:
 					setAudioRoute(CallAudioState.ROUTE_SPEAKER);
@@ -310,9 +315,9 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			while (!postDial.empty()) {
 				String next = postDial.pop();
 				if (next.equals(";")) {
-					Stack v = (Stack) postDial.clone();
+					Vector<String> v = new Vector<>(postDial);
 					Collections.reverse(v);
-					setPostDialWait(String.join("", v));
+					setPostDialWait(Joiner.on("").join(v));
 					return;
 				} else if (next.equals(",")) {
 					sleep(2000);
