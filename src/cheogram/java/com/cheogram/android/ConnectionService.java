@@ -136,7 +136,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 
 			@Override
 			public void onPermissionDenied(DeniedPermissions deniedPermissions) {
-				connection.setDisconnected(new DisconnectCause(DisconnectCause.ERROR));
+				connection.close(new DisconnectCause(DisconnectCause.ERROR));
 			}
 		});
 
@@ -237,13 +237,13 @@ public class ConnectionService extends android.telecom.ConnectionService {
 
 				postDial();
 			} else if (state == RtpEndUserState.DECLINED_OR_BUSY) {
-				setDisconnected(new DisconnectCause(DisconnectCause.BUSY));
+				close(new DisconnectCause(DisconnectCause.BUSY));
 			} else if (state == RtpEndUserState.ENDED) {
-				setDisconnected(new DisconnectCause(DisconnectCause.LOCAL));
+				close(new DisconnectCause(DisconnectCause.LOCAL));
 			} else if (state == RtpEndUserState.RETRACTED) {
-				setDisconnected(new DisconnectCause(DisconnectCause.CANCELED));
+				close(new DisconnectCause(DisconnectCause.CANCELED));
 			} else if (RtpSessionActivity.END_CARD.contains(state)) {
-				setDisconnected(new DisconnectCause(DisconnectCause.ERROR));
+				close(new DisconnectCause(DisconnectCause.ERROR));
 			}
 		}
 
@@ -278,21 +278,27 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		public void onReject() {
 			this.rtpConnection = xmppConnectionService.getJingleConnectionManager().findJingleRtpConnection(account, with, sessionId);
 			rtpConnection.get().rejectCall();
-			setDisconnected(new DisconnectCause(DisconnectCause.LOCAL));
+			close(new DisconnectCause(DisconnectCause.LOCAL));
+		}
+
+		// Set the connection to the disconnected state and clean up the resources
+		// Note that we cannot do this from onStateChanged() because calling destroy
+		// there seems to trigger a deadlock somewhere in the telephony stack.
+		public void close(DisconnectCause reason) {
+			setDisconnected(reason);
+			destroy();
+			xmppConnectionService.setDiallerIntegrationActive(false);
+			xmppConnectionService.removeRtpConnectionUpdateListener(this);
 		}
 
 		@Override
 		public void onDisconnect() {
 			if (rtpConnection == null || rtpConnection.get() == null) {
 				xmppConnectionService.getJingleConnectionManager().retractSessionProposal(account, with.asBareJid());
+				close(new DisconnectCause(DisconnectCause.LOCAL));
 			} else {
 				rtpConnection.get().endCall();
 			}
-			destroy();
-			xmppConnectionService.setDiallerIntegrationActive(false);
-			xmppConnectionService.removeRtpConnectionUpdateListener(
-				(XmppConnectionService.OnJingleRtpConnectionUpdate) this
-			);
 		}
 
 		@Override
