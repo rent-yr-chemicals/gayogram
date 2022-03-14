@@ -5,9 +5,12 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
+import java.util.Vector;
 
+import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
 
+import android.os.Build;
 import android.telecom.CallAudioState;
 import android.telecom.Connection;
 import android.telecom.ConnectionRequest;
@@ -119,7 +122,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 				.withSmallIcon(R.drawable.ic_notification).build()
 		);
 
-		Set<String> permissions = new HashSet();
+		Set<String> permissions = new HashSet<>();
 		permissions.add(Manifest.permission.RECORD_AUDIO);
 		permissionManager.checkPermissions(permissions, new PermissionManager.PermissionRequestListener() {
 			@Override
@@ -133,7 +136,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 
 			@Override
 			public void onPermissionDenied(DeniedPermissions deniedPermissions) {
-				connection.setDisconnected(new DisconnectCause(DisconnectCause.ERROR));
+				connection.close(new DisconnectCause(DisconnectCause.ERROR));
 			}
 		});
 
@@ -150,11 +153,34 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		return connection;
 	}
 
+	@Override
+	public Connection onCreateIncomingConnection(PhoneAccountHandle handle, ConnectionRequest request) {
+		Bundle extras = request.getExtras();
+		String accountJid = extras.getString("account");
+		String withJid = extras.getString("with");
+		String sessionId = extras.getString("sessionId");
+
+		Account account = xmppConnectionService.findAccountByJid(Jid.of(accountJid));
+		Jid with = Jid.of(withJid);
+
+		CheogramConnection connection = new CheogramConnection(account, with, null);
+		connection.setSessionId(sessionId);
+		connection.setAddress(
+			Uri.fromParts("tel", with.getLocal(), null),
+			TelecomManager.PRESENTATION_ALLOWED
+		);
+		connection.setRinging();
+
+		xmppConnectionService.setOnRtpConnectionUpdateListener(connection);
+
+		return connection;
+	}
+
 	public class CheogramConnection extends Connection implements XmppConnectionService.OnJingleRtpConnectionUpdate {
 		protected Account account;
 		protected Jid with;
 		protected String sessionId = null;
-		protected Stack<String> postDial = new Stack();
+		protected Stack<String> postDial = new Stack<>();
 		protected Icon gatewayIcon;
 		protected WeakReference<JingleRtpConnection> rtpConnection = null;
 
@@ -203,24 +229,28 @@ public class ConnectionService extends android.telecom.ConnectionService {
 				setInitialized();
 			} else if (state == RtpEndUserState.RINGING) {
 				setDialing();
+			} else if (state == RtpEndUserState.INCOMING_CALL) {
+				setRinging();
 			} else if (state == RtpEndUserState.CONNECTED) {
 				xmppConnectionService.setDiallerIntegrationActive(true);
 				setActive();
 
 				postDial();
 			} else if (state == RtpEndUserState.DECLINED_OR_BUSY) {
-				setDisconnected(new DisconnectCause(DisconnectCause.BUSY));
+				close(new DisconnectCause(DisconnectCause.BUSY));
 			} else if (state == RtpEndUserState.ENDED) {
-				setDisconnected(new DisconnectCause(DisconnectCause.LOCAL));
+				close(new DisconnectCause(DisconnectCause.LOCAL));
 			} else if (state == RtpEndUserState.RETRACTED) {
-				setDisconnected(new DisconnectCause(DisconnectCause.CANCELED));
+				close(new DisconnectCause(DisconnectCause.CANCELED));
 			} else if (RtpSessionActivity.END_CARD.contains(state)) {
-				setDisconnected(new DisconnectCause(DisconnectCause.ERROR));
+				close(new DisconnectCause(DisconnectCause.ERROR));
 			}
 		}
 
 		@Override
 		public void onAudioDeviceChanged(AppRTCAudioManager.AudioDevice selectedAudioDevice, Set<AppRTCAudioManager.AudioDevice> availableAudioDevices) {
+			if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O) return;
+
 			switch(selectedAudioDevice) {
 				case SPEAKER_PHONE:
 					setAudioRoute(CallAudioState.ROUTE_SPEAKER);
@@ -236,17 +266,39 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		}
 
 		@Override
+		public void onAnswer() {
+			// For incoming calls, a connection update may not have been triggered before answering
+			// so we have to acquire the rtp connection object here
+			this.rtpConnection = xmppConnectionService.getJingleConnectionManager().findJingleRtpConnection(account, with, sessionId);
+
+			rtpConnection.get().acceptCall();
+		}
+
+		@Override
+		public void onReject() {
+			this.rtpConnection = xmppConnectionService.getJingleConnectionManager().findJingleRtpConnection(account, with, sessionId);
+			rtpConnection.get().rejectCall();
+			close(new DisconnectCause(DisconnectCause.LOCAL));
+		}
+
+		// Set the connection to the disconnected state and clean up the resources
+		// Note that we cannot do this from onStateChanged() because calling destroy
+		// there seems to trigger a deadlock somewhere in the telephony stack.
+		public void close(DisconnectCause reason) {
+			setDisconnected(reason);
+			destroy();
+			xmppConnectionService.setDiallerIntegrationActive(false);
+			xmppConnectionService.removeRtpConnectionUpdateListener(this);
+		}
+
+		@Override
 		public void onDisconnect() {
 			if (rtpConnection == null || rtpConnection.get() == null) {
 				xmppConnectionService.getJingleConnectionManager().retractSessionProposal(account, with.asBareJid());
+				close(new DisconnectCause(DisconnectCause.LOCAL));
 			} else {
 				rtpConnection.get().endCall();
 			}
-			destroy();
-			xmppConnectionService.setDiallerIntegrationActive(false);
-			xmppConnectionService.removeRtpConnectionUpdateListener(
-				(XmppConnectionService.OnJingleRtpConnectionUpdate) this
-			);
 		}
 
 		@Override
@@ -276,9 +328,9 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			while (!postDial.empty()) {
 				String next = postDial.pop();
 				if (next.equals(";")) {
-					Stack v = (Stack) postDial.clone();
+					Vector<String> v = new Vector<>(postDial);
 					Collections.reverse(v);
-					setPostDialWait(String.join("", v));
+					setPostDialWait(Joiner.on("").join(v));
 					return;
 				} else if (next.equals(",")) {
 					sleep(2000);

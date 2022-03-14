@@ -1,5 +1,6 @@
 package eu.siacs.conversations.services;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -8,6 +9,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
@@ -16,9 +18,12 @@ import android.media.Ringtone;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.os.Vibrator;
 import android.preference.PreferenceManager;
+import android.telecom.PhoneAccountHandle;
+import android.telecom.TelecomManager;
 import android.text.SpannableString;
 import android.text.style.StyleSpan;
 import android.util.DisplayMetrics;
@@ -423,7 +428,63 @@ public class NotificationService {
         notify(DELIVERY_FAILED_NOTIFICATION_ID, summaryNotification);
     }
 
+    private synchronized boolean tryRingingWithDialerUI(final AbstractJingleConnection.Id id, final Set<Media> media) {
+        if (mXmppConnectionService.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            // We cannot request audio permission in Dialer UI
+            // when Dialer is shown over keyguard, the user cannot even necessarily
+            // see notifications.
+            return false;
+        }
+
+        if (media.size() != 1 || !media.contains(Media.AUDIO)) {
+            // Currently our ConnectionService only handles single audio calls
+            Log.w(Config.LOGTAG, "only audio calls can be handled by cheogram connection service");
+            return false;
+        }
+
+        PhoneAccountHandle handle = null;
+        for (Contact contact : id.account.getRoster().getContacts()) {
+            if (!contact.getJid().getDomain().equals(id.with.getDomain())) {
+                continue;
+            }
+
+            if (!contact.getPresences().anyIdentity("gateway", "pstn")) {
+                continue;
+            }
+
+            handle = contact.phoneAccountHandle();
+            break;
+        }
+
+        if (handle == null) {
+            Log.w(Config.LOGTAG, "Could not find phone account handle for " + id.account.getJid().toString());
+            return false;
+        }
+
+        Bundle callInfo = new Bundle();
+        callInfo.putString("account", id.account.getJid().toString());
+        callInfo.putString("with", id.with.toString());
+        callInfo.putString("sessionId", id.sessionId);
+
+        TelecomManager telecomManager = mXmppConnectionService.getSystemService(TelecomManager.class);
+
+        try {
+            telecomManager.addNewIncomingCall(handle, callInfo);
+        } catch (SecurityException e) {
+            // If the account is not registered or enabled, it could result in a security exception
+            // Just fall back to the built-in UI in this case.
+            Log.w(Config.LOGTAG, e);
+            return false;
+        }
+
+        return true;
+    }
+
     public synchronized void startRinging(final AbstractJingleConnection.Id id, final Set<Media> media) {
+        if (tryRingingWithDialerUI(id, media)) {
+            return;
+        }
+
         showIncomingCallNotification(id, media);
         final NotificationManager notificationManager = (NotificationManager) mXmppConnectionService.getSystemService(Context.NOTIFICATION_SERVICE);
         final int currentInterruptionFilter;
