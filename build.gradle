@@ -49,6 +49,13 @@ configurations {
 }
 
 dependencies {
+    androidTestImplementation 'tools.fastlane:screengrab:2.1.1'
+    androidTestImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.3.0'
+    androidTestImplementation 'androidx.test:rules:1.3.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
     implementation 'androidx.viewpager:viewpager:1.0.0'
 
     playstoreImplementation('com.google.firebase:firebase-messaging:23.0.0') {
