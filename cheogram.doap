@@ -26,6 +26,7 @@
 
 	<schema:logo rdf:resource="https://git.singpolyma.net/cheogram-android/blob/master/art/ic_launcher.svg"/>
 	<schema:screenshot rdf:resource='https://git.singpolyma.net/cheogram-android/blob/master/fastlane/metadata/android/en_US/images/phoneScreenshots/conversation.png'/>
+	<schema:screenshot rdf:resource='https://git.singpolyma.net/cheogram-android/blob/master/fastlane/metadata/android/en_US/images/phoneScreenshots/dialler.png'/>
 
 	<programming-language>Java</programming-language>
 
