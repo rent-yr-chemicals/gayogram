@@ -528,15 +528,12 @@ public final class MimeUtils {
 
     public static String guessMimeTypeFromUriAndMime(final Context context, final Uri uri, final String mime) {
         Log.d(Config.LOGTAG, "guessMimeTypeFromUriAndMime " + uri + " and mime=" + mime);
-        if (mime == null || mime.equals("application/octet-stream")) {
-            final String guess = guessMimeTypeFromUri(context, uri);
-            if (guess != null) {
-                return guess;
-            } else {
-                return mime;
-            }
+        final String guess = guessMimeTypeFromUri(context, uri);
+        if (guess != null) {
+            return guess;
+        } else {
+            return mime;
         }
-        return guessMimeTypeFromUri(context, uri);
     }
 
     public static String guessMimeTypeFromUri(Context context, Uri uri) {

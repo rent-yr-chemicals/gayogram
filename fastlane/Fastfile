@@ -1,0 +1,38 @@
+# This file contains the fastlane.tools configuration
+# You can find the documentation at https://docs.fastlane.tools
+#
+# For a list of all available actions, check out
+#
+#		 https://docs.fastlane.tools/actions
+#
+# For a list of all available plugins, check out
+#
+#		 https://docs.fastlane.tools/plugins/available-plugins
+#
+
+# Uncomment the line if you want fastlane to automatically update itself
+# update_fastlane
+
+default_platform(:android)
+
+platform :android do
+	desc "Build debug and test APK for screenshots"
+	lane :build_for_screengrab do
+		build_android_app(
+			task: 'assemble',
+			flavor: 'CheogramFree',
+			build_type: 'Debug'
+		)
+		build_android_app(
+			task: 'assemble',
+			flavor: 'CheogramFree',
+			build_type: 'DebugAndroidTest'
+		)
+	end
+
+	desc "Build and take screenshots"
+	lane :build_and_screengrab do
+		build_for_screengrab
+		capture_android_screenshots
+	end
+end
