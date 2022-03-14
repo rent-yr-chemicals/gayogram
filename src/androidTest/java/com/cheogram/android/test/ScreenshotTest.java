@@ -42,6 +42,7 @@ import eu.siacs.conversations.services.XmppConnectionService.XmppConnectionBinde
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.test.R;
 import eu.siacs.conversations.ui.ConversationsActivity;
+import eu.siacs.conversations.ui.StartConversationActivity;
 import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.pep.Avatar;
@@ -83,6 +84,7 @@ public class ScreenshotTest {
 
 		Contact cheogram = account.getRoster().getContact(Jid.of("cheogram.com"));
 		cheogram.setOption(Contact.Options.IN_ROSTER);
+		cheogram.setPhotoUri("android.resource://" + pkg + "/" + String.valueOf(R.drawable.cheogram));
 		Presence cheogramPresence = Presence.parse(null, null, "");
 		IqPacket discoPacket = new IqPacket(IqPacket.TYPE.RESULT);
 		Element query = discoPacket.addChild("query", "http://jabber.org/protocol/disco#info");
@@ -98,11 +100,8 @@ public class ScreenshotTest {
 		CleanStatusBar.disable();
 	}
 
-	@Rule
-	public ActivityScenarioRule<ConversationsActivity> activityRule = new ActivityScenarioRule<>(ConversationsActivity.class);
-
 	@Test
-	public void testTakeScreenshot() throws FileBackend.FileCopyException, InterruptedException {
+	public void testConversation() throws FileBackend.FileCopyException, InterruptedException {
 		Conversation conversation = xmppConnectionService.findOrCreateConversation(account, Jid.of("+15550737737@cheogram.com"), false, false);
 		conversation.getContact().setOption(Contact.Options.IN_ROSTER);
 		conversation.getContact().setSystemName("Pepper");
@@ -135,12 +134,20 @@ public class ScreenshotTest {
 			new Message(conversation, "👍", 0, Message.STATUS_RECEIVED)
 		));
 
-		ActivityScenario scenario = activityRule.getScenario();
+		ActivityScenario scenario = ActivityScenario.launch(ConversationsActivity.class);
 		scenario.onActivity((Activity activity) -> {
 			((ConversationsActivity) activity).switchToConversation(conversation);
 		});
 		InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 		Thread.sleep(100); // ImageView not paited yet after waitForIdleSync
 		Screengrab.screenshot("conversation");
+	}
+
+	@Test
+	public void testStartConversation() throws InterruptedException {
+		ActivityScenario scenario = ActivityScenario.launch(StartConversationActivity.class);
+		InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+		Thread.sleep(100); // ImageView not paited yet after waitForIdleSync
+		Screengrab.screenshot("startConversation");
 	}
 }
