@@ -1,1 +1,0 @@
-* fix HTTP up/download for users that don’t trust system CAs

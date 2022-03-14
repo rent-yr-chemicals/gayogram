@@ -1,1 +1,0 @@
-* Fixed 'No Connectivity' issues on Android 7.1
