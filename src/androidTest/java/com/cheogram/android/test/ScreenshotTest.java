@@ -25,6 +25,9 @@ import androidx.test.core.app.ApplicationProvider;
 import androidx.test.ext.junit.rules.ActivityScenarioRule;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 import androidx.test.rule.ServiceTestRule;
+import static androidx.test.espresso.Espresso.onView;
+import static androidx.test.espresso.action.ViewActions.click;
+import static androidx.test.espresso.matcher.ViewMatchers.withId;
 
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.cleanstatusbar.CleanStatusBar;
@@ -149,5 +152,18 @@ public class ScreenshotTest {
 		InstrumentationRegistry.getInstrumentation().waitForIdleSync();
 		Thread.sleep(100); // ImageView not paited yet after waitForIdleSync
 		Screengrab.screenshot("startConversation");
+	}
+
+	@Test
+	public void testAddContact() throws InterruptedException {
+		ActivityScenario scenario = ActivityScenario.launch(StartConversationActivity.class);
+		onView(withId(eu.siacs.conversations.R.id.speed_dial)).perform(click());
+		Screengrab.screenshot("startConversationOptions");
+
+		// Not actually online, so can't screenshot the gateway selector yet
+		/*onView(withId(eu.siacs.conversations.R.id.create_contact)).perform(click());
+		InstrumentationRegistry.getInstrumentation().waitForIdleSync();
+		Thread.sleep(10000); // ImageView not paited yet after waitForIdleSync
+		Screengrab.screenshot("addContact");*/
 	}
 }
