@@ -1,6 +1,6 @@
 The Cheogram Android app allows you to join a worldwide communication network.  It especially focuses on features useful to users who want to contact those on other networks as well, such as SMS-enabled phone numbers.
 
-Unique Features:
+Based on the app Conversations, but with unique features:
 
 * Messages with both media and text, including animated media
 * Unobtrusive display of subject lines, where present
