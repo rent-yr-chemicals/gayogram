@@ -5,6 +5,8 @@ Based on the app Conversations, but with unique features:
 * Messages with both media and text, including animated media
 * Unobtrusive display of subject lines, where present
 * Links to known contacts are shown with their name
+* Show timestamps for calls
+* Missed call notifications
 * Integrates with gateways' add contact flows
 * When using a gateway to the phone network, integrate with the native Android Phone app
 * Address book integration
