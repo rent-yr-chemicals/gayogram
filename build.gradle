@@ -74,8 +74,8 @@ dependencies {
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'com.google.android.material:material:1.4.0'
 
-    implementation "androidx.emoji2:emoji2:1.1.0-rc01"
-    freeImplementation "androidx.emoji2:emoji2-bundled:1.1.0-rc01"
+    implementation "androidx.emoji2:emoji2:1.1.0"
+    freeImplementation "androidx.emoji2:emoji2-bundled:1.1.0"
 
     implementation 'org.bouncycastle:bcmail-jdk15on:1.64'
     //zxing stopped supporting Java 7 so we have to stick with 3.3.3
@@ -88,8 +88,8 @@ dependencies {
     implementation "com.wefika:flowlayout:0.4.1"
     implementation 'com.otaliastudios:transcoder:0.10.4'
 
-    implementation 'org.jxmpp:jxmpp-jid:1.0.2'
-    implementation 'org.osmdroid:osmdroid-android:6.1.10'
+    implementation 'org.jxmpp:jxmpp-jid:1.0.3'
+    implementation 'org.osmdroid:osmdroid-android:6.1.11'
     implementation 'org.hsluv:hsluv:0.2'
     implementation 'org.conscrypt:conscrypt-android:2.5.2'
     implementation 'me.drakeet.support:toastcompat:1.1.0'
@@ -117,8 +117,8 @@ android {
     compileSdkVersion 31
 
     defaultConfig {
-        minSdkVersion 24
-        targetSdkVersion 29
+        minSdkVersion 21
+        targetSdkVersion 30
         versionCode 42024 + grgit.tag.list().size()
         versionName grgit.describe(tags: true, always: true)
         applicationId "eu.siacs.conversations"
