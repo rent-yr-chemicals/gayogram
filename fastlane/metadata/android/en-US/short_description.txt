@@ -1,1 +1,1 @@
-A user friendly chat client for the Jabber network (using the XMPP protocol) with a focus on features for gateway users.
+Chat on the Jabber network (XMPP protocol); focus on features for gateway users
