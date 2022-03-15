@@ -1,0 +1,5 @@
+locales ['en-US']
+clear_previous_screenshots true
+tests_apk_path 'build/outputs/apk/androidTest/cheogramFree/debug/Conversations-cheogram-free-debug-androidTest.apk'
+app_apk_path 'build/outputs/apk/cheogramFree/debug/Conversations-cheogram-free-debug.apk'
+test_instrumentation_runner 'androidx.test.runner.AndroidJUnitRunner'

@@ -121,12 +121,12 @@ android {
         targetSdkVersion 29
         versionCode 42024 + grgit.tag.list().size()
         versionName grgit.describe(tags: true, always: true)
-        archivesBaseName += "-$versionName"
         applicationId "eu.siacs.conversations"
         resValue "string", "applicationId", applicationId
         def appName = "Conversations"
         resValue "string", "app_name", appName
         buildConfigField "String", "APP_NAME", "\"$appName\"";
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
 
