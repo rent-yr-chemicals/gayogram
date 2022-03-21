@@ -249,7 +249,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 
 		@Override
 		public void onAudioDeviceChanged(AppRTCAudioManager.AudioDevice selectedAudioDevice, Set<AppRTCAudioManager.AudioDevice> availableAudioDevices) {
-			if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.O) return;
+			if (Build.VERSION.SDK_INT < 26) return;
 
 			switch(selectedAudioDevice) {
 				case SPEAKER_PHONE:
