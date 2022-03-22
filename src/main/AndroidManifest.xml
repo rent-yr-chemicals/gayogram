@@ -74,7 +74,7 @@
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />
 
-        <service android:name=".services.XmppConnectionService" />
+        <service android:name=".services.XmppConnectionService" android:foregroundServiceType="microphone" />
 
         <receiver android:name=".services.EventReceiver">
             <intent-filter>
