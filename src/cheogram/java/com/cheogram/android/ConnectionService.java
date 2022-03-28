@@ -99,7 +99,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		String tel = PhoneNumberUtils.extractNetworkPortion(rawTel);
 		try {
 			tel = PhoneNumberUtilWrapper.normalize(this, tel);
-		} catch (NumberParseException e) {
+		} catch (IllegalArgumentException | NumberParseException e) {
 			return Connection.createFailedConnection(
 				new DisconnectCause(DisconnectCause.ERROR)
 			);
