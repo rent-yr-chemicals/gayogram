@@ -453,6 +453,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                 binding.jidLayout.setHint(this.gateways.get(i-1).second);
 
                 String type = getType(i);
+                if (type == null) type = "";
                 if (type.equals("pstn") || type.equals("sms")) {
                     binding.jid.setInputType(InputType.TYPE_CLASS_PHONE);
                 } else if (type.equals("email") || type.equals("sip")) {
