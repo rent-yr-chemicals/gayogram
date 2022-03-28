@@ -112,6 +112,12 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		}
 
 		Account account = xmppConnectionService.findAccountByJid(Jid.of(gateway[0]));
+		if (account == null) {
+			return Connection.createFailedConnection(
+				new DisconnectCause(DisconnectCause.ERROR)
+			);
+		}
+
 		Jid with = Jid.ofLocalAndDomain(tel, gateway[1]);
 		CheogramConnection connection = new CheogramConnection(account, with, postDial);
 
