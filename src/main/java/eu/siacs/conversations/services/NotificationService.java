@@ -429,6 +429,8 @@ public class NotificationService {
     }
 
     private synchronized boolean tryRingingWithDialerUI(final AbstractJingleConnection.Id id, final Set<Media> media) {
+        if (Build.VERSION.SDK_INT < 23) return false;
+
         if (mXmppConnectionService.checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
             // We cannot request audio permission in Dialer UI
             // when Dialer is shown over keyguard, the user cannot even necessarily

@@ -3,6 +3,7 @@ package eu.siacs.conversations.ui;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.security.KeyChain;
 import android.security.KeyChainAliasCallback;
@@ -85,6 +86,8 @@ public class ManageAccountActivity extends XmppActivity implements OnAccountUpda
         findViewById(R.id.phone_accounts_settings).setOnClickListener((View v) -> {
             startActivity(new Intent(android.telecom.TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS));
         });
+
+        if (Build.VERSION.SDK_INT < 23) return;
 
         outer:
         for (Account account : xmppConnectionService.getAccounts()) {
