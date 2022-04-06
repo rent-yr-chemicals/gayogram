@@ -159,10 +159,11 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
             @Override
             public void onItemSelected(AdapterView accountSpinner, View view, int position, long id) {
                 XmppActivity context = (XmppActivity) getActivity();
-                if (context.xmppConnectionService == null || accountJid() == null) return;
+                if (context == null || context.xmppConnectionService == null || accountJid() == null) return;
 
                 gatewayListAdapter.clear();
                 final Account account = context.xmppConnectionService.findAccountByJid(accountJid());
+                if (account == null) return;
 
                 for (final Contact contact : account.getRoster().getContacts()) {
                     if (contact.showInRoster() && (contact.getPresences().anyIdentity("gateway", null) || contact.getPresences().anySupport("jabber:iq:gateway"))) {
