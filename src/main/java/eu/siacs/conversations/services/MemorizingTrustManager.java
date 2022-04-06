@@ -428,7 +428,7 @@ public class MemorizingTrustManager {
     private List<String> getPoshFingerprintsFromServer(String domain, String url, int maxTtl, boolean followUrl) {
         Log.d(Config.LOGTAG, "downloading json for " + domain + " from " + url);
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(master);
-        final boolean useTor = QuickConversationsService.isConversations() && preferences.getBoolean("use_tor", master.getResources().getBoolean(R.bool.use_tor));
+        final boolean useTor = preferences.getBoolean("use_tor", master.getResources().getBoolean(R.bool.use_tor));
         try {
             final List<String> results = new ArrayList<>();
             final InputStream inputStream = HttpConnectionManager.open(url, useTor);

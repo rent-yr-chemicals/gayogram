@@ -459,7 +459,7 @@ public abstract class XmppActivity extends ActionBarActivity {
     }
 
     private boolean useTor() {
-        return QuickConversationsService.isConversations() && getBooleanPreference("use_tor", R.bool.use_tor);
+        return getBooleanPreference("use_tor", R.bool.use_tor);
     }
 
     protected SharedPreferences getPreferences() {
