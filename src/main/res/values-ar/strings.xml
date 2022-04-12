@@ -140,7 +140,7 @@
     <string name="account_status_incompatible_server">لا يتوافق مع السيرفر</string>
     <string name="account_status_stream_error">خطأ في التدفق</string>
     <string name="account_status_stream_opening_error">خطأ عند فتح التدفق</string>
-    <string name="encryption_choice_unencrypted">غير مشفر</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">رسالة مشفرة عبر OTR</string>
     <string name="encryption_choice_pgp">رسالة مشفرة عبر OpenPGP</string>
     <string name="encryption_choice_omemo">أوميمو OMEMO</string>

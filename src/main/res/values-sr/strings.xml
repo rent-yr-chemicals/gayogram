@@ -171,7 +171,7 @@
     <string name="account_status_incompatible_server">Некомпатибилан сервер</string>
     <string name="account_status_stream_error">Грешка тока</string>
     <string name="account_status_stream_opening_error">Грешка при отварању тока</string>
-    <string name="encryption_choice_unencrypted">Нешифровано</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">ОТР</string>
     <string name="encryption_choice_pgp">ОпенПГП</string>
     <string name="encryption_choice_omemo">ОМЕМО</string>

@@ -544,7 +544,7 @@ public class UIHelper {
         switch (conversation.getNextEncryption()) {
             case Message.ENCRYPTION_NONE:
                 if (Config.multipleEncryptionChoices()) {
-                    return context.getString(R.string.send_unencrypted_message);
+                    return context.getString(R.string.send_message);
                 } else {
                     return context.getString(R.string.send_message_to_x, conversation.getName());
                 }

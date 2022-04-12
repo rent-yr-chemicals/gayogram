@@ -161,7 +161,7 @@
     <string name="account_status_incompatible_server">Server tidak cocok</string>
     <string name="account_status_stream_error">Kesalahan stream</string>
     <string name="account_status_stream_opening_error">Kesalahan pembukaan stream</string>
-    <string name="encryption_choice_unencrypted">Tidak terenkripsi</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

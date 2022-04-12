@@ -156,7 +156,7 @@
     <string name="account_status_incompatible_server">Несумісний сервер</string>
     <string name="account_status_stream_error">Помилка потоку</string>
     <string name="account_status_stream_opening_error">Не вдалося відкрити мережевий потік</string>
-    <string name="encryption_choice_unencrypted">Без шифрування</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

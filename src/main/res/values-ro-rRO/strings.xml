@@ -175,7 +175,7 @@
     <string name="account_status_incompatible_server">Server incompatibil</string>
     <string name="account_status_stream_error">Eroare de date</string>
     <string name="account_status_stream_opening_error">Eroare deschidere flux de date</string>
-    <string name="encryption_choice_unencrypted">Necriptat</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenGPG</string>
     <string name="encryption_choice_omemo">OMEMO</string>

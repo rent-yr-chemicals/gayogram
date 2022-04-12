@@ -169,7 +169,7 @@
     <string name="account_status_incompatible_server">Máy chủ không tương thích</string>
     <string name="account_status_stream_error">Lỗi truyền phát</string>
     <string name="account_status_stream_opening_error">Lỗi khi mở luồng truyền</string>
-    <string name="encryption_choice_unencrypted">Không mã hoá</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

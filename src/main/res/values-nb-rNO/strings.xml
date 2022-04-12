@@ -122,7 +122,7 @@
     <string name="account_status_policy_violation">Praksisbrudd</string>
     <string name="account_status_incompatible_server">Ukompatibel tjener</string>
     <string name="account_status_stream_error">Strømmingsfeil</string>
-    <string name="encryption_choice_unencrypted">Ukryptert</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

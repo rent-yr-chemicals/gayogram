@@ -102,9 +102,7 @@ public class ConversationMenuConfigurator {
 			return;
 		}
 
-		if (conversation.getNextEncryption() != Message.ENCRYPTION_NONE) {
-			menuSecure.setIcon(R.drawable.ic_lock_white_24dp);
-		}
+		menuSecure.setIcon(R.drawable.ic_lock_white_24dp);
 
 		pgp.setVisible(Config.supportOpenPgp());
 		none.setVisible(Config.supportUnencrypted() || conversation.getMode() == Conversation.MODE_MULTI);

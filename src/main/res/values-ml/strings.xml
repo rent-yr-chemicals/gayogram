@@ -112,7 +112,7 @@
     <string name="account_status_regis_conflict">ഉപയോക്തൃനാമം ഇതിനകം നിലവിലുണ്ട്</string>
     <string name="account_status_regis_success">രജിസ്ട്രേഷൻ പൂർത്തിയായി</string>
     <string name="account_status_policy_violation">നയ ലംഘനം</string>
-    <string name="encryption_choice_unencrypted">സുരക്ഷിതമല്ലാത്ത</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

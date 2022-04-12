@@ -172,7 +172,7 @@
     <string name="account_status_incompatible_server">Несъвместим сървър</string>
     <string name="account_status_stream_error">Поточна грешка</string>
     <string name="account_status_stream_opening_error">Проблем при отварянето на потока</string>
-    <string name="encryption_choice_unencrypted">Нешифровано</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

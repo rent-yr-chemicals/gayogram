@@ -172,7 +172,7 @@
     <string name="account_status_incompatible_server">Servidor incompatible</string>
     <string name="account_status_stream_error">Error de flujo</string>
     <string name="account_status_stream_opening_error">Error al abrir la secuencia</string>
-    <string name="encryption_choice_unencrypted">Sin cifrado</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

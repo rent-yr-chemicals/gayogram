@@ -164,7 +164,7 @@
     <string name="account_status_incompatible_server">Servidor incompatible</string>
     <string name="account_status_stream_error">Error de transmissió</string>
     <string name="account_status_stream_opening_error">Error d\'obertura de la transmissió</string>
-    <string name="encryption_choice_unencrypted">Sense xifrar</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

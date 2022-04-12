@@ -178,7 +178,7 @@
     <string name="account_status_incompatible_server">Несовместимый сервер</string>
     <string name="account_status_stream_error">Ошибка потока</string>
     <string name="account_status_stream_opening_error">Ошибка открытия потока</string>
-    <string name="encryption_choice_unencrypted">Без шифра</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

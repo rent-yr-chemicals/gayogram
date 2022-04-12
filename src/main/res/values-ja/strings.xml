@@ -169,7 +169,7 @@
     <string name="account_status_incompatible_server">互換性のないサーバー</string>
     <string name="account_status_stream_error">ストリーム エラー</string>
     <string name="account_status_stream_opening_error">ストリームを開く際にエラー</string>
-    <string name="encryption_choice_unencrypted">暗号化されていない</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

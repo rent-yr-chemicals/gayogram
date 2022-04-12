@@ -172,7 +172,7 @@
     <string name="account_status_incompatible_server">Servidor incompatível</string>
     <string name="account_status_stream_error">Erro de fluxo</string>
     <string name="account_status_stream_opening_error">Erro na abertura do fluxo</string>
-    <string name="encryption_choice_unencrypted">Descriptografada</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

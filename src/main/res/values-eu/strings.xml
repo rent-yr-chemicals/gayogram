@@ -135,7 +135,7 @@
     <string name="account_status_incompatible_server">Zerbitzari ez bateragarria</string>
     <string name="account_status_stream_error">Akatsa korrontean</string>
     <string name="account_status_stream_opening_error">Akatsa korrontea irekitzerakoan</string>
-    <string name="encryption_choice_unencrypted">Enkriptatu gabe</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>

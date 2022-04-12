@@ -115,7 +115,7 @@
     <string name="account_status_policy_violation">違反政策</string>
     <string name="account_status_incompatible_server">伺服器不相容</string>
     <string name="account_status_stream_error">流錯誤</string>
-    <string name="encryption_choice_unencrypted">未加密</string>
+    <string name="encryption_choice_unencrypted">TLS</string>
     <string name="encryption_choice_otr">OTR</string>
     <string name="encryption_choice_pgp">OpenPGP</string>
     <string name="encryption_choice_omemo">OMEMO</string>
