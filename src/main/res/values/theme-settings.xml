@@ -5,10 +5,12 @@
     <string-array name="themes">
         <item>@string/pref_theme_light</item>
         <item>@string/pref_theme_dark</item>
+        <item>@string/pref_theme_obsidian</item>
     </string-array>
     <string-array name="themes_values">
 		<item>light</item>
 		<item>dark</item>
+		<item>obsidian</item>
 	</string-array>
 
 </resources>

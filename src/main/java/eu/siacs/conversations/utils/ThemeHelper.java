@@ -52,14 +52,18 @@ public class ThemeHelper {
 	public static int find(final Context context) {
 		final SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(context);
 		final Resources resources = context.getResources();
+		final String setting = sharedPreferences.getString(SettingsActivity.THEME, resources.getString(R.string.theme));
 		final boolean dark = isDark(sharedPreferences, resources);
 		final String fontSize = sharedPreferences.getString("font_size", resources.getString(R.string.default_font_size));
 		switch (fontSize) {
 			case "medium":
+				if ("obsidian".equals(setting)) return R.style.ConversationsTheme_Obsidian_Medium;
 				return dark ? R.style.ConversationsTheme_Dark_Medium : R.style.ConversationsTheme_Medium;
 			case "large":
+				if ("obsidian".equals(setting)) return R.style.ConversationsTheme_Obsidian_Large;
 				return dark ? R.style.ConversationsTheme_Dark_Large : R.style.ConversationsTheme_Large;
 			default:
+				if ("obsidian".equals(setting)) return R.style.ConversationsTheme_Obsidian;
 				return dark ? R.style.ConversationsTheme_Dark : R.style.ConversationsTheme;
 		}
 	}
@@ -84,7 +88,7 @@ public class ThemeHelper {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && "automatic".equals(setting)) {
 			return (resources.getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
 		} else {
-			return "dark".equals(setting);
+			return "dark".equals(setting) || "obsidian".equals(setting);
 		}
 	}
 
@@ -93,6 +97,9 @@ public class ThemeHelper {
 			case R.style.ConversationsTheme_Dark:
 			case R.style.ConversationsTheme_Dark_Large:
 			case R.style.ConversationsTheme_Dark_Medium:
+			case R.style.ConversationsTheme_Obsidian:
+			case R.style.ConversationsTheme_Obsidian_Large:
+			case R.style.ConversationsTheme_Obsidian_Medium:
 				return true;
 			default:
 				return false;
