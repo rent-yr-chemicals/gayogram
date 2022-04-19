@@ -237,10 +237,6 @@ public class XmppConnectionService extends Service {
                 }
             }
         }
-
-        if (contact.getPresences().anyIdentity("gateway", "pstn")) {
-            contact.registerAsPhoneAccount(this);
-        }
     };
     private final PresenceGenerator mPresenceGenerator = new PresenceGenerator(this);
     private List<Account> accounts;
@@ -4677,11 +4673,15 @@ public class XmppConnectionService extends Service {
     public void fetchCaps(Account account, final Jid jid, final Presence presence) {
         final Pair<String, String> key = new Pair<>(presence.getHash(), presence.getVer());
         final ServiceDiscoveryResult disco = getCachedServiceDiscoveryResult(key);
+
         if (disco != null) {
             presence.setServiceDiscoveryResult(disco);
             final Contact contact = account.getRoster().getContact(jid);
             if (contact.refreshRtpCapability()) {
                 syncRoster(account);
+            }
+            if (disco.hasIdentity("gateway", "pstn")) {
+                contact.registerAsPhoneAccount(this);
             }
         } else {
             final IqPacket request = new IqPacket(IqPacket.TYPE.GET);
@@ -4699,6 +4699,10 @@ public class XmppConnectionService extends Service {
                     if (presence.getVer().equals(discoveryResult.getVer())) {
                         databaseBackend.insertDiscoveryResult(discoveryResult);
                         injectServiceDiscoveryResult(a.getRoster(), presence.getHash(), presence.getVer(), discoveryResult);
+                        if (discoveryResult.hasIdentity("gateway", "pstn")) {
+                            final Contact contact = account.getRoster().getContact(jid);
+                            contact.registerAsPhoneAccount(this);
+                        }
                     } else {
                         Log.d(Config.LOGTAG, a.getJid().asBareJid() + ": mismatch in caps for contact " + jid + " " + presence.getVer() + " vs " + discoveryResult.getVer());
                     }
