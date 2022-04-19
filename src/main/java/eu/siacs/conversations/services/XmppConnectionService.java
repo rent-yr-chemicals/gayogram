@@ -2468,6 +2468,11 @@ public class XmppConnectionService extends Service {
                     mNotificationService.clear(conversation);
                 }
             }
+            new Thread(() -> {
+                for (final Contact contact : account.getRoster().getContacts()) {
+                    contact.unregisterAsPhoneAccount(this);
+                }
+            }).start();
             if (account.getXmppConnection() != null) {
                 new Thread(() -> disconnect(account, !connected)).start();
             }
