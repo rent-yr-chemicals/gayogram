@@ -986,7 +986,9 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 
         Collections.sort(this.contacts);
 
-        if (!foundSopranica && (needle == null || needle.equals(""))) {
+        final boolean sopranicaDeleted = getPreferences().getBoolean("cheogram_sopranica_bookmark_deleted", false);
+
+        if (!sopranicaDeleted && !foundSopranica && (needle == null || needle.equals(""))) {
             Bookmark bookmark = new Bookmark(
                 xmppConnectionService.getAccounts().get(0),
                 Jid.of("discuss@conference.soprani.ca")

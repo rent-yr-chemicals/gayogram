@@ -1843,6 +1843,9 @@ public class XmppConnectionService extends Service {
     }
 
     public void deleteBookmark(final Account account, final Bookmark bookmark) {
+        if (bookmark.getJid().toString().equals("discuss@conference.soprani.ca")) {
+            getPreferences().edit().putBoolean("cheogram_sopranica_bookmark_deleted", true).apply();
+        }
         account.removeBookmark(bookmark);
         final XmppConnection connection = account.getXmppConnection();
         if (connection.getFeatures().bookmarks2()) {
