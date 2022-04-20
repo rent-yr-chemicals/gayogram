@@ -105,6 +105,12 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			);
 		}
 
+		if (xmppConnectionService == null) {
+			return Connection.createFailedConnection(
+				new DisconnectCause(DisconnectCause.ERROR)
+			);
+		}
+
 		if (xmppConnectionService.getJingleConnectionManager().isBusy() != null) {
 			return Connection.createFailedConnection(
 				new DisconnectCause(DisconnectCause.BUSY)
