@@ -394,6 +394,7 @@ public class SettingsActivity extends XmppActivity implements
 		} else if (name.equals(THEME)) {
 			final int theme = findTheme();
 			if (this.mTheme != theme) {
+				xmppConnectionService.setTheme(theme);
 				recreate();
 			}
 		} else if(name.equals(PREVENT_SCREENSHOTS)){

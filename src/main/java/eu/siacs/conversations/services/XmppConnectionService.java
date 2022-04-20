@@ -137,6 +137,7 @@ import eu.siacs.conversations.utils.Resolver;
 import eu.siacs.conversations.utils.SerialSingleThreadExecutor;
 import eu.siacs.conversations.utils.StringUtils;
 import eu.siacs.conversations.utils.TorServiceUtils;
+import eu.siacs.conversations.utils.ThemeHelper;
 import eu.siacs.conversations.utils.WakeLockHelper;
 import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xml.Element;
@@ -1133,6 +1134,7 @@ public class XmppConnectionService extends Service {
     @SuppressLint("TrulyRandom")
     @Override
     public void onCreate() {
+        setTheme(ThemeHelper.find(this));
         if (Compatibility.runsTwentySix()) {
             mNotificationService.initializeChannels();
         }

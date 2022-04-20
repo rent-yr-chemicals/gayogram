@@ -28,6 +28,7 @@ import android.text.SpannableString;
 import android.text.style.StyleSpan;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
@@ -750,7 +751,9 @@ public class NotificationService {
     }
 
     private void setNotificationColor(final Builder mBuilder) {
-        mBuilder.setColor(ContextCompat.getColor(mXmppConnectionService, R.color.perpy));
+        TypedValue typedValue = new TypedValue();
+        mXmppConnectionService.getTheme().resolveAttribute(R.attr.colorPrimary, typedValue, true);
+        mBuilder.setColor(typedValue.data);
     }
 
     public void updateNotification() {
