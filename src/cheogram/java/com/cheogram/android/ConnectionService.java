@@ -243,10 +243,10 @@ public class ConnectionService extends android.telecom.ConnectionService {
 				setDialing();
 			} else if (state == RtpEndUserState.INCOMING_CALL) {
 				setRinging();
-			} else if (state == RtpEndUserState.CONNECTED) {
+			} else if (state == RtpEndUserState.CONNECTING) {
 				xmppConnectionService.setDiallerIntegrationActive(true);
 				setActive();
-
+			} else if (state == RtpEndUserState.CONNECTED) {
 				postDial();
 			} else if (state == RtpEndUserState.DECLINED_OR_BUSY) {
 				close(new DisconnectCause(DisconnectCause.BUSY));
