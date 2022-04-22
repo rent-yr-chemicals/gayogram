@@ -251,6 +251,8 @@ public class ConnectionService extends android.telecom.ConnectionService {
 				setActive();
 				statusLabel = getString(R.string.rtp_state_connecting);
 			} else if (state == RtpEndUserState.CONNECTED) {
+				xmppConnectionService.setDiallerIntegrationActive(true);
+				setActive();
 				postDial();
 			} else if (state == RtpEndUserState.DECLINED_OR_BUSY) {
 				close(new DisconnectCause(DisconnectCause.BUSY));
