@@ -22,6 +22,8 @@ import android.telecom.TelecomManager;
 import android.telephony.PhoneNumberUtils;
 
 import android.Manifest;
+
+import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import android.content.ComponentName;
 import android.content.Context;
@@ -53,6 +55,7 @@ import eu.siacs.conversations.xmpp.jingle.JingleRtpConnection;
 import eu.siacs.conversations.xmpp.jingle.Media;
 import eu.siacs.conversations.xmpp.jingle.RtpEndUserState;
 
+@RequiresApi(Build.VERSION_CODES.M)
 public class ConnectionService extends android.telecom.ConnectionService {
 	public XmppConnectionService xmppConnectionService = null;
 	protected ServiceConnection mConnection = new ServiceConnection() {
