@@ -235,7 +235,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 				findRtpConnection();
 			}
 
-			setStatusHints(new StatusHints(null, gatewayIcon, null));
+			String statusLabel = null;
 
 			if (state == RtpEndUserState.FINDING_DEVICE) {
 				setInitialized();
@@ -246,6 +246,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			} else if (state == RtpEndUserState.CONNECTING) {
 				xmppConnectionService.setDiallerIntegrationActive(true);
 				setActive();
+				statusLabel = getString(R.string.rtp_state_connecting);
 			} else if (state == RtpEndUserState.CONNECTED) {
 				postDial();
 			} else if (state == RtpEndUserState.DECLINED_OR_BUSY) {
@@ -257,6 +258,8 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			} else if (RtpSessionActivity.END_CARD.contains(state)) {
 				close(new DisconnectCause(DisconnectCause.ERROR));
 			}
+
+			setStatusHints(new StatusHints(statusLabel, gatewayIcon, null));
 		}
 
 		@Override
