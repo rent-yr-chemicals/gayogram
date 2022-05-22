@@ -97,9 +97,11 @@ public class QuickConversationsService extends AbstractQuickConversationsService
     }
 
     protected void considerSync(boolean forced) {
-        final ImmutableMap<String, PhoneNumberContact> allContacts = PhoneNumberContact.load(service);
+        ImmutableMap<String, PhoneNumberContact> allContacts = null;
         for (final Account account : service.getAccounts()) {
             List<String> gateways = gateways(account);
+            if (gateways.size() < 1) continue;
+            if (allContacts == null) allContacts = PhoneNumberContact.load(service);
             refresh(account, gateways, allContacts.values());
             if (!considerSync(account, gateways, allContacts, forced)) {
                 service.syncRoster(account);
