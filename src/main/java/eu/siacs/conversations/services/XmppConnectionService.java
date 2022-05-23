@@ -4184,7 +4184,7 @@ public class XmppConnectionService extends Service {
     }
 
     public void updateAccountUi() {
-        for (OnAccountUpdate listener : threadSafeList(this.mOnAccountUpdates)) {
+        for (final OnAccountUpdate listener : threadSafeList(this.mOnAccountUpdates)) {
             listener.onAccountUpdate();
         }
     }
