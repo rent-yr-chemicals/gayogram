@@ -21,7 +21,7 @@ Art in screenshots is from https://www.peppercarrot.com by David Revoy, CC-BY. A
 
 ## Getting Help
 
-If you have any questions about this app, or wish to report a bug, please come by the chatroom at  xmpp:discuss@conference.soprani.ca?join or [on the web](https://anonymous.cheogram.com/discuss@conference.soprani.ca).
+If you have any questions about this app, or wish to report a bug, please come by the chatroom [in your client](xmpp:discuss@conference.soprani.ca?join) or [on the web](https://anonymous.cheogram.com/discuss@conference.soprani.ca).
 
 ## Contributing
 
