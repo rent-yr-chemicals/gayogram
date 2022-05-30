@@ -4744,6 +4744,11 @@ public class XmppConnectionService extends Service {
         }
     }
 
+    public void fetchCommands(Account account, final Jid jid, OnIqPacketReceived callback) {
+        final IqPacket request = mIqGenerator.queryDiscoItems(jid, "http://jabber.org/protocol/commands");
+        sendIqPacket(account, request, callback);
+    }
+
     private void injectServiceDiscoveryResult(Roster roster, String hash, String ver, ServiceDiscoveryResult disco) {
         boolean rosterNeedsSync = false;
         for (final Contact contact : roster.getContacts()) {

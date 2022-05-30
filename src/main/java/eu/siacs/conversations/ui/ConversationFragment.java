@@ -55,11 +55,14 @@ import android.widget.Toast;
 
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.view.inputmethod.InputConnectionCompat;
 import androidx.core.view.inputmethod.InputContentInfoCompat;
 import androidx.databinding.DataBindingUtil;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -73,6 +76,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -92,6 +96,7 @@ import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.entities.MucOptions;
 import eu.siacs.conversations.entities.MucOptions.User;
 import eu.siacs.conversations.entities.Presence;
+import eu.siacs.conversations.entities.Presences;
 import eu.siacs.conversations.entities.ReadByMarker;
 import eu.siacs.conversations.entities.Transferable;
 import eu.siacs.conversations.entities.TransferablePlaceholder;
@@ -100,6 +105,7 @@ import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.services.MessageArchiveService;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.services.XmppConnectionService;
+import eu.siacs.conversations.ui.adapter.CommandAdapter;
 import eu.siacs.conversations.ui.adapter.MediaPreviewAdapter;
 import eu.siacs.conversations.ui.adapter.MessageAdapter;
 import eu.siacs.conversations.ui.util.ActivityResult;
@@ -129,6 +135,7 @@ import eu.siacs.conversations.utils.QuickLoader;
 import eu.siacs.conversations.utils.StylingHelper;
 import eu.siacs.conversations.utils.TimeFrameUtils;
 import eu.siacs.conversations.utils.UIHelper;
+import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.XmppConnection;
@@ -139,6 +146,7 @@ import eu.siacs.conversations.xmpp.jingle.JingleFileTransferConnection;
 import eu.siacs.conversations.xmpp.jingle.Media;
 import eu.siacs.conversations.xmpp.jingle.OngoingRtpSession;
 import eu.siacs.conversations.xmpp.jingle.RtpCapability;
+import eu.siacs.conversations.xmpp.stanzas.IqPacket;
 
 public class ConversationFragment extends XmppFragment
         implements EditMessage.KeyboardListener,
@@ -185,6 +193,7 @@ public class ConversationFragment extends XmppFragment
     private final PendingItem<Message> pendingMessage = new PendingItem<>();
     public Uri mPendingEditorContent = null;
     protected MessageAdapter messageListAdapter;
+    protected CommandAdapter commandAdapter;
     private MediaPreviewAdapter mediaPreviewAdapter;
     private String lastMessageUuid = null;
     private Conversation conversation;
@@ -1232,6 +1241,39 @@ public class ConversationFragment extends XmppFragment
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             this.binding.textinput.setCustomInsertionActionModeCallback(
                     new EditMessageActionModeCallback(this.binding.textinput));
+        }
+
+        binding.conversationViewPager.setAdapter(new StaticPagerAdapter(
+            binding.conversationViewPager
+        ));
+        binding.tabLayout.setupWithViewPager(binding.conversationViewPager);
+
+        commandAdapter = new CommandAdapter((XmppActivity) getActivity());
+        binding.commandsView.setAdapter(commandAdapter);
+        Presences presences = conversation.getContact().getPresences();
+        for (Map.Entry<String, Presence> entry : presences.getPresencesMap().entrySet()) {
+            String resource = entry.getKey();
+            Presence presence = entry.getValue();
+            if (presence.getServiceDiscoveryResult().getFeatures().contains("http://jabber.org/protocol/commands")) {
+                binding.tabLayout.setVisibility(View.VISIBLE);
+                binding.conversationViewPager.setCurrentItem(1);
+                Jid jid = conversation.getContact().getJid();
+                if (resource != null && !resource.equals("")) jid = jid.withResource(resource);
+                activity.xmppConnectionService.fetchCommands(conversation.getAccount(), jid, (a, iq) -> {
+                    if (iq.getType() == IqPacket.TYPE.RESULT) {
+                        activity.runOnUiThread(() -> {
+                            for (Element child : iq.query().getChildren()) {
+                                if (!"item".equals(child.getName()) || !Namespace.DISCO_ITEMS.equals(child.getNamespace())) continue;
+                                commandAdapter.add(child);
+                            }
+                        });
+                    } else {
+                        binding.tabLayout.setVisibility(View.GONE);
+                        binding.conversationViewPager.setCurrentItem(0);
+                    }
+                });
+                break;
+            }
         }
 
         return binding.getRoot();
@@ -3603,5 +3645,42 @@ public class ConversationFragment extends XmppFragment
             throw new IllegalStateException("Activity not attached");
         }
         return activity;
+    }
+
+    public class StaticPagerAdapter extends PagerAdapter {
+        ViewPager mPager;
+
+        StaticPagerAdapter(ViewPager pager) {
+            mPager = pager;
+        }
+
+        @NonNull
+        @Override
+        public View instantiateItem(@NonNull ViewGroup container, int position) {
+            return mPager.getChildAt(position);
+        }
+
+        @Override
+        public int getCount() {
+            return 2;
+        }
+
+        @Override
+        public boolean isViewFromObject(@NonNull View view, @NonNull Object o) {
+            return view == o;
+        }
+
+        @Nullable
+        @Override
+        public CharSequence getPageTitle(int position) {
+            switch (position) {
+                case 0:
+                    return "Conversation";
+                case 1:
+                    return "Commands";
+                default:
+                    return super.getPageTitle(position);
+            }
+        }
     }
 }

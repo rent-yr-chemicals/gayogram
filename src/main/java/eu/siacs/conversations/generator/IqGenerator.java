@@ -552,7 +552,14 @@ public class IqGenerator extends AbstractGenerator {
     public IqPacket queryDiscoItems(Jid jid) {
         IqPacket packet = new IqPacket(IqPacket.TYPE.GET);
         packet.setTo(jid);
-        packet.addChild("query",Namespace.DISCO_ITEMS);
+        packet.query(Namespace.DISCO_ITEMS);
+        return packet;
+    }
+
+    public IqPacket queryDiscoItems(Jid jid, String node) {
+        IqPacket packet = queryDiscoItems(jid);
+        final Element query = packet.query(Namespace.DISCO_ITEMS);
+        query.setAttribute("node", node);
         return packet;
     }
 
