@@ -85,6 +85,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
     private ChatState mOutgoingChatState = Config.DEFAULT_CHAT_STATE;
     private ChatState mIncomingChatState = Config.DEFAULT_CHAT_STATE;
     private String mFirstMamReference = null;
+    protected int mCurrentTab = -1;
 
     public Conversation(final String name, final Account account, final Jid contactJid,
                         final int mode) {
@@ -1110,7 +1111,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         return getName().toString();
     }
 
+    public void setCurrentTab(int tab) {
+        mCurrentTab = tab;
+    }
+
     public int getCurrentTab() {
+        if (mCurrentTab >= 0) return mCurrentTab;
+
         if (!isRead() || getContact().resourceWhichSupport(Namespace.COMMANDS) == null) {
             return 0;
         }

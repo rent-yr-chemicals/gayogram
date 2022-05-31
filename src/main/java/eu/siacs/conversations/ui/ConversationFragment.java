@@ -1248,6 +1248,14 @@ public class ConversationFragment extends XmppFragment
         ));
         binding.tabLayout.setupWithViewPager(binding.conversationViewPager);
         binding.conversationViewPager.setCurrentItem(conversation.getCurrentTab());
+        binding.conversationViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            public void onPageScrollStateChanged(int state) { }
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+
+            public void onPageSelected(int position) {
+                conversation.setCurrentTab(position);
+            }
+        });
 
         commandAdapter = new CommandAdapter((XmppActivity) getActivity());
         binding.commandsView.setAdapter(commandAdapter);
