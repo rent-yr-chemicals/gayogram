@@ -30,6 +30,7 @@ import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.utils.MessageUtils;
 import eu.siacs.conversations.utils.UIHelper;
+import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
 import eu.siacs.conversations.xmpp.mam.MamReference;
@@ -1107,6 +1108,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
     @Override
     public String getAvatarName() {
         return getName().toString();
+    }
+
+    public int getCurrentTab() {
+        if (!isRead() || getContact().resourceWhichSupport(Namespace.COMMANDS) == null) {
+            return 0;
+        }
+
+        return 1;
     }
 
     public interface OnMessageFound {

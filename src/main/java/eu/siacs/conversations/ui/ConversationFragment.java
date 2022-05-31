@@ -1247,33 +1247,26 @@ public class ConversationFragment extends XmppFragment
             binding.conversationViewPager
         ));
         binding.tabLayout.setupWithViewPager(binding.conversationViewPager);
+        binding.conversationViewPager.setCurrentItem(conversation.getCurrentTab());
 
         commandAdapter = new CommandAdapter((XmppActivity) getActivity());
         binding.commandsView.setAdapter(commandAdapter);
-        Presences presences = conversation.getContact().getPresences();
-        for (Map.Entry<String, Presence> entry : presences.getPresencesMap().entrySet()) {
-            String resource = entry.getKey();
-            Presence presence = entry.getValue();
-            if (presence.getServiceDiscoveryResult().getFeatures().contains("http://jabber.org/protocol/commands")) {
-                binding.tabLayout.setVisibility(View.VISIBLE);
-                binding.conversationViewPager.setCurrentItem(1);
-                Jid jid = conversation.getContact().getJid();
-                if (resource != null && !resource.equals("")) jid = jid.withResource(resource);
-                activity.xmppConnectionService.fetchCommands(conversation.getAccount(), jid, (a, iq) -> {
-                    if (iq.getType() == IqPacket.TYPE.RESULT) {
-                        activity.runOnUiThread(() -> {
-                            for (Element child : iq.query().getChildren()) {
-                                if (!"item".equals(child.getName()) || !Namespace.DISCO_ITEMS.equals(child.getNamespace())) continue;
-                                commandAdapter.add(child);
-                            }
-                        });
-                    } else {
-                        binding.tabLayout.setVisibility(View.GONE);
-                        binding.conversationViewPager.setCurrentItem(0);
-                    }
-                });
-                break;
-            }
+        Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
+        if (commandJid != null) {
+            binding.tabLayout.setVisibility(View.VISIBLE);
+            activity.xmppConnectionService.fetchCommands(conversation.getAccount(), commandJid, (a, iq) -> {
+                if (iq.getType() == IqPacket.TYPE.RESULT) {
+                    activity.runOnUiThread(() -> {
+                        for (Element child : iq.query().getChildren()) {
+                            if (!"item".equals(child.getName()) || !Namespace.DISCO_ITEMS.equals(child.getNamespace())) continue;
+                            commandAdapter.add(child);
+                        }
+                    });
+                } else {
+                    binding.tabLayout.setVisibility(View.GONE);
+                    binding.conversationViewPager.setCurrentItem(0);
+                }
+            });
         }
 
         return binding.getRoot();
