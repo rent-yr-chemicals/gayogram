@@ -17,7 +17,7 @@
             android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
             app:tabGravity="fill"
             app:tabIndicatorColor="@color/white87"
-            app:tabMode="fixed"
+            app:tabMode="scrollable"
             app:tabSelectedTextColor="@color/white"
             app:tabTextColor="@color/white70" />
 

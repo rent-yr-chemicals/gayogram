@@ -3,10 +3,19 @@ package eu.siacs.conversations.entities;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.text.TextUtils;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.material.tabs.TabLayout;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
 
@@ -22,18 +31,24 @@ import java.util.ListIterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import eu.siacs.conversations.Config;
+import eu.siacs.conversations.R;
 import eu.siacs.conversations.crypto.OmemoSetting;
 import eu.siacs.conversations.crypto.PgpDecryptionService;
+import eu.siacs.conversations.databinding.CommandPageBinding;
+import eu.siacs.conversations.databinding.CommandNoteBinding;
 import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.QuickConversationsService;
+import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.utils.MessageUtils;
 import eu.siacs.conversations.utils.UIHelper;
+import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
 import eu.siacs.conversations.xmpp.mam.MamReference;
+import eu.siacs.conversations.xmpp.stanzas.IqPacket;
 
 import static eu.siacs.conversations.entities.Bookmark.printableValue;
 
@@ -86,6 +101,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
     private ChatState mIncomingChatState = Config.DEFAULT_CHAT_STATE;
     private String mFirstMamReference = null;
     protected int mCurrentTab = -1;
+    protected ConversationPagerAdapter pagerAdapter = new ConversationPagerAdapter();
 
     public Conversation(final String name, final Account account, final Jid contactJid,
                         final int mode) {
@@ -1125,6 +1141,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         return 1;
     }
 
+    public void startCommand(Element command, XmppConnectionService xmppConnectionService) {
+        pagerAdapter.startCommand(command, xmppConnectionService);
+    }
+
+    public void setupViewPager(ViewPager pager, TabLayout tabs) {
+        pagerAdapter.setupViewPager(pager, tabs);
+    }
+
     public interface OnMessageFound {
         void onMessageFound(final Message message);
     }
@@ -1144,6 +1168,235 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
         public String getMessage() {
             return message;
+        }
+    }
+
+    public class ConversationPagerAdapter extends PagerAdapter {
+        protected ViewPager mPager = null;
+        protected TabLayout mTabs = null;
+        ArrayList<CommandSession> sessions = new ArrayList<>();
+
+        public void setupViewPager(ViewPager pager, TabLayout tabs) {
+            mPager = pager;
+            mTabs = tabs;
+            pager.setAdapter(this);
+            tabs.setupWithViewPager(mPager);
+            pager.setCurrentItem(getCurrentTab());
+
+            mPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                public void onPageScrollStateChanged(int state) { }
+                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+
+                public void onPageSelected(int position) {
+                    setCurrentTab(position);
+                }
+            });
+        }
+
+        public void startCommand(Element command, XmppConnectionService xmppConnectionService) {
+            CommandSession session = new CommandSession(command.getAttribute("name"));
+
+            final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
+            packet.setTo(command.getAttributeAsJid("jid"));
+            final Element c = packet.addChild("command", Namespace.COMMANDS);
+            c.setAttribute("node", command.getAttribute("node"));
+            c.setAttribute("action", "execute");
+            xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
+                mPager.post(() -> {
+                    session.updateWithResponse(iq);
+                });
+            });
+
+            sessions.add(session);
+            notifyDataSetChanged();
+            mPager.setCurrentItem(getCount() - 1);
+        }
+
+        @NonNull
+        @Override
+        public Object instantiateItem(@NonNull ViewGroup container, int position) {
+            if (position < 2) {
+              return mPager.getChildAt(position);
+            }
+
+            CommandSession session = sessions.get(position-2);
+            CommandPageBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_page, container, false);
+            container.addView(binding.getRoot());
+            binding.form.setAdapter(session);
+            binding.done.setOnClickListener((button) -> {
+                sessions.remove(session);
+                notifyDataSetChanged();
+            });
+
+            session.setBinding(binding);
+            return session;
+        }
+
+        @Override
+        public void destroyItem(@NonNull ViewGroup container, int position, Object o) {
+            if (position < 2) return;
+
+            container.removeView(((CommandSession) o).getView());
+        }
+
+        @Override
+        public int getItemPosition(Object o) {
+            if (o == mPager.getChildAt(0)) return PagerAdapter.POSITION_UNCHANGED;
+            if (o == mPager.getChildAt(1)) return PagerAdapter.POSITION_UNCHANGED;
+
+            int pos = sessions.indexOf(o);
+            if (pos < 0) return PagerAdapter.POSITION_NONE;
+            return pos + 2;
+        }
+
+        @Override
+        public int getCount() {
+            int count = 2 + sessions.size();
+            if (count > 2) {
+                mTabs.setTabMode(TabLayout.MODE_SCROLLABLE);
+            } else {
+                mTabs.setTabMode(TabLayout.MODE_FIXED);
+            }
+            return count;
+        }
+
+        @Override
+        public boolean isViewFromObject(@NonNull View view, @NonNull Object o) {
+            if (view == o) return true;
+
+            if (o instanceof CommandSession) {
+                return ((CommandSession) o).getView() == view;
+            }
+
+            return false;
+        }
+
+        @Nullable
+        @Override
+        public CharSequence getPageTitle(int position) {
+            switch (position) {
+                case 0:
+                    return "Conversation";
+                case 1:
+                    return "Commands";
+                default:
+                    CommandSession session = sessions.get(position-2);
+                    if (session == null) return super.getPageTitle(position);
+                    return session.getTitle();
+            }
+        }
+
+        class CommandSession extends RecyclerView.Adapter<CommandSession.ViewHolder> {
+            abstract class ViewHolder<T extends ViewDataBinding> extends RecyclerView.ViewHolder {
+                protected T binding;
+
+                public ViewHolder(T binding) {
+                    super(binding.getRoot());
+                    this.binding = binding;
+                }
+
+                abstract public void bind(IqPacket iq, int position);
+            }
+
+            class ErrorViewHolder extends ViewHolder<CommandNoteBinding> {
+                public ErrorViewHolder(CommandNoteBinding binding) { super(binding); }
+
+                @Override
+                public void bind(IqPacket iq, int position) {
+                    binding.errorIcon.setVisibility(View.VISIBLE);
+
+                    Element error = iq.findChild("error");
+                    if (error == null) return;
+                    String text = error.findChildContent("text", "urn:ietf:params:xml:ns:xmpp-stanzas");
+                    if (text == null || text.equals("")) {
+                        text = error.getChildren().get(0).getName();
+                    }
+                    binding.message.setText(text);
+                }
+            }
+
+            class NoteViewHolder extends ViewHolder<CommandNoteBinding> {
+                public NoteViewHolder(CommandNoteBinding binding) { super(binding); }
+
+                @Override
+                public void bind(IqPacket iq, int position) {
+                    Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
+                    if (command == null) return;
+                    Element note = command.findChild("note", "http://jabber.org/protocol/commands");
+                    if (note == null) return;
+                    binding.message.setText(note.getContent());
+
+                    if (note.getAttribute("type").equals("error")) {
+                        binding.errorIcon.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+
+            final int TYPE_ERROR = 1;
+            final int TYPE_NOTE = 2;
+
+            protected String mTitle;
+            protected CommandPageBinding mBinding = null;
+            protected IqPacket response = null;
+
+            CommandSession(String title) {
+                mTitle = title;
+            }
+
+            public String getTitle() {
+                return mTitle;
+            }
+
+            public void updateWithResponse(IqPacket iq) {
+                this.response = iq;
+                notifyDataSetChanged();
+            }
+
+            @Override
+            public int getItemCount() {
+                if (response == null) return 0;
+                return 1;
+            }
+
+            @Override
+            public int getItemViewType(int position) {
+                if (response == null) return -1;
+
+                if (response.getType() == IqPacket.TYPE.RESULT) {
+                    return TYPE_NOTE;
+                } else {
+                    return TYPE_ERROR;
+                }
+            }
+
+            @Override
+            public ViewHolder onCreateViewHolder(ViewGroup container, int viewType) {
+                switch(viewType) {
+                    case TYPE_ERROR: {
+                        CommandNoteBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_note, container, false);
+                        return new ErrorViewHolder(binding);
+                    }
+                    case TYPE_NOTE: {
+                        CommandNoteBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_note, container, false);
+                        return new NoteViewHolder(binding);
+                    }
+                    default:
+                        return null;
+                }
+            }
+
+            @Override
+            public void onBindViewHolder(ViewHolder viewHolder, int position) {
+                viewHolder.bind(response, position);
+            }
+
+            public View getView() {
+                return mBinding.getRoot();
+            }
+
+            public void setBinding(CommandPageBinding b) {
+                mBinding = b;
+            }
         }
     }
 }

@@ -1243,22 +1243,12 @@ public class ConversationFragment extends XmppFragment
                     new EditMessageActionModeCallback(this.binding.textinput));
         }
 
-        binding.conversationViewPager.setAdapter(new StaticPagerAdapter(
-            binding.conversationViewPager
-        ));
-        binding.tabLayout.setupWithViewPager(binding.conversationViewPager);
-        binding.conversationViewPager.setCurrentItem(conversation.getCurrentTab());
-        binding.conversationViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-            public void onPageScrollStateChanged(int state) { }
-            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
-
-            public void onPageSelected(int position) {
-                conversation.setCurrentTab(position);
-            }
-        });
-
+        conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout);
         commandAdapter = new CommandAdapter((XmppActivity) getActivity());
         binding.commandsView.setAdapter(commandAdapter);
+        binding.commandsView.setOnItemClickListener((parent, view, position, id) -> {
+            conversation.startCommand(commandAdapter.getItem(position), activity.xmppConnectionService);
+        });
         Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
         if (commandJid != null) {
             binding.tabLayout.setVisibility(View.VISIBLE);
@@ -3646,42 +3636,5 @@ public class ConversationFragment extends XmppFragment
             throw new IllegalStateException("Activity not attached");
         }
         return activity;
-    }
-
-    public class StaticPagerAdapter extends PagerAdapter {
-        ViewPager mPager;
-
-        StaticPagerAdapter(ViewPager pager) {
-            mPager = pager;
-        }
-
-        @NonNull
-        @Override
-        public View instantiateItem(@NonNull ViewGroup container, int position) {
-            return mPager.getChildAt(position);
-        }
-
-        @Override
-        public int getCount() {
-            return 2;
-        }
-
-        @Override
-        public boolean isViewFromObject(@NonNull View view, @NonNull Object o) {
-            return view == o;
-        }
-
-        @Nullable
-        @Override
-        public CharSequence getPageTitle(int position) {
-            switch (position) {
-                case 0:
-                    return "Conversation";
-                case 1:
-                    return "Commands";
-                default:
-                    return super.getPageTitle(position);
-            }
-        }
     }
 }
