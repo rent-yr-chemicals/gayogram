@@ -2,10 +2,13 @@ package eu.siacs.conversations.entities;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.net.Uri;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,6 +16,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
@@ -36,6 +40,7 @@ import eu.siacs.conversations.crypto.OmemoSetting;
 import eu.siacs.conversations.crypto.PgpDecryptionService;
 import eu.siacs.conversations.databinding.CommandPageBinding;
 import eu.siacs.conversations.databinding.CommandNoteBinding;
+import eu.siacs.conversations.databinding.CommandWebviewBinding;
 import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.QuickConversationsService;
@@ -1328,8 +1333,27 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
+            class WebViewHolder extends ViewHolder<CommandWebviewBinding> {
+                public WebViewHolder(CommandWebviewBinding binding) { super(binding); }
+
+                @Override
+                public void bind(Element oob, int position) {
+                    binding.webview.getSettings().setJavaScriptEnabled(true);
+                    binding.webview.setWebViewClient(new WebViewClient() {
+                        @Override
+                        public void onPageFinished(WebView view, String url) {
+                            super.onPageFinished(view, url);
+                            mTitle = view.getTitle();
+                            ConversationPagerAdapter.this.notifyDataSetChanged();
+                        }
+                    });
+                    binding.webview.loadUrl(oob.findChildContent("url", "jabber:x:oob"));
+                }
+            }
+
             final int TYPE_ERROR = 1;
             final int TYPE_NOTE = 2;
+            final int TYPE_WEB = 3;
 
             protected String mTitle;
             protected CommandPageBinding mBinding = null;
@@ -1351,6 +1375,16 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
                 if (iq.getType() == IqPacket.TYPE.RESULT && command != null) {
                     for (Element el : command.getChildren()) {
+                        if (el.getName().equals("x") && el.getNamespace().equals("jabber:x:oob")) {
+                            String url = el.findChildContent("url", "jabber:x:oob");
+                            if (url != null) {
+                                String scheme = Uri.parse(url).getScheme();
+                                if (scheme.equals("http") || scheme.equals("https")) {
+                                    this.responseElement = el;
+                                    break;
+                                }
+                            }
+                        }
                         if (el.getName().equals("note") && el.getNamespace().equals("http://jabber.org/protocol/commands")) {
                             this.responseElement = el;
                             break;
@@ -1373,6 +1407,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                 if (response.getType() == IqPacket.TYPE.RESULT) {
                     if (responseElement.getName().equals("note")) return TYPE_NOTE;
+                    if (responseElement.getNamespace().equals("jabber:x:oob")) return TYPE_WEB;
                     return -1;
                 } else {
                     return TYPE_ERROR;
@@ -1389,6 +1424,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     case TYPE_NOTE: {
                         CommandNoteBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_note, container, false);
                         return new NoteViewHolder(binding);
+                    }
+                    case TYPE_WEB: {
+                        CommandWebviewBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_webview, container, false);
+                        return new WebViewHolder(binding);
                     }
                     default:
                         return null;
