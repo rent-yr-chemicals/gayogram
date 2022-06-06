@@ -153,7 +153,8 @@ public class Presences {
         for (Map.Entry<String, Presence> entry : this.presences.entrySet()) {
             String resource = entry.getKey();
             Presence presence = entry.getValue();
-            if (presence.getServiceDiscoveryResult().getFeatures().contains(namespace)) {
+            ServiceDiscoveryResult disco = presence.getServiceDiscoveryResult();
+            if (disco != null && disco.getFeatures().contains(namespace)) {
                 return resource;
             }
         }
