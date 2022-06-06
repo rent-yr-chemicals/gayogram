@@ -1295,14 +1295,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     this.binding = binding;
                 }
 
-                abstract public void bind(IqPacket iq, int position);
+                abstract public void bind(Element el, int position);
             }
 
             class ErrorViewHolder extends ViewHolder<CommandNoteBinding> {
                 public ErrorViewHolder(CommandNoteBinding binding) { super(binding); }
 
                 @Override
-                public void bind(IqPacket iq, int position) {
+                public void bind(Element iq, int position) {
                     binding.errorIcon.setVisibility(View.VISIBLE);
 
                     Element error = iq.findChild("error");
@@ -1319,11 +1319,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public NoteViewHolder(CommandNoteBinding binding) { super(binding); }
 
                 @Override
-                public void bind(IqPacket iq, int position) {
-                    Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
-                    if (command == null) return;
-                    Element note = command.findChild("note", "http://jabber.org/protocol/commands");
-                    if (note == null) return;
+                public void bind(Element note, int position) {
                     binding.message.setText(note.getContent());
 
                     if (note.getAttribute("type").equals("error")) {
@@ -1338,6 +1334,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected String mTitle;
             protected CommandPageBinding mBinding = null;
             protected IqPacket response = null;
+            protected Element responseElement = null;
 
             CommandSession(String title) {
                 mTitle = title;
@@ -1348,7 +1345,19 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             public void updateWithResponse(IqPacket iq) {
+                this.responseElement = null;
                 this.response = iq;
+
+                Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
+                if (iq.getType() == IqPacket.TYPE.RESULT && command != null) {
+                    for (Element el : command.getChildren()) {
+                        if (el.getName().equals("note") && el.getNamespace().equals("http://jabber.org/protocol/commands")) {
+                            this.responseElement = el;
+                            break;
+                        }
+                    }
+                }
+
                 notifyDataSetChanged();
             }
 
@@ -1363,7 +1372,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 if (response == null) return -1;
 
                 if (response.getType() == IqPacket.TYPE.RESULT) {
-                    return TYPE_NOTE;
+                    if (responseElement.getName().equals("note")) return TYPE_NOTE;
+                    return -1;
                 } else {
                     return TYPE_ERROR;
                 }
@@ -1387,7 +1397,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             @Override
             public void onBindViewHolder(ViewHolder viewHolder, int position) {
-                viewHolder.bind(response, position);
+                viewHolder.bind(responseElement == null ? response : responseElement, position);
             }
 
             public View getView() {
