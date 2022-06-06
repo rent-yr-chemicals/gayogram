@@ -1406,6 +1406,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             public void setBinding(CommandPageBinding b) {
                 mBinding = b;
+                mBinding.form.setLayoutManager(new LinearLayoutManager(mPager.getContext()) {
+                    @Override
+                    public boolean canScrollVertically() { return getItemCount() > 1; }
+                });
             }
         }
     }
