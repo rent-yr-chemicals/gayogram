@@ -3,7 +3,9 @@ package eu.siacs.conversations.entities;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
+import android.text.Editable;
 import android.text.TextUtils;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,6 +44,7 @@ import eu.siacs.conversations.crypto.PgpDecryptionService;
 import eu.siacs.conversations.databinding.CommandPageBinding;
 import eu.siacs.conversations.databinding.CommandNoteBinding;
 import eu.siacs.conversations.databinding.CommandResultFieldBinding;
+import eu.siacs.conversations.databinding.CommandTextFieldBinding;
 import eu.siacs.conversations.databinding.CommandWebviewBinding;
 import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.services.AvatarService;
@@ -1201,7 +1204,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         }
 
         public void startCommand(Element command, XmppConnectionService xmppConnectionService) {
-            CommandSession session = new CommandSession(command.getAttribute("name"));
+            CommandSession session = new CommandSession(command.getAttribute("name"), xmppConnectionService);
 
             final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
             packet.setTo(command.getAttributeAsJid("jid"));
@@ -1231,8 +1234,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             container.addView(binding.getRoot());
             binding.form.setAdapter(session);
             binding.done.setOnClickListener((button) -> {
-                sessions.remove(session);
-                notifyDataSetChanged();
+                if (session.execute()) {
+                    sessions.remove(session);
+                    notifyDataSetChanged();
+                }
             });
 
             session.setBinding(binding);
@@ -1368,6 +1373,49 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
+            class TextFieldViewHolder extends ViewHolder<CommandTextFieldBinding> implements TextWatcher {
+                public TextFieldViewHolder(CommandTextFieldBinding binding) {
+                    super(binding);
+                    binding.textinput.addTextChangedListener(this);
+                }
+                protected Element mValue = null;
+
+                @Override
+                public void bind(Element field) {
+                    String label = field.getAttribute("label");
+                    if (label == null) label = field.getAttribute("var");
+                    if (label == null) label = "";
+                    binding.textinputLayout.setHint(label);
+
+                    String desc = field.findChildContent("desc", "jabber:x:data");
+                    if (desc == null) {
+                        binding.desc.setVisibility(View.GONE);
+                    } else {
+                        binding.desc.setVisibility(View.VISIBLE);
+                        binding.desc.setText(desc);
+                    }
+
+                    mValue = field.findChild("value", "jabber:x:data");
+                    if (mValue == null) {
+                        mValue = field.addChild("value", "jabber:x:data");
+                    }
+                    binding.textinput.setText(mValue.getContent());
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    if (mValue == null) return;
+
+                    mValue.setContent(s.toString());
+                }
+
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int count, int after) { }
+            }
+
             class WebViewHolder extends ViewHolder<CommandWebviewBinding> {
                 public WebViewHolder(CommandWebviewBinding binding) { super(binding); }
 
@@ -1390,14 +1438,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_NOTE = 2;
             final int TYPE_WEB = 3;
             final int TYPE_RESULT_FIELD = 4;
+            final int TYPE_TEXT_FIELD = 5;
 
             protected String mTitle;
             protected CommandPageBinding mBinding = null;
             protected IqPacket response = null;
             protected Element responseElement = null;
+            protected XmppConnectionService xmppConnectionService;
 
-            CommandSession(String title) {
+            CommandSession(String title, XmppConnectionService xmppConnectionService) {
                 mTitle = title;
+                this.xmppConnectionService = xmppConnectionService;
             }
 
             public String getTitle() {
@@ -1496,7 +1547,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     if (item.getName().equals("note")) return TYPE_NOTE;
                     if (item.getNamespace().equals("jabber:x:oob")) return TYPE_WEB;
                     if (item.getName().equals("instructions") && item.getNamespace().equals("jabber:x:data")) return TYPE_NOTE;
-                    if (item.getName().equals("field") && item.getNamespace().equals("jabber:x:data")) return TYPE_RESULT_FIELD;
+                    if (item.getName().equals("field") && item.getNamespace().equals("jabber:x:data")) {
+                        String formType = responseElement.getAttribute("type");
+                        String fieldType = item.getAttribute("type");
+                        if (formType.equals("result") || fieldType.equals("fixed")) return TYPE_RESULT_FIELD;
+                        if (formType.equals("form")) return TYPE_TEXT_FIELD;
+                    }
                     return -1;
                 } else {
                     return TYPE_ERROR;
@@ -1522,6 +1578,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         CommandResultFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_result_field, container, false);
                         return new ResultFieldViewHolder(binding);
                     }
+                    case TYPE_TEXT_FIELD: {
+                        CommandTextFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_text_field, container, false);
+                        return new TextFieldViewHolder(binding);
+                    }
                     default:
                         throw new IllegalArgumentException("Unknown viewType: " + viewType);
                 }
@@ -1534,6 +1594,35 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             public View getView() {
                 return mBinding.getRoot();
+            }
+
+            public boolean execute() {
+                if (response == null || responseElement == null) return true;
+                Element command = response.findChild("command", "http://jabber.org/protocol/commands");
+                if (command == null) return true;
+                String status = command.getAttribute("status");
+                if (status == null || !status.equals("executing")) return true;
+                if (!responseElement.getName().equals("x") || !responseElement.getNamespace().equals("jabber:x:data")) return true;
+                String formType = responseElement.getAttribute("type");
+                if (formType == null || !formType.equals("form")) return true;
+
+                responseElement.setAttribute("type", "submit");
+
+                final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
+                packet.setTo(response.getFrom());
+                final Element c = packet.addChild("command", Namespace.COMMANDS);
+                c.setAttribute("node", command.getAttribute("node"));
+                c.setAttribute("sessionid", command.getAttribute("sessionid"));
+                c.setAttribute("action", "execute");
+                c.addChild(responseElement);
+
+                xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
+                    getView().post(() -> {
+                        updateWithResponse(iq);
+                    });
+                });
+
+                return false;
             }
 
             public void setBinding(CommandPageBinding b) {
