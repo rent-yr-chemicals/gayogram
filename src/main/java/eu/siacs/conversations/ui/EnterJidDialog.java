@@ -223,7 +223,10 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         }
         final Jid accountJid = accountJid();
         final OnGatewayResult finish = (final String jidString, final String errorMessage) -> {
-            getActivity().runOnUiThread(() -> {
+            Activity context = getActivity();
+            if (context == null) return; // Race condition, we got the reply after the UI was closed
+
+            context.runOnUiThread(() -> {
                 if (errorMessage != null) {
                     binding.jidLayout.setError(errorMessage);
                     return;
