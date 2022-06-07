@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -40,6 +41,7 @@ import eu.siacs.conversations.crypto.OmemoSetting;
 import eu.siacs.conversations.crypto.PgpDecryptionService;
 import eu.siacs.conversations.databinding.CommandPageBinding;
 import eu.siacs.conversations.databinding.CommandNoteBinding;
+import eu.siacs.conversations.databinding.CommandResultFieldBinding;
 import eu.siacs.conversations.databinding.CommandWebviewBinding;
 import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.services.AvatarService;
@@ -1300,14 +1302,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     this.binding = binding;
                 }
 
-                abstract public void bind(Element el, int position);
+                abstract public void bind(Element el);
             }
 
             class ErrorViewHolder extends ViewHolder<CommandNoteBinding> {
                 public ErrorViewHolder(CommandNoteBinding binding) { super(binding); }
 
                 @Override
-                public void bind(Element iq, int position) {
+                public void bind(Element iq) {
                     binding.errorIcon.setVisibility(View.VISIBLE);
 
                     Element error = iq.findChild("error");
@@ -1324,12 +1326,33 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public NoteViewHolder(CommandNoteBinding binding) { super(binding); }
 
                 @Override
-                public void bind(Element note, int position) {
+                public void bind(Element note) {
                     binding.message.setText(note.getContent());
 
-                    if (note.getAttribute("type").equals("error")) {
+                    String type = note.getAttribute("type");
+                    if (type != null && type.equals("error")) {
                         binding.errorIcon.setVisibility(View.VISIBLE);
                     }
+                }
+            }
+
+            class ResultFieldViewHolder extends ViewHolder<CommandResultFieldBinding> {
+                public ResultFieldViewHolder(CommandResultFieldBinding binding) { super(binding); }
+
+                @Override
+                public void bind(Element field) {
+                    String label = field.getAttribute("label");
+                    if (label == null) label = field.getAttribute("var");
+                    if (label == null) label = "";
+                    binding.label.setText(label);
+
+                    ArrayAdapter<String> values = new ArrayAdapter<String>(binding.getRoot().getContext(), R.layout.simple_list_item);
+                    for (Element el : field.getChildren()) {
+                        if (el.getName().equals("value") && el.getNamespace().equals("jabber:x:data")) {
+                            values.add(el.getContent());
+                        }
+                    }
+                    binding.values.setAdapter(values);
                 }
             }
 
@@ -1337,7 +1360,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public WebViewHolder(CommandWebviewBinding binding) { super(binding); }
 
                 @Override
-                public void bind(Element oob, int position) {
+                public void bind(Element oob) {
                     binding.webview.getSettings().setJavaScriptEnabled(true);
                     binding.webview.setWebViewClient(new WebViewClient() {
                         @Override
@@ -1354,6 +1377,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_ERROR = 1;
             final int TYPE_NOTE = 2;
             final int TYPE_WEB = 3;
+            final int TYPE_RESULT_FIELD = 4;
 
             protected String mTitle;
             protected CommandPageBinding mBinding = null;
@@ -1375,6 +1399,15 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
                 if (iq.getType() == IqPacket.TYPE.RESULT && command != null) {
                     for (Element el : command.getChildren()) {
+                        if (el.getName().equals("x") && el.getNamespace().equals("jabber:x:data")) {
+                            String title = el.findChildContent("title", "jabber:x:data");
+                            if (title != null) {
+                                mTitle = title;
+                                ConversationPagerAdapter.this.notifyDataSetChanged();
+                            }
+                            this.responseElement = el;
+                            break;
+                        }
                         if (el.getName().equals("x") && el.getNamespace().equals("jabber:x:oob")) {
                             String url = el.findChildContent("url", "jabber:x:oob");
                             if (url != null) {
@@ -1398,7 +1431,48 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             @Override
             public int getItemCount() {
                 if (response == null) return 0;
+                if (response.getType() == IqPacket.TYPE.RESULT && responseElement.getNamespace().equals("jabber:x:data")) {
+                    int i = 0;
+                    for (Element el : responseElement.getChildren()) {
+                        if (!el.getNamespace().equals("jabber:x:data")) continue;
+                        if (el.getName().equals("title")) continue;
+                        if (el.getName().equals("field")) {
+                            String type = el.getAttribute("type");
+                            if (type != null && type.equals("hidden")) continue;
+                        }
+
+                        i++;
+                    }
+                    return i;
+                }
                 return 1;
+            }
+
+            public Element getItem(int position) {
+                if (response == null) return null;
+
+                if (response.getType() == IqPacket.TYPE.RESULT) {
+                    if (responseElement.getNamespace().equals("jabber:x:data")) {
+                        int i = 0;
+                        for (Element el : responseElement.getChildren()) {
+                            if (!el.getNamespace().equals("jabber:x:data")) continue;
+                            if (el.getName().equals("title")) continue;
+                            if (el.getName().equals("field")) {
+                                String type = el.getAttribute("type");
+                                if (type != null && type.equals("hidden")) continue;
+                            }
+
+                            if (i < position) {
+                                i++;
+                                continue;
+                            }
+
+                            return el;
+                        }
+                    }
+                }
+
+                return responseElement == null ? response : responseElement;
             }
 
             @Override
@@ -1406,8 +1480,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 if (response == null) return -1;
 
                 if (response.getType() == IqPacket.TYPE.RESULT) {
-                    if (responseElement.getName().equals("note")) return TYPE_NOTE;
-                    if (responseElement.getNamespace().equals("jabber:x:oob")) return TYPE_WEB;
+                    Element item = getItem(position);
+                    if (item.getName().equals("note")) return TYPE_NOTE;
+                    if (item.getNamespace().equals("jabber:x:oob")) return TYPE_WEB;
+                    if (item.getName().equals("instructions") && item.getNamespace().equals("jabber:x:data")) return TYPE_NOTE;
+                    if (item.getName().equals("field") && item.getNamespace().equals("jabber:x:data")) return TYPE_RESULT_FIELD;
                     return -1;
                 } else {
                     return TYPE_ERROR;
@@ -1429,14 +1506,18 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         CommandWebviewBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_webview, container, false);
                         return new WebViewHolder(binding);
                     }
+                    case TYPE_RESULT_FIELD: {
+                        CommandResultFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_result_field, container, false);
+                        return new ResultFieldViewHolder(binding);
+                    }
                     default:
-                        return null;
+                        throw new IllegalArgumentException("Unknown viewType: " + viewType);
                 }
             }
 
             @Override
             public void onBindViewHolder(ViewHolder viewHolder, int position) {
-                viewHolder.bind(responseElement == null ? response : responseElement, position);
+                viewHolder.bind(getItem(position));
             }
 
             public View getView() {
