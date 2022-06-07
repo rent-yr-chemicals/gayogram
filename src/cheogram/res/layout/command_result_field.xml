@@ -28,5 +28,14 @@
             android:divider="@android:color/transparent"
             android:dividerHeight="0dp"></ListView>
 
+        <TextView
+            android:id="@+id/desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="8dp"
+            android:paddingRight="8dp"
+            android:textAppearance="@style/TextAppearance.Conversations.Status"
+            android:textColor="?attr/edit_text_color" />
+
     </LinearLayout>
 </layout>

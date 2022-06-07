@@ -1343,8 +1343,20 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public void bind(Element field) {
                     String label = field.getAttribute("label");
                     if (label == null) label = field.getAttribute("var");
-                    if (label == null) label = "";
-                    binding.label.setText(label);
+                    if (label == null) {
+                        binding.label.setVisibility(View.GONE);
+                    } else {
+                        binding.label.setVisibility(View.VISIBLE);
+                        binding.label.setText(label);
+                    }
+
+                    String desc = field.findChildContent("desc", "jabber:x:data");
+                    if (desc == null) {
+                        binding.desc.setVisibility(View.GONE);
+                    } else {
+                        binding.desc.setVisibility(View.VISIBLE);
+                        binding.desc.setText(desc);
+                    }
 
                     ArrayAdapter<String> values = new ArrayAdapter<String>(binding.getRoot().getContext(), R.layout.simple_list_item);
                     for (Element el : field.getChildren()) {
