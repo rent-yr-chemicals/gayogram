@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.net.Uri;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -1400,6 +1401,35 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         mValue = field.addChild("value", "jabber:x:data");
                     }
                     binding.textinput.setText(mValue.getContent());
+
+                    binding.textinput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
+                    Element validate = field.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                    if (validate == null) return;
+                    String datatype = validate.getAttribute("datatype");
+
+                    if (datatype.equals("xs:integer") || datatype.equals("xs:int") || datatype.equals("xs:long") || datatype.equals("xs:short") || datatype.equals("xs:byte")) {
+                        binding.textinput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+                    }
+
+                    if (datatype.equals("xs:decimal") || datatype.equals("xs:double")) {
+                        binding.textinput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                    }
+
+                    if (datatype.equals("xs:date")) {
+                        binding.textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_DATE);
+                    }
+
+                    if (datatype.equals("xs:dateTime")) {
+                        binding.textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_NORMAL);
+                    }
+
+                    if (datatype.equals("xs:time")) {
+                        binding.textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
+                    }
+
+                    if (datatype.equals("xs:anyURI")) {
+                        binding.textinput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+                    }
                 }
 
                 @Override
