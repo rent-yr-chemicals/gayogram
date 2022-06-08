@@ -4,13 +4,13 @@
     <LinearLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
+        android:paddingBottom="16dp"
         android:orientation="vertical">
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textinput_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="16dp"
             android:paddingLeft="8dp"
             android:paddingRight="8dp"
             app:errorTextAppearance="@style/TextAppearance.Conversations.Design.Error"
@@ -34,7 +34,6 @@
             android:layout_height="wrap_content"
             android:paddingLeft="16dp"
             android:paddingRight="8dp"
-            android:paddingBottom="8dp"
             android:textAppearance="@style/TextAppearance.Conversations.Status"
             android:textColor="?attr/edit_text_color" />
 
