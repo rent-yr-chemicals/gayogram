@@ -11,6 +11,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -45,6 +46,7 @@ import eu.siacs.conversations.crypto.PgpDecryptionService;
 import eu.siacs.conversations.databinding.CommandPageBinding;
 import eu.siacs.conversations.databinding.CommandNoteBinding;
 import eu.siacs.conversations.databinding.CommandResultFieldBinding;
+import eu.siacs.conversations.databinding.CommandCheckboxFieldBinding;
 import eu.siacs.conversations.databinding.CommandTextFieldBinding;
 import eu.siacs.conversations.databinding.CommandWebviewBinding;
 import eu.siacs.conversations.persistance.DatabaseBackend;
@@ -1374,6 +1376,47 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
+            class CheckboxFieldViewHolder extends ViewHolder<CommandCheckboxFieldBinding> implements CompoundButton.OnCheckedChangeListener {
+                public CheckboxFieldViewHolder(CommandCheckboxFieldBinding binding) {
+                    super(binding);
+                    binding.row.setOnClickListener((v) -> {
+                        binding.checkbox.toggle();
+                    });
+                    binding.checkbox.setOnCheckedChangeListener(this);
+                }
+                protected Element mValue = null;
+
+                @Override
+                public void bind(Element field) {
+                    String label = field.getAttribute("label");
+                    if (label == null) label = field.getAttribute("var");
+                    if (label == null) label = "";
+                    binding.label.setText(label);
+
+                    String desc = field.findChildContent("desc", "jabber:x:data");
+                    if (desc == null) {
+                        binding.desc.setVisibility(View.GONE);
+                    } else {
+                        binding.desc.setVisibility(View.VISIBLE);
+                        binding.desc.setText(desc);
+                    }
+
+                    mValue = field.findChild("value", "jabber:x:data");
+                    if (mValue == null) {
+                        mValue = field.addChild("value", "jabber:x:data");
+                    }
+
+                    binding.checkbox.setChecked(mValue.getContent() != null && (mValue.getContent().equals("true") || mValue.getContent().equals("1")));
+                }
+
+                @Override
+                public void onCheckedChanged(CompoundButton checkbox, boolean isChecked) {
+                    if (mValue == null) return;
+
+                    mValue.setContent(isChecked ? "true" : "false");
+                }
+            }
+
             class TextFieldViewHolder extends ViewHolder<CommandTextFieldBinding> implements TextWatcher {
                 public TextFieldViewHolder(CommandTextFieldBinding binding) {
                     super(binding);
@@ -1469,6 +1512,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_WEB = 3;
             final int TYPE_RESULT_FIELD = 4;
             final int TYPE_TEXT_FIELD = 5;
+            final int TYPE_CHECKBOX_FIELD = 6;
 
             protected String mTitle;
             protected CommandPageBinding mBinding = null;
@@ -1581,7 +1625,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         String formType = responseElement.getAttribute("type");
                         String fieldType = item.getAttribute("type");
                         if (formType.equals("result") || fieldType.equals("fixed")) return TYPE_RESULT_FIELD;
-                        if (formType.equals("form")) return TYPE_TEXT_FIELD;
+                        if (formType.equals("form")) {
+                            if (fieldType.equals("boolean")) return TYPE_CHECKBOX_FIELD;
+
+                            return TYPE_TEXT_FIELD;
+                        }
                     }
                     return -1;
                 } else {
@@ -1607,6 +1655,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     case TYPE_RESULT_FIELD: {
                         CommandResultFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_result_field, container, false);
                         return new ResultFieldViewHolder(binding);
+                    }
+                    case TYPE_CHECKBOX_FIELD: {
+                        CommandCheckboxFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_checkbox_field, container, false);
+                        return new CheckboxFieldViewHolder(binding);
                     }
                     case TYPE_TEXT_FIELD: {
                         CommandTextFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_text_field, container, false);
