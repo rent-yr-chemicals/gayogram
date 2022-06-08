@@ -1243,30 +1243,6 @@ public class ConversationFragment extends XmppFragment
                     new EditMessageActionModeCallback(this.binding.textinput));
         }
 
-        conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout);
-        commandAdapter = new CommandAdapter((XmppActivity) getActivity());
-        binding.commandsView.setAdapter(commandAdapter);
-        binding.commandsView.setOnItemClickListener((parent, view, position, id) -> {
-            conversation.startCommand(commandAdapter.getItem(position), activity.xmppConnectionService);
-        });
-        Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
-        if (commandJid != null) {
-            binding.tabLayout.setVisibility(View.VISIBLE);
-            activity.xmppConnectionService.fetchCommands(conversation.getAccount(), commandJid, (a, iq) -> {
-                if (iq.getType() == IqPacket.TYPE.RESULT) {
-                    activity.runOnUiThread(() -> {
-                        for (Element child : iq.query().getChildren()) {
-                            if (!"item".equals(child.getName()) || !Namespace.DISCO_ITEMS.equals(child.getNamespace())) continue;
-                            commandAdapter.add(child);
-                        }
-                    });
-                } else {
-                    binding.tabLayout.setVisibility(View.GONE);
-                    binding.conversationViewPager.setCurrentItem(0);
-                }
-            });
-        }
-
         return binding.getRoot();
     }
 
@@ -2526,6 +2502,31 @@ public class ConversationFragment extends XmppFragment
         activity.xmppConnectionService
                 .getNotificationService()
                 .setOpenConversation(this.conversation);
+
+        conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout);
+        commandAdapter = new CommandAdapter((XmppActivity) getActivity());
+        binding.commandsView.setAdapter(commandAdapter);
+        binding.commandsView.setOnItemClickListener((parent, view, position, id) -> {
+            conversation.startCommand(commandAdapter.getItem(position), activity.xmppConnectionService);
+        });
+        Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
+        if (commandJid != null) {
+            binding.tabLayout.setVisibility(View.VISIBLE);
+            activity.xmppConnectionService.fetchCommands(conversation.getAccount(), commandJid, (a, iq) -> {
+                if (iq.getType() == IqPacket.TYPE.RESULT) {
+                    activity.runOnUiThread(() -> {
+                        for (Element child : iq.query().getChildren()) {
+                            if (!"item".equals(child.getName()) || !Namespace.DISCO_ITEMS.equals(child.getNamespace())) continue;
+                            commandAdapter.add(child);
+                        }
+                    });
+                } else {
+                    binding.tabLayout.setVisibility(View.GONE);
+                    binding.conversationViewPager.setCurrentItem(0);
+                }
+            });
+        }
+
         return true;
     }
 
