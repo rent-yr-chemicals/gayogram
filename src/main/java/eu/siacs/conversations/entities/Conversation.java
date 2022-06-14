@@ -1595,6 +1595,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             break;
                         }
                     }
+
+                    if (responseElement == null && (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled"))) {
+                        removeSession(this);
+                        return;
+                    }
                 }
 
                 if (actionsAdapter.getCount() > 0) {
