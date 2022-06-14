@@ -1614,7 +1614,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             @Override
             public int getItemCount() {
                 if (response == null) return 0;
-                if (response.getType() == IqPacket.TYPE.RESULT && responseElement.getNamespace().equals("jabber:x:data")) {
+                if (response.getType() == IqPacket.TYPE.RESULT && responseElement != null && responseElement.getNamespace().equals("jabber:x:data")) {
                     int i = 0;
                     for (Element el : responseElement.getChildren()) {
                         if (!el.getNamespace().equals("jabber:x:data")) continue;
@@ -1634,7 +1634,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             public Element getItem(int position) {
                 if (response == null) return null;
 
-                if (response.getType() == IqPacket.TYPE.RESULT) {
+                if (response.getType() == IqPacket.TYPE.RESULT && responseElement != null) {
                     if (responseElement.getNamespace().equals("jabber:x:data")) {
                         int i = 0;
                         for (Element el : responseElement.getChildren()) {
