@@ -2,21 +2,25 @@ package eu.siacs.conversations.entities;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.DataSetObserver;
 import android.net.Uri;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
+import android.widget.TextView;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.viewpager.widget.PagerAdapter;
@@ -1225,6 +1229,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             mPager.setCurrentItem(getCount() - 1);
         }
 
+        public void removeSession(CommandSession session) {
+            sessions.remove(session);
+            notifyDataSetChanged();
+        }
+
         @NonNull
         @Override
         public Object instantiateItem(@NonNull ViewGroup container, int position) {
@@ -1235,14 +1244,6 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             CommandSession session = sessions.get(position-2);
             CommandPageBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_page, container, false);
             container.addView(binding.getRoot());
-            binding.form.setAdapter(session);
-            binding.done.setOnClickListener((button) -> {
-                if (session.execute()) {
-                    sessions.remove(session);
-                    notifyDataSetChanged();
-                }
-            });
-
             session.setBinding(binding);
             return session;
         }
@@ -1519,10 +1520,35 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected IqPacket response = null;
             protected Element responseElement = null;
             protected XmppConnectionService xmppConnectionService;
+            protected ArrayAdapter<String> actionsAdapter;
 
             CommandSession(String title, XmppConnectionService xmppConnectionService) {
                 mTitle = title;
                 this.xmppConnectionService = xmppConnectionService;
+                actionsAdapter = new ArrayAdapter<String>(xmppConnectionService, R.layout.simple_list_item) {
+                    @Override
+                    public View getView(int position, View convertView, ViewGroup parent) {
+                        View v = super.getView(position, convertView, parent);
+                        TextView tv = (TextView) v.findViewById(android.R.id.text1);
+                        tv.setGravity(Gravity.CENTER);
+                        int resId = xmppConnectionService.getResources().getIdentifier("action_" + tv.getText() , "string" , xmppConnectionService.getPackageName());
+                        if (resId != 0) tv.setText(xmppConnectionService.getResources().getString(resId));
+                        tv.setTextColor(ContextCompat.getColor(xmppConnectionService, R.color.white));
+                        tv.setBackgroundColor(UIHelper.getColorForName(tv.getText().toString()));
+                        return v;
+                    }
+                };
+                actionsAdapter.registerDataSetObserver(new DataSetObserver() {
+                    @Override
+                    public void onChanged() {
+                        if (mBinding == null) return;
+
+                        mBinding.actions.setNumColumns(actionsAdapter.getCount() > 1 ? 2 : 1);
+                    }
+
+                    @Override
+                    public void onInvalidated() {}
+                });
             }
 
             public String getTitle() {
@@ -1532,10 +1558,19 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             public void updateWithResponse(IqPacket iq) {
                 this.responseElement = null;
                 this.response = iq;
+                this.actionsAdapter.clear();
 
                 Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
                 if (iq.getType() == IqPacket.TYPE.RESULT && command != null) {
                     for (Element el : command.getChildren()) {
+                        if (el.getName().equals("actions") && el.getNamespace().equals("http://jabber.org/protocol/commands")) {
+                            for (Element action : el.getChildren()) {
+                                if (!el.getNamespace().equals("http://jabber.org/protocol/commands")) continue;
+                                if (action.getName().equals("execute")) continue;
+
+                                actionsAdapter.add(action.getName());
+                            }
+                        }
                         if (el.getName().equals("x") && el.getNamespace().equals("jabber:x:data")) {
                             String title = el.findChildContent("title", "jabber:x:data");
                             if (title != null) {
@@ -1560,6 +1595,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             break;
                         }
                     }
+                }
+
+                if (actionsAdapter.getCount() > 0) {
+                    if (actionsAdapter.getPosition("cancel") < 0) actionsAdapter.insert("cancel", 0);
+                } else {
+                    actionsAdapter.add("close");
                 }
 
                 notifyDataSetChanged();
@@ -1679,6 +1720,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             public boolean execute() {
+                return execute("execute");
+            }
+
+            public boolean execute(int actionPosition) {
+                return execute(actionsAdapter.getItem(actionPosition));
+            }
+
+            public boolean execute(String action) {
                 if (response == null || responseElement == null) return true;
                 Element command = response.findChild("command", "http://jabber.org/protocol/commands");
                 if (command == null) return true;
@@ -1695,7 +1744,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 final Element c = packet.addChild("command", Namespace.COMMANDS);
                 c.setAttribute("node", command.getAttribute("node"));
                 c.setAttribute("sessionid", command.getAttribute("sessionid"));
-                c.setAttribute("action", "execute");
+                c.setAttribute("action", action);
                 c.addChild(responseElement);
 
                 xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
@@ -1713,6 +1762,15 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     @Override
                     public boolean canScrollVertically() { return getItemCount() > 1; }
                 });
+                mBinding.form.setAdapter(this);
+                mBinding.actions.setAdapter(actionsAdapter);
+                mBinding.actions.setOnItemClickListener((parent, v, pos, id) -> {
+                    if (execute(pos)) {
+                        removeSession(CommandSession.this);
+                    }
+                });
+
+                actionsAdapter.notifyDataSetChanged();
             }
         }
     }

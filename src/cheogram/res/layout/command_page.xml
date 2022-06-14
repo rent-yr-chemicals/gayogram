@@ -10,20 +10,20 @@
             android:paddingTop="8dp"
             android:layout_width="match_parent"
             android:layout_height="fill_parent"
-            android:layout_above="@+id/done"
+            android:layout_above="@+id/actions"
             android:orientation="vertical"
             app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
-        <Button
-            android:id="@+id/done"
-            android:layout_height="wrap_content"
+        <GridView
+            android:id="@+id/actions"
             android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
             android:layout_alignParentBottom="true"
-            style="@style/Widget.Conversations.Button.Borderless"
-            android:background="?attr/colorPrimary"
-            android:textColor="@color/white"
-            android:text="Done" />
+            android:horizontalSpacing="0dp"
+            android:verticalSpacing="0dp"
+            android:numColumns="2" />
+
     </RelativeLayout>
 </layout>
