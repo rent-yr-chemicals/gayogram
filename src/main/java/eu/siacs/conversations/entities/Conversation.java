@@ -13,8 +13,10 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.Spinner;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 
@@ -51,6 +53,7 @@ import eu.siacs.conversations.databinding.CommandPageBinding;
 import eu.siacs.conversations.databinding.CommandNoteBinding;
 import eu.siacs.conversations.databinding.CommandResultFieldBinding;
 import eu.siacs.conversations.databinding.CommandCheckboxFieldBinding;
+import eu.siacs.conversations.databinding.CommandSpinnerFieldBinding;
 import eu.siacs.conversations.databinding.CommandTextFieldBinding;
 import eu.siacs.conversations.databinding.CommandWebviewBinding;
 import eu.siacs.conversations.persistance.DatabaseBackend;
@@ -1418,6 +1421,85 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
+            class SpinnerFieldViewHolder extends ViewHolder<CommandSpinnerFieldBinding> implements AdapterView.OnItemSelectedListener {
+                public SpinnerFieldViewHolder(CommandSpinnerFieldBinding binding) {
+                    super(binding);
+                    binding.spinner.setOnItemSelectedListener(this);
+                }
+                protected Element mValue = null;
+
+                @Override
+                public void bind(Element field) {
+                    String label = field.getAttribute("label");
+                    if (label == null) label = field.getAttribute("var");
+                    if (label == null) {
+                        binding.label.setVisibility(View.GONE);
+                    } else {
+                        binding.label.setVisibility(View.VISIBLE);
+                        binding.label.setText(label);
+                        binding.spinner.setPrompt(label);
+                    }
+
+                    String desc = field.findChildContent("desc", "jabber:x:data");
+                    if (desc == null) {
+                        binding.desc.setVisibility(View.GONE);
+                    } else {
+                        binding.desc.setVisibility(View.VISIBLE);
+                        binding.desc.setText(desc);
+                    }
+
+                    mValue = field.findChild("value", "jabber:x:data");
+                    if (mValue == null) {
+                        mValue = field.addChild("value", "jabber:x:data");
+                    }
+
+                    ArrayAdapter<Option> options = new ArrayAdapter<Option>(binding.getRoot().getContext(), android.R.layout.simple_spinner_item);
+                    options.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    for (Element el : field.getChildren()) {
+                        if (!el.getNamespace().equals("jabber:x:data")) continue;
+                        if (!el.getName().equals("option")) continue;
+                        options.add(new Option(el));
+                    }
+                    binding.spinner.setAdapter(options);
+                    binding.spinner.setSelection(options.getPosition(new Option(mValue.getContent(), null)));
+                }
+
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                    Option o = (Option) parent.getItemAtPosition(pos);
+                    if (mValue == null) return;
+
+                    mValue.setContent(o == null ? "" : o.value);
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    mValue.setContent("");
+                }
+
+                class Option {
+                    protected final String value;
+                    protected final String label;
+
+                    public Option(final Element option) {
+                        this(option.findChildContent("value", "jabber:x:data"), option.getAttribute("label"));
+                    }
+
+                    public Option(final String value, final String label) {
+                        this.value = value;
+                        this.label = label == null ? value : label;
+                    }
+
+                    public boolean equals(Object o) {
+                        if (!(o instanceof Option)) return false;
+
+                        return value.equals(((Option) o).value);
+                    }
+
+                    public String toString() { return label; }
+                }
+            }
+
             class TextFieldViewHolder extends ViewHolder<CommandTextFieldBinding> implements TextWatcher {
                 public TextFieldViewHolder(CommandTextFieldBinding binding) {
                     super(binding);
@@ -1514,6 +1596,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_RESULT_FIELD = 4;
             final int TYPE_TEXT_FIELD = 5;
             final int TYPE_CHECKBOX_FIELD = 6;
+            final int TYPE_SPINNER_FIELD = 7;
 
             protected String mTitle;
             protected CommandPageBinding mBinding = null;
@@ -1673,6 +1756,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         if (formType.equals("result") || fieldType.equals("fixed")) return TYPE_RESULT_FIELD;
                         if (formType.equals("form")) {
                             if (fieldType.equals("boolean")) return TYPE_CHECKBOX_FIELD;
+                            if (fieldType.equals("list-single")) return TYPE_SPINNER_FIELD;
 
                             return TYPE_TEXT_FIELD;
                         }
@@ -1705,6 +1789,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     case TYPE_CHECKBOX_FIELD: {
                         CommandCheckboxFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_checkbox_field, container, false);
                         return new CheckboxFieldViewHolder(binding);
+                    }
+                    case TYPE_SPINNER_FIELD: {
+                        CommandSpinnerFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_spinner_field, container, false);
+                        return new SpinnerFieldViewHolder(binding);
                     }
                     case TYPE_TEXT_FIELD: {
                         CommandTextFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_text_field, container, false);
