@@ -1752,7 +1752,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     if (item.getName().equals("instructions") && item.getNamespace().equals("jabber:x:data")) return TYPE_NOTE;
                     if (item.getName().equals("field") && item.getNamespace().equals("jabber:x:data")) {
                         String formType = responseElement.getAttribute("type");
+                        if (formType == null) return -1;
+
                         String fieldType = item.getAttribute("type");
+                        if (fieldType == null) fieldType = "text-single";
+
                         if (formType.equals("result") || fieldType.equals("fixed")) return TYPE_RESULT_FIELD;
                         if (formType.equals("form")) {
                             if (fieldType.equals("boolean")) return TYPE_CHECKBOX_FIELD;
