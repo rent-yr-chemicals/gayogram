@@ -33,7 +33,7 @@ import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
@@ -58,6 +58,7 @@ import eu.siacs.conversations.crypto.PgpDecryptionService;
 import eu.siacs.conversations.databinding.CommandPageBinding;
 import eu.siacs.conversations.databinding.CommandNoteBinding;
 import eu.siacs.conversations.databinding.CommandResultFieldBinding;
+import eu.siacs.conversations.databinding.CommandResultCellBinding;
 import eu.siacs.conversations.databinding.CommandCheckboxFieldBinding;
 import eu.siacs.conversations.databinding.CommandRadioEditFieldBinding;
 import eu.siacs.conversations.databinding.CommandSpinnerFieldBinding;
@@ -1444,6 +1445,23 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
+            class ResultCellViewHolder extends ViewHolder<CommandResultCellBinding> {
+                public ResultCellViewHolder(CommandResultCellBinding binding) { super(binding); }
+
+                @Override
+                public void bind(Element field) {
+                    Column col = (Column) field;
+
+                    if (col.item == null) {
+                        binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Subhead);
+                        binding.text.setText(col.reported.getAttribute("label"));
+                    } else {
+                        binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Body1);
+                        binding.text.setText(col.item.findChildContent("value", "jabber:x:data"));
+                    }
+                }
+            }
+
             class CheckboxFieldViewHolder extends ViewHolder<CommandCheckboxFieldBinding> implements CompoundButton.OnCheckedChangeListener {
                 public CheckboxFieldViewHolder(CommandCheckboxFieldBinding binding) {
                     super(binding);
@@ -1693,6 +1711,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
+            class Column extends Element {
+                protected Element reported;
+                protected Element item;
+
+                Column(Element reported, Element item) {
+                    super("x", "x:column");
+                    this.reported = reported;
+                    this.item = item;
+                }
+            }
+
             final int TYPE_ERROR = 1;
             final int TYPE_NOTE = 2;
             final int TYPE_WEB = 3;
@@ -1701,18 +1730,22 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_CHECKBOX_FIELD = 6;
             final int TYPE_SPINNER_FIELD = 7;
             final int TYPE_RADIO_EDIT_FIELD = 8;
+            final int TYPE_RESULT_CELL = 9;
 
             protected String mTitle;
             protected CommandPageBinding mBinding = null;
             protected IqPacket response = null;
             protected Element responseElement = null;
+            protected Element reported = null;
             protected SparseArray<Integer> viewTypes = new SparseArray<>();
             protected XmppConnectionService xmppConnectionService;
             protected ArrayAdapter<String> actionsAdapter;
+            protected GridLayoutManager layoutManager;
 
             CommandSession(String title, XmppConnectionService xmppConnectionService) {
                 mTitle = title;
                 this.xmppConnectionService = xmppConnectionService;
+                setupLayoutManager();
                 actionsAdapter = new ArrayAdapter<String>(xmppConnectionService, R.layout.simple_list_item) {
                     @Override
                     public View getView(int position, View convertView, ViewGroup parent) {
@@ -1745,9 +1778,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             public void updateWithResponse(IqPacket iq) {
                 this.responseElement = null;
+                this.reported = null;
                 this.response = iq;
                 this.viewTypes.clear();
                 this.actionsAdapter.clear();
+                layoutManager.setSpanCount(1);
 
                 Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
                 if (iq.getType() == IqPacket.TYPE.RESULT && command != null) {
@@ -1769,6 +1804,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                             if (el.getAttribute("type").equals("result") || el.getAttribute("type").equals("form")) {
                                 this.responseElement = el;
+                                this.reported = el.findChild("reported", "jabber:x:data");
+                                layoutManager.setSpanCount(this.reported == null ? 1 : this.reported.getChildren().size());
                             }
                             break;
                         }
@@ -1822,6 +1859,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             if (type != null && type.equals("hidden")) continue;
                         }
 
+                        if (el.getName().equals("reported") || el.getName().equals("item")) {
+                            i += el.getChildren().size();
+                            continue;
+                        }
+
                         i++;
                     }
                     return i;
@@ -1841,6 +1883,34 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             if (el.getName().equals("field")) {
                                 String type = el.getAttribute("type");
                                 if (type != null && type.equals("hidden")) continue;
+                            }
+
+                            if (el.getName().equals("reported") || el.getName().equals("item")) {
+                                int col = 0;
+                                for (Element subel : el.getChildren()) {
+                                    if (i < position) {
+                                        i++;
+                                        col++;
+                                        continue;
+                                    }
+
+                                    Element reportedField = null;
+                                    if (reported != null) {
+                                        int rCol = 0;
+                                        for (Element field : reported.getChildren()) {
+                                            if (!field.getName().equals("field") || !field.getNamespace().equals("jabber:x:data")) continue;
+                                            if (rCol < col) {
+                                                rCol++;
+                                                continue;
+                                            }
+                                            reportedField = field;
+                                            break;
+                                        }
+                                    }
+                                    return new Column(reportedField, el.getName().equals("item") ? subel : null);
+                                }
+
+                                i--;
                             }
 
                             if (i < position) {
@@ -1906,6 +1976,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             return TYPE_TEXT_FIELD;
                         }
                     }
+                    if (item instanceof Column) {
+                        return TYPE_RESULT_CELL;
+                    }
                     return -1;
                 } else {
                     return TYPE_ERROR;
@@ -1930,6 +2003,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     case TYPE_RESULT_FIELD: {
                         CommandResultFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_result_field, container, false);
                         return new ResultFieldViewHolder(binding);
+                    }
+                    case TYPE_RESULT_CELL: {
+                        CommandResultCellBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_result_cell, container, false);
+                        return new ResultCellViewHolder(binding);
                     }
                     case TYPE_CHECKBOX_FIELD: {
                         CommandCheckboxFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_checkbox_field, container, false);
@@ -1998,12 +2075,24 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return false;
             }
 
-            public void setBinding(CommandPageBinding b) {
-                mBinding = b;
-                mBinding.form.setLayoutManager(new LinearLayoutManager(mPager.getContext()) {
+            protected GridLayoutManager setupLayoutManager() {
+                layoutManager = new GridLayoutManager(mPager.getContext(), layoutManager == null ? 1 : layoutManager.getSpanCount()) {
                     @Override
                     public boolean canScrollVertically() { return getItemCount() > 1; }
+                };
+                layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                    @Override
+                    public int getSpanSize(int position) {
+                        if (getItemViewType(position) != TYPE_RESULT_CELL) return layoutManager.getSpanCount();
+                        return 1;
+                    }
                 });
+                return layoutManager;
+            }
+
+            public void setBinding(CommandPageBinding b) {
+                mBinding = b;
+                mBinding.form.setLayoutManager(setupLayoutManager());
                 mBinding.form.setAdapter(this);
                 mBinding.actions.setAdapter(actionsAdapter);
                 mBinding.actions.setOnItemClickListener((parent, v, pos, id) -> {

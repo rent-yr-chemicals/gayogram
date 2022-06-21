@@ -9,10 +9,10 @@
             android:id="@+id/form"
             android:paddingTop="8dp"
             android:layout_width="match_parent"
-            android:layout_height="fill_parent"
+            android:layout_height="match_parent"
             android:layout_above="@+id/actions"
             android:orientation="vertical"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager" />
 
         <GridView
             android:id="@+id/actions"
