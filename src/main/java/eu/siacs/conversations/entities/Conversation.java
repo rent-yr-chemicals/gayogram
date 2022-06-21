@@ -1778,6 +1778,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         removeSession(this);
                         return;
                     }
+
+                    if (command.getAttribute("status").equals("executing") && actionsAdapter.getCount() < 1) {
+                        // No actions have been given, but we are not done?
+                        // This is probably a spec violation, but we should do *something*
+                        actionsAdapter.add("execute");
+                    }
                 }
 
                 if (actionsAdapter.getCount() > 0) {
