@@ -6,6 +6,8 @@ import android.database.DataSetObserver;
 import android.net.Uri;
 import android.text.Editable;
 import android.text.InputType;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -19,6 +21,7 @@ import android.widget.TextView;
 import android.widget.Spinner;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -53,6 +56,7 @@ import eu.siacs.conversations.databinding.CommandPageBinding;
 import eu.siacs.conversations.databinding.CommandNoteBinding;
 import eu.siacs.conversations.databinding.CommandResultFieldBinding;
 import eu.siacs.conversations.databinding.CommandCheckboxFieldBinding;
+import eu.siacs.conversations.databinding.CommandRadioEditFieldBinding;
 import eu.siacs.conversations.databinding.CommandSpinnerFieldBinding;
 import eu.siacs.conversations.databinding.CommandTextFieldBinding;
 import eu.siacs.conversations.databinding.CommandWebviewBinding;
@@ -66,6 +70,7 @@ import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.Jid;
+import eu.siacs.conversations.xmpp.Option;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
 import eu.siacs.conversations.xmpp.mam.MamReference;
 import eu.siacs.conversations.xmpp.stanzas.IqPacket;
@@ -1421,6 +1426,75 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
+            class RadioEditFieldViewHolder extends ViewHolder<CommandRadioEditFieldBinding> implements CompoundButton.OnCheckedChangeListener {
+                public RadioEditFieldViewHolder(CommandRadioEditFieldBinding binding) {
+                    super(binding);
+                    options = new ArrayAdapter<Option>(binding.getRoot().getContext(), R.layout.radio_grid_item) {
+                        @Override
+                        public View getView(int position, View convertView, ViewGroup parent) {
+                            CompoundButton v = (CompoundButton) super.getView(position, convertView, parent);
+                            v.setId(position);
+                            v.setChecked(getItem(position).getValue().equals(mValue.getContent()));
+                            v.setOnCheckedChangeListener(RadioEditFieldViewHolder.this);
+                            return v;
+                        }
+                    };
+                }
+                protected Element mValue = null;
+                protected ArrayAdapter<Option> options;
+
+                @Override
+                public void bind(Element field) {
+                    String label = field.getAttribute("label");
+                    if (label == null) label = field.getAttribute("var");
+                    if (label == null) {
+                        binding.label.setVisibility(View.GONE);
+                    } else {
+                        binding.label.setVisibility(View.VISIBLE);
+                        binding.label.setText(label);
+                    }
+
+                    String desc = field.findChildContent("desc", "jabber:x:data");
+                    if (desc == null) {
+                        binding.desc.setVisibility(View.GONE);
+                    } else {
+                        binding.desc.setVisibility(View.VISIBLE);
+                        binding.desc.setText(desc);
+                    }
+
+                    mValue = field.findChild("value", "jabber:x:data");
+                    if (mValue == null) {
+                        mValue = field.addChild("value", "jabber:x:data");
+                    }
+
+                    options.clear();
+                    List<Option> theOptions = Option.forField(field);
+                    options.addAll(theOptions);
+
+                    float screenWidth = binding.getRoot().getContext().getResources().getDisplayMetrics().widthPixels;
+                    TextPaint paint = ((TextView) LayoutInflater.from(binding.getRoot().getContext()).inflate(R.layout.radio_grid_item, null)).getPaint();
+                    float maxColumnWidth = theOptions.stream().map((x) ->
+                        StaticLayout.getDesiredWidth(x.toString(), paint)
+                    ).max(Float::compare).orElse(new Float(0.0));
+                    if (maxColumnWidth * theOptions.size() < 0.90 * screenWidth) {
+                        binding.radios.setNumColumns(theOptions.size());
+                    } else if (maxColumnWidth * (theOptions.size() / 2) < 0.90 * screenWidth) {
+                        binding.radios.setNumColumns(theOptions.size() / 2);
+                    } else {
+                        binding.radios.setNumColumns(1);
+                    }
+                    binding.radios.setAdapter(options);
+                }
+
+                @Override
+                public void onCheckedChanged(CompoundButton radio, boolean isChecked) {
+                    if (mValue == null) return;
+
+                    if (isChecked) mValue.setContent(options.getItem(radio.getId()).getValue());
+                    options.notifyDataSetChanged();
+                }
+            }
+
             class SpinnerFieldViewHolder extends ViewHolder<CommandSpinnerFieldBinding> implements AdapterView.OnItemSelectedListener {
                 public SpinnerFieldViewHolder(CommandSpinnerFieldBinding binding) {
                     super(binding);
@@ -1455,11 +1529,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                     ArrayAdapter<Option> options = new ArrayAdapter<Option>(binding.getRoot().getContext(), android.R.layout.simple_spinner_item);
                     options.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    for (Element el : field.getChildren()) {
-                        if (!el.getNamespace().equals("jabber:x:data")) continue;
-                        if (!el.getName().equals("option")) continue;
-                        options.add(new Option(el));
-                    }
+                    options.addAll(Option.forField(field));
+
                     binding.spinner.setAdapter(options);
                     binding.spinner.setSelection(options.getPosition(new Option(mValue.getContent(), null)));
                 }
@@ -1469,34 +1540,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     Option o = (Option) parent.getItemAtPosition(pos);
                     if (mValue == null) return;
 
-                    mValue.setContent(o == null ? "" : o.value);
+                    mValue.setContent(o == null ? "" : o.getValue());
                 }
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parent) {
                     mValue.setContent("");
-                }
-
-                class Option {
-                    protected final String value;
-                    protected final String label;
-
-                    public Option(final Element option) {
-                        this(option.findChildContent("value", "jabber:x:data"), option.getAttribute("label"));
-                    }
-
-                    public Option(final String value, final String label) {
-                        this.value = value;
-                        this.label = label == null ? value : label;
-                    }
-
-                    public boolean equals(Object o) {
-                        if (!(o instanceof Option)) return false;
-
-                        return value.equals(((Option) o).value);
-                    }
-
-                    public String toString() { return label; }
                 }
             }
 
@@ -1597,11 +1646,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_TEXT_FIELD = 5;
             final int TYPE_CHECKBOX_FIELD = 6;
             final int TYPE_SPINNER_FIELD = 7;
+            final int TYPE_RADIO_EDIT_FIELD = 8;
 
             protected String mTitle;
             protected CommandPageBinding mBinding = null;
             protected IqPacket response = null;
             protected Element responseElement = null;
+            protected SparseArray<Integer> viewTypes = new SparseArray<>();
             protected XmppConnectionService xmppConnectionService;
             protected ArrayAdapter<String> actionsAdapter;
 
@@ -1641,6 +1692,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             public void updateWithResponse(IqPacket iq) {
                 this.responseElement = null;
                 this.response = iq;
+                this.viewTypes.clear();
                 this.actionsAdapter.clear();
 
                 Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
@@ -1743,13 +1795,23 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             @Override
             public int getItemViewType(int position) {
+                if (viewTypes.get(position) != null) return viewTypes.get(position);
                 if (response == null) return -1;
 
                 if (response.getType() == IqPacket.TYPE.RESULT) {
                     Element item = getItem(position);
-                    if (item.getName().equals("note")) return TYPE_NOTE;
-                    if (item.getNamespace().equals("jabber:x:oob")) return TYPE_WEB;
-                    if (item.getName().equals("instructions") && item.getNamespace().equals("jabber:x:data")) return TYPE_NOTE;
+                    if (item.getName().equals("note")) {
+                        viewTypes.put(position, TYPE_NOTE);
+                        return TYPE_NOTE;
+                    }
+                    if (item.getNamespace().equals("jabber:x:oob")) {
+                        viewTypes.put(position, TYPE_WEB);
+                        return TYPE_WEB;
+                    }
+                    if (item.getName().equals("instructions") && item.getNamespace().equals("jabber:x:data")) {
+                        viewTypes.put(position, TYPE_NOTE);
+                        return TYPE_NOTE;
+                    }
                     if (item.getName().equals("field") && item.getNamespace().equals("jabber:x:data")) {
                         String formType = responseElement.getAttribute("type");
                         if (formType == null) return -1;
@@ -1757,11 +1819,26 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         String fieldType = item.getAttribute("type");
                         if (fieldType == null) fieldType = "text-single";
 
-                        if (formType.equals("result") || fieldType.equals("fixed")) return TYPE_RESULT_FIELD;
+                        if (formType.equals("result") || fieldType.equals("fixed")) {
+                            viewTypes.put(position, TYPE_RESULT_FIELD);
+                            return TYPE_RESULT_FIELD;
+                        }
                         if (formType.equals("form")) {
-                            if (fieldType.equals("boolean")) return TYPE_CHECKBOX_FIELD;
-                            if (fieldType.equals("list-single")) return TYPE_SPINNER_FIELD;
+                            viewTypes.put(position, TYPE_CHECKBOX_FIELD);
+                            if (fieldType.equals("boolean")) {
+                                return TYPE_CHECKBOX_FIELD;
+                            }
+                            if (fieldType.equals("list-single")) {
+                                if (item.findChild("value", "jabber:x:data") == null) {
+                                    viewTypes.put(position, TYPE_RADIO_EDIT_FIELD);
+                                    return TYPE_RADIO_EDIT_FIELD;
+                                }
 
+                                viewTypes.put(position, TYPE_SPINNER_FIELD);
+                                return TYPE_SPINNER_FIELD;
+                            }
+
+                            viewTypes.put(position, TYPE_TEXT_FIELD);
                             return TYPE_TEXT_FIELD;
                         }
                     }
@@ -1793,6 +1870,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     case TYPE_CHECKBOX_FIELD: {
                         CommandCheckboxFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_checkbox_field, container, false);
                         return new CheckboxFieldViewHolder(binding);
+                    }
+                    case TYPE_RADIO_EDIT_FIELD: {
+                        CommandRadioEditFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_radio_edit_field, container, false);
+                        return new RadioEditFieldViewHolder(binding);
                     }
                     case TYPE_SPINNER_FIELD: {
                         CommandSpinnerFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_spinner_field, container, false);
