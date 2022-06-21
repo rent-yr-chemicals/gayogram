@@ -1,5 +1,7 @@
 package eu.siacs.conversations.entities;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.DataSetObserver;
@@ -18,6 +20,7 @@ import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.Spinner;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -1430,6 +1433,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         }
                     }
                     binding.values.setAdapter(values);
+
+                    ClipboardManager clipboard = binding.getRoot().getContext().getSystemService(ClipboardManager.class);
+                    binding.values.setOnItemLongClickListener((arg0, arg1, pos, id) -> {
+                        ClipData myClip = ClipData.newPlainText("text", values.getItem(pos));
+                        clipboard.setPrimaryClip(myClip);
+                        Toast.makeText(binding.getRoot().getContext(), R.string.message_copied_to_clipboard, Toast.LENGTH_SHORT).show();
+                        return true;
+                    });
                 }
             }
 
