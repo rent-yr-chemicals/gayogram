@@ -24,7 +24,6 @@
         <androidx.viewpager.widget.ViewPager
             android:id="@+id/conversation_view_pager"
             android:layout_below="@id/tab_layout"
-            android:layout_above="@+id/snackbar"
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:background="?attr/color_background_primary">
@@ -37,7 +36,7 @@
                     android:id="@+id/messages_view"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:layout_above="@+id/textsend"
+                    android:layout_above="@+id/snackbar"
                     android:layout_alignParentStart="true"
                     android:layout_alignParentLeft="true"
                     android:layout_alignParentTop="true"
@@ -149,6 +148,47 @@
                     android:visibility="gone"
                     app:backgroundColor="?attr/unread_count"
                     tools:ignore="RtlCompat" />
+
+                <RelativeLayout
+                    android:id="@+id/snackbar"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_above="@+id/textsend"
+                    android:layout_marginLeft="8dp"
+                    android:layout_marginRight="8dp"
+                    android:layout_marginBottom="4dp"
+                    android:background="@drawable/snackbar"
+                    android:minHeight="48dp"
+                    android:visibility="gone">
+
+                    <TextView
+                        android:id="@+id/snackbar_message"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentStart="true"
+                        android:layout_alignParentLeft="true"
+                        android:layout_centerVertical="true"
+                        android:layout_toStartOf="@+id/snackbar_action"
+                        android:layout_toLeftOf="@+id/snackbar_action"
+                        android:paddingStart="24dp"
+                        android:paddingLeft="24dp"
+                        android:textAppearance="@style/TextAppearance.Conversations.Body1.OnDark" />
+
+                    <TextView
+                        android:id="@+id/snackbar_action"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentEnd="true"
+                        android:layout_alignParentRight="true"
+                        android:layout_centerVertical="true"
+                        android:paddingLeft="24dp"
+                        android:paddingTop="16dp"
+                        android:paddingRight="24dp"
+                        android:paddingBottom="16dp"
+                        android:textAllCaps="true"
+                        android:textAppearance="@style/TextAppearance.Conversations.Body1.OnDark"
+                        android:textStyle="bold" />
+                </RelativeLayout>
 		        </RelativeLayout>
 
             <ListView
@@ -163,47 +203,6 @@
                 android:dividerHeight="0dp"></ListView>
 
         </androidx.viewpager.widget.ViewPager>
-
-        <RelativeLayout
-            android:id="@+id/snackbar"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@+id/textsend"
-            android:layout_marginLeft="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginBottom="4dp"
-            android:background="@drawable/snackbar"
-            android:minHeight="48dp"
-            android:visibility="gone">
-
-            <TextView
-                android:id="@+id/snackbar_message"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentStart="true"
-                android:layout_alignParentLeft="true"
-                android:layout_centerVertical="true"
-                android:layout_toStartOf="@+id/snackbar_action"
-                android:layout_toLeftOf="@+id/snackbar_action"
-                android:paddingStart="24dp"
-                android:paddingLeft="24dp"
-                android:textAppearance="@style/TextAppearance.Conversations.Body1.OnDark" />
-
-            <TextView
-                android:id="@+id/snackbar_action"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_alignParentRight="true"
-                android:layout_centerVertical="true"
-                android:paddingLeft="24dp"
-                android:paddingTop="16dp"
-                android:paddingRight="24dp"
-                android:paddingBottom="16dp"
-                android:textAllCaps="true"
-                android:textAppearance="@style/TextAppearance.Conversations.Body1.OnDark"
-                android:textStyle="bold" />
-        </RelativeLayout>
 
     </RelativeLayout>
 </layout>
