@@ -1755,7 +1755,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                 mTitle = title;
                                 ConversationPagerAdapter.this.notifyDataSetChanged();
                             }
-                            this.responseElement = el;
+
+                            if (el.getAttribute("type").equals("result") || el.getAttribute("type").equals("form")) {
+                                this.responseElement = el;
+                            }
                             break;
                         }
                         if (el.getName().equals("x") && el.getNamespace().equals("jabber:x:oob")) {
