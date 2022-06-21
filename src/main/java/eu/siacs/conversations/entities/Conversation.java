@@ -1174,6 +1174,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         pagerAdapter.setupViewPager(pager, tabs);
     }
 
+    public void hideViewPager() {
+        pagerAdapter.hide();
+    }
+
     public interface OnMessageFound {
         void onMessageFound(final Message message);
     }
@@ -1204,6 +1208,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         public void setupViewPager(ViewPager pager, TabLayout tabs) {
             mPager = pager;
             mTabs = tabs;
+            if (sessions == null) {
+                sessions = new ArrayList<>();
+                notifyDataSetChanged();
+            }
             pager.setAdapter(this);
             tabs.setupWithViewPager(mPager);
             pager.setCurrentItem(getCurrentTab());
@@ -1216,6 +1224,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     setCurrentTab(position);
                 }
             });
+        }
+
+        public void hide() {
+            mPager.setCurrentItem(0);
+            mTabs.setVisibility(View.GONE);
+            sessions = null;
+            notifyDataSetChanged();
         }
 
         public void startCommand(Element command, XmppConnectionService xmppConnectionService) {
@@ -1275,6 +1290,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
         @Override
         public int getCount() {
+            if (sessions == null) return 1;
+
             int count = 2 + sessions.size();
             if (count > 2) {
                 mTabs.setTabMode(TabLayout.MODE_SCROLLABLE);

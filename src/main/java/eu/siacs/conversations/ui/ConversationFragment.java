@@ -2511,20 +2511,23 @@ public class ConversationFragment extends XmppFragment
                 conversation.startCommand(commandAdapter.getItem(position), activity.xmppConnectionService);
             });
             Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
-            if (commandJid != null) {
+            if (commandJid == null) {
+                conversation.hideViewPager();
+            } else {
                 binding.tabLayout.setVisibility(View.VISIBLE);
                 activity.xmppConnectionService.fetchCommands(conversation.getAccount(), commandJid, (a, iq) -> {
-                    if (iq.getType() == IqPacket.TYPE.RESULT) {
-                        activity.runOnUiThread(() -> {
+                    if (activity == null) return;
+
+                    activity.runOnUiThread(() -> {
+                        if (iq.getType() == IqPacket.TYPE.RESULT) {
                             for (Element child : iq.query().getChildren()) {
                                 if (!"item".equals(child.getName()) || !Namespace.DISCO_ITEMS.equals(child.getNamespace())) continue;
                                 commandAdapter.add(child);
                             }
-                        });
-                    } else {
-                        binding.tabLayout.setVisibility(View.GONE);
-                        binding.conversationViewPager.setCurrentItem(0);
-                    }
+                        }
+
+                        if (commandAdapter.getCount() < 1) conversation.hideViewPager();
+                    });
                 });
             }
         }
