@@ -1320,6 +1320,37 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
 
                 abstract public void bind(Element el);
+
+                protected void setupInputType(Element field, TextView textinput) {
+                    textinput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
+                    Element validate = field.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                    if (validate == null) return;
+                    String datatype = validate.getAttribute("datatype");
+
+                    if (datatype.equals("xs:integer") || datatype.equals("xs:int") || datatype.equals("xs:long") || datatype.equals("xs:short") || datatype.equals("xs:byte")) {
+                        textinput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+                    }
+
+                    if (datatype.equals("xs:decimal") || datatype.equals("xs:double")) {
+                        textinput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                    }
+
+                    if (datatype.equals("xs:date")) {
+                        textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_DATE);
+                    }
+
+                    if (datatype.equals("xs:dateTime")) {
+                        textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_NORMAL);
+                    }
+
+                    if (datatype.equals("xs:time")) {
+                        textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
+                    }
+
+                    if (datatype.equals("xs:anyURI")) {
+                        textinput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+                    }
+                }
             }
 
             class ErrorViewHolder extends ViewHolder<CommandNoteBinding> {
@@ -1426,9 +1457,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
-            class RadioEditFieldViewHolder extends ViewHolder<CommandRadioEditFieldBinding> implements CompoundButton.OnCheckedChangeListener {
+            class RadioEditFieldViewHolder extends ViewHolder<CommandRadioEditFieldBinding> implements CompoundButton.OnCheckedChangeListener, TextWatcher {
                 public RadioEditFieldViewHolder(CommandRadioEditFieldBinding binding) {
                     super(binding);
+                    binding.open.addTextChangedListener(this);
                     options = new ArrayAdapter<Option>(binding.getRoot().getContext(), R.layout.radio_grid_item) {
                         @Override
                         public View getView(int position, View convertView, ViewGroup parent) {
@@ -1467,6 +1499,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         mValue = field.addChild("value", "jabber:x:data");
                     }
 
+                    Element validate = field.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                    binding.open.setVisibility((validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null) ? View.VISIBLE : View.GONE);
+                    binding.open.setText(mValue.getContent());
+                    setupInputType(field, binding.open);
+
                     options.clear();
                     List<Option> theOptions = Option.forField(field);
                     options.addAll(theOptions);
@@ -1490,9 +1527,26 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public void onCheckedChanged(CompoundButton radio, boolean isChecked) {
                     if (mValue == null) return;
 
-                    if (isChecked) mValue.setContent(options.getItem(radio.getId()).getValue());
+                    if (isChecked) {
+                        mValue.setContent(options.getItem(radio.getId()).getValue());
+                        binding.open.setText(mValue.getContent());
+                    }
                     options.notifyDataSetChanged();
                 }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    if (mValue == null) return;
+
+                    mValue.setContent(s.toString());
+                    options.notifyDataSetChanged();
+                }
+
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int count, int after) { }
             }
 
             class SpinnerFieldViewHolder extends ViewHolder<CommandSpinnerFieldBinding> implements AdapterView.OnItemSelectedListener {
@@ -1576,35 +1630,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         mValue = field.addChild("value", "jabber:x:data");
                     }
                     binding.textinput.setText(mValue.getContent());
-
-                    binding.textinput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
-                    Element validate = field.findChild("validate", "http://jabber.org/protocol/xdata-validate");
-                    if (validate == null) return;
-                    String datatype = validate.getAttribute("datatype");
-
-                    if (datatype.equals("xs:integer") || datatype.equals("xs:int") || datatype.equals("xs:long") || datatype.equals("xs:short") || datatype.equals("xs:byte")) {
-                        binding.textinput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
-                    }
-
-                    if (datatype.equals("xs:decimal") || datatype.equals("xs:double")) {
-                        binding.textinput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-                    }
-
-                    if (datatype.equals("xs:date")) {
-                        binding.textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_DATE);
-                    }
-
-                    if (datatype.equals("xs:dateTime")) {
-                        binding.textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_NORMAL);
-                    }
-
-                    if (datatype.equals("xs:time")) {
-                        binding.textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
-                    }
-
-                    if (datatype.equals("xs:anyURI")) {
-                        binding.textinput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
-                    }
+                    setupInputType(field, binding.textinput);
                 }
 
                 @Override
@@ -1829,7 +1855,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                 return TYPE_CHECKBOX_FIELD;
                             }
                             if (fieldType.equals("list-single")) {
-                                if (item.findChild("value", "jabber:x:data") == null) {
+                                Element validate = item.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                                if (item.findChild("value", "jabber:x:data") == null || (validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null)) {
                                     viewTypes.put(position, TYPE_RADIO_EDIT_FIELD);
                                     return TYPE_RADIO_EDIT_FIELD;
                                 }
