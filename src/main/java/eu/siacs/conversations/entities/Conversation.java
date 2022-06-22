@@ -1341,7 +1341,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     this.binding = binding;
                 }
 
-                abstract public void bind(Element el);
+                abstract public void bind(Item el);
 
                 protected void setupInputType(Element field, TextView textinput, TextInputLayout layout) {
                     int flags = 0;
@@ -1409,10 +1409,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public ErrorViewHolder(CommandNoteBinding binding) { super(binding); }
 
                 @Override
-                public void bind(Element iq) {
+                public void bind(Item iq) {
                     binding.errorIcon.setVisibility(View.VISIBLE);
 
-                    Element error = iq.findChild("error");
+                    Element error = iq.el.findChild("error");
                     if (error == null) return;
                     String text = error.findChildContent("text", "urn:ietf:params:xml:ns:xmpp-stanzas");
                     if (text == null || text.equals("")) {
@@ -1426,10 +1426,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public NoteViewHolder(CommandNoteBinding binding) { super(binding); }
 
                 @Override
-                public void bind(Element note) {
-                    binding.message.setText(note.getContent());
+                public void bind(Item note) {
+                    binding.message.setText(note.el.getContent());
 
-                    String type = note.getAttribute("type");
+                    String type = note.el.getAttribute("type");
                     if (type != null && type.equals("error")) {
                         binding.errorIcon.setVisibility(View.VISIBLE);
                     }
@@ -1440,9 +1440,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public ResultFieldViewHolder(CommandResultFieldBinding binding) { super(binding); }
 
                 @Override
-                public void bind(Element field) {
-                    String label = field.getAttribute("label");
-                    if (label == null) label = field.getAttribute("var");
+                public void bind(Item field) {
+                    String label = field.el.getAttribute("label");
+                    if (label == null) label = field.el.getAttribute("var");
                     if (label == null) {
                         binding.label.setVisibility(View.GONE);
                     } else {
@@ -1450,7 +1450,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         binding.label.setText(label);
                     }
 
-                    String desc = field.findChildContent("desc", "jabber:x:data");
+                    String desc = field.el.findChildContent("desc", "jabber:x:data");
                     if (desc == null) {
                         binding.desc.setVisibility(View.GONE);
                     } else {
@@ -1459,7 +1459,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     }
 
                     ArrayAdapter<String> values = new ArrayAdapter<String>(binding.getRoot().getContext(), R.layout.simple_list_item);
-                    for (Element el : field.getChildren()) {
+                    for (Element el : field.el.getChildren()) {
                         if (el.getName().equals("value") && el.getNamespace().equals("jabber:x:data")) {
                             values.add(el.getContent());
                         }
@@ -1480,15 +1480,15 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public ResultCellViewHolder(CommandResultCellBinding binding) { super(binding); }
 
                 @Override
-                public void bind(Element field) {
-                    Column col = (Column) field;
+                public void bind(Item field) {
+                    Cell cell = (Cell) field;
 
-                    if (col.item == null) {
+                    if (cell.el == null) {
                         binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Subhead);
-                        binding.text.setText(col.reported.getAttribute("label"));
+                        binding.text.setText(cell.reported.getAttribute("label"));
                     } else {
                         binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Body1);
-                        binding.text.setText(col.item.findChildContent("value", "jabber:x:data"));
+                        binding.text.setText(cell.el.findChildContent("value", "jabber:x:data"));
                     }
                 }
             }
@@ -1504,13 +1504,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 protected Element mValue = null;
 
                 @Override
-                public void bind(Element field) {
-                    String label = field.getAttribute("label");
-                    if (label == null) label = field.getAttribute("var");
+                public void bind(Item field) {
+                    String label = field.el.getAttribute("label");
+                    if (label == null) label = field.el.getAttribute("var");
                     if (label == null) label = "";
                     binding.label.setText(label);
 
-                    String desc = field.findChildContent("desc", "jabber:x:data");
+                    String desc = field.el.findChildContent("desc", "jabber:x:data");
                     if (desc == null) {
                         binding.desc.setVisibility(View.GONE);
                     } else {
@@ -1518,9 +1518,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         binding.desc.setText(desc);
                     }
 
-                    mValue = field.findChild("value", "jabber:x:data");
+                    mValue = field.el.findChild("value", "jabber:x:data");
                     if (mValue == null) {
-                        mValue = field.addChild("value", "jabber:x:data");
+                        mValue = field.el.addChild("value", "jabber:x:data");
                     }
 
                     binding.checkbox.setChecked(mValue.getContent() != null && (mValue.getContent().equals("true") || mValue.getContent().equals("1")));
@@ -1553,9 +1553,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 protected ArrayAdapter<Option> options;
 
                 @Override
-                public void bind(Element field) {
-                    String label = field.getAttribute("label");
-                    if (label == null) label = field.getAttribute("var");
+                public void bind(Item field) {
+                    String label = field.el.getAttribute("label");
+                    if (label == null) label = field.el.getAttribute("var");
                     if (label == null) {
                         binding.label.setVisibility(View.GONE);
                     } else {
@@ -1563,7 +1563,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         binding.label.setText(label);
                     }
 
-                    String desc = field.findChildContent("desc", "jabber:x:data");
+                    String desc = field.el.findChildContent("desc", "jabber:x:data");
                     if (desc == null) {
                         binding.desc.setVisibility(View.GONE);
                     } else {
@@ -1571,18 +1571,18 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         binding.desc.setText(desc);
                     }
 
-                    mValue = field.findChild("value", "jabber:x:data");
+                    mValue = field.el.findChild("value", "jabber:x:data");
                     if (mValue == null) {
-                        mValue = field.addChild("value", "jabber:x:data");
+                        mValue = field.el.addChild("value", "jabber:x:data");
                     }
 
-                    Element validate = field.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                    Element validate = field.el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
                     binding.open.setVisibility((validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null) ? View.VISIBLE : View.GONE);
                     binding.open.setText(mValue.getContent());
-                    setupInputType(field, binding.open, null);
+                    setupInputType(field.el, binding.open, null);
 
                     options.clear();
-                    List<Option> theOptions = Option.forField(field);
+                    List<Option> theOptions = Option.forField(field.el);
                     options.addAll(theOptions);
 
                     float screenWidth = binding.getRoot().getContext().getResources().getDisplayMetrics().widthPixels;
@@ -1634,9 +1634,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 protected Element mValue = null;
 
                 @Override
-                public void bind(Element field) {
-                    String label = field.getAttribute("label");
-                    if (label == null) label = field.getAttribute("var");
+                public void bind(Item field) {
+                    String label = field.el.getAttribute("label");
+                    if (label == null) label = field.el.getAttribute("var");
                     if (label == null) {
                         binding.label.setVisibility(View.GONE);
                     } else {
@@ -1645,7 +1645,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         binding.spinner.setPrompt(label);
                     }
 
-                    String desc = field.findChildContent("desc", "jabber:x:data");
+                    String desc = field.el.findChildContent("desc", "jabber:x:data");
                     if (desc == null) {
                         binding.desc.setVisibility(View.GONE);
                     } else {
@@ -1653,14 +1653,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         binding.desc.setText(desc);
                     }
 
-                    mValue = field.findChild("value", "jabber:x:data");
+                    mValue = field.el.findChild("value", "jabber:x:data");
                     if (mValue == null) {
-                        mValue = field.addChild("value", "jabber:x:data");
+                        mValue = field.el.addChild("value", "jabber:x:data");
                     }
 
                     ArrayAdapter<Option> options = new ArrayAdapter<Option>(binding.getRoot().getContext(), android.R.layout.simple_spinner_item);
                     options.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    options.addAll(Option.forField(field));
+                    options.addAll(Option.forField(field.el));
 
                     binding.spinner.setAdapter(options);
                     binding.spinner.setSelection(options.getPosition(new Option(mValue.getContent(), null)));
@@ -1688,13 +1688,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 protected Element mValue = null;
 
                 @Override
-                public void bind(Element field) {
-                    String label = field.getAttribute("label");
-                    if (label == null) label = field.getAttribute("var");
+                public void bind(Item field) {
+                    String label = field.el.getAttribute("label");
+                    if (label == null) label = field.el.getAttribute("var");
                     if (label == null) label = "";
                     binding.textinputLayout.setHint(label);
 
-                    String desc = field.findChildContent("desc", "jabber:x:data");
+                    String desc = field.el.findChildContent("desc", "jabber:x:data");
                     if (desc == null) {
                         binding.textinputLayout.setHelperTextEnabled(false);
                     } else {
@@ -1702,12 +1702,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         binding.textinputLayout.setHelperText(desc);
                     }
 
-                    mValue = field.findChild("value", "jabber:x:data");
+                    mValue = field.el.findChild("value", "jabber:x:data");
                     if (mValue == null) {
-                        mValue = field.addChild("value", "jabber:x:data");
+                        mValue = field.el.addChild("value", "jabber:x:data");
                     }
                     binding.textinput.setText(mValue.getContent());
-                    setupInputType(field, binding.textinput, binding.textinputLayout);
+                    setupInputType(field.el, binding.textinput, binding.textinputLayout);
                 }
 
                 @Override
@@ -1728,7 +1728,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public WebViewHolder(CommandWebviewBinding binding) { super(binding); }
 
                 @Override
-                public void bind(Element oob) {
+                public void bind(Item oob) {
                     binding.webview.getSettings().setJavaScriptEnabled(true);
                     binding.webview.setWebViewClient(new WebViewClient() {
                         @Override
@@ -1738,19 +1738,70 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             ConversationPagerAdapter.this.notifyDataSetChanged();
                         }
                     });
-                    binding.webview.loadUrl(oob.findChildContent("url", "jabber:x:oob"));
+                    binding.webview.loadUrl(oob.el.findChildContent("url", "jabber:x:oob"));
                 }
             }
 
-            class Column extends Element {
-                protected Element reported;
-                protected Element item;
+            class Item {
+                protected Element el;
+                protected int viewType;
 
-                Column(Element reported, Element item) {
-                    super("x", "x:column");
-                    this.reported = reported;
-                    this.item = item;
+                Item(Element el, int viewType) {
+                    this.el = el;
+                    this.viewType = viewType;
                 }
+            }
+
+            class Cell extends Item {
+                protected Element reported;
+
+                Cell(Element reported, Element item) {
+                    super(item, TYPE_RESULT_CELL);
+                    this.reported = reported;
+                }
+            }
+
+            protected Item mkItem(Element el, int pos) {
+                int viewType = -1;
+
+                if (response != null && response.getType() == IqPacket.TYPE.RESULT) {
+                    if (el.getName().equals("note")) {
+                        viewType = TYPE_NOTE;
+                    } else if (el.getNamespace().equals("jabber:x:oob")) {
+                        viewType = TYPE_WEB;
+                    } else if (el.getName().equals("instructions") && el.getNamespace().equals("jabber:x:data")) {
+                        viewType = TYPE_NOTE;
+                    } else if (el.getName().equals("field") && el.getNamespace().equals("jabber:x:data")) {
+                        String formType = responseElement.getAttribute("type");
+                        if (formType != null) {
+                            String fieldType = el.getAttribute("type");
+                            if (fieldType == null) fieldType = "text-single";
+
+                            if (formType.equals("result") || fieldType.equals("fixed")) {
+                                viewType = TYPE_RESULT_FIELD;
+                            } else if (formType.equals("form")) {
+                                if (fieldType.equals("boolean")) {
+                                    viewType = TYPE_CHECKBOX_FIELD;
+                                } else if (fieldType.equals("list-single")) {
+                                    Element validate = el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                                    if (el.findChild("value", "jabber:x:data") == null || (validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null)) {
+                                        viewType = TYPE_RADIO_EDIT_FIELD;
+                                    } else {
+                                        viewType = TYPE_SPINNER_FIELD;
+                                    }
+                                } else {
+                                    viewType = TYPE_TEXT_FIELD;
+                                }
+                            }
+                        }
+                    }
+                } else if (response != null) {
+                    viewType = TYPE_ERROR;
+                }
+
+                Item item = new Item(el, viewType);
+                items.put(pos, item);
+                return item;
             }
 
             final int TYPE_ERROR = 1;
@@ -1768,7 +1819,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected IqPacket response = null;
             protected Element responseElement = null;
             protected Element reported = null;
-            protected SparseArray<Integer> viewTypes = new SparseArray<>();
+            protected SparseArray<Item> items = new SparseArray<>();
             protected XmppConnectionService xmppConnectionService;
             protected ArrayAdapter<String> actionsAdapter;
             protected GridLayoutManager layoutManager;
@@ -1811,7 +1862,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 this.responseElement = null;
                 this.reported = null;
                 this.response = iq;
-                this.viewTypes.clear();
+                this.items.clear();
                 this.actionsAdapter.clear();
                 layoutManager.setSpanCount(1);
 
@@ -1902,7 +1953,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return 1;
             }
 
-            public Element getItem(int position) {
+            public Item getItem(int position) {
+                if (items.get(position) != null) return items.get(position);
                 if (response == null) return null;
 
                 if (response.getType() == IqPacket.TYPE.RESULT && responseElement != null) {
@@ -1938,7 +1990,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                             break;
                                         }
                                     }
-                                    return new Column(reportedField, el.getName().equals("item") ? subel : null);
+                                    Cell cell = new Cell(reportedField, el.getName().equals("item") ? subel : null);
+                                    items.put(position, cell);
+                                    return cell;
                                 }
 
                                 i--;
@@ -1949,71 +2003,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                 continue;
                             }
 
-                            return el;
+                            return mkItem(el, position);
                         }
                     }
                 }
 
-                return responseElement == null ? response : responseElement;
+                return mkItem(responseElement == null ? response : responseElement, position);
             }
 
             @Override
             public int getItemViewType(int position) {
-                if (viewTypes.get(position) != null) return viewTypes.get(position);
-                if (response == null) return -1;
-
-                if (response.getType() == IqPacket.TYPE.RESULT) {
-                    Element item = getItem(position);
-                    if (item.getName().equals("note")) {
-                        viewTypes.put(position, TYPE_NOTE);
-                        return TYPE_NOTE;
-                    }
-                    if (item.getNamespace().equals("jabber:x:oob")) {
-                        viewTypes.put(position, TYPE_WEB);
-                        return TYPE_WEB;
-                    }
-                    if (item.getName().equals("instructions") && item.getNamespace().equals("jabber:x:data")) {
-                        viewTypes.put(position, TYPE_NOTE);
-                        return TYPE_NOTE;
-                    }
-                    if (item.getName().equals("field") && item.getNamespace().equals("jabber:x:data")) {
-                        String formType = responseElement.getAttribute("type");
-                        if (formType == null) return -1;
-
-                        String fieldType = item.getAttribute("type");
-                        if (fieldType == null) fieldType = "text-single";
-
-                        if (formType.equals("result") || fieldType.equals("fixed")) {
-                            viewTypes.put(position, TYPE_RESULT_FIELD);
-                            return TYPE_RESULT_FIELD;
-                        }
-                        if (formType.equals("form")) {
-                            viewTypes.put(position, TYPE_CHECKBOX_FIELD);
-                            if (fieldType.equals("boolean")) {
-                                return TYPE_CHECKBOX_FIELD;
-                            }
-                            if (fieldType.equals("list-single")) {
-                                Element validate = item.findChild("validate", "http://jabber.org/protocol/xdata-validate");
-                                if (item.findChild("value", "jabber:x:data") == null || (validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null)) {
-                                    viewTypes.put(position, TYPE_RADIO_EDIT_FIELD);
-                                    return TYPE_RADIO_EDIT_FIELD;
-                                }
-
-                                viewTypes.put(position, TYPE_SPINNER_FIELD);
-                                return TYPE_SPINNER_FIELD;
-                            }
-
-                            viewTypes.put(position, TYPE_TEXT_FIELD);
-                            return TYPE_TEXT_FIELD;
-                        }
-                    }
-                    if (item instanceof Column) {
-                        return TYPE_RESULT_CELL;
-                    }
-                    return -1;
-                } else {
-                    return TYPE_ERROR;
-                }
+                return getItem(position).viewType;
             }
 
             @Override
