@@ -37,6 +37,7 @@ import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
 
@@ -1342,8 +1343,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                 abstract public void bind(Element el);
 
-                protected void setupInputType(Element field, TextView textinput) {
+                protected void setupInputType(Element field, TextView textinput, TextInputLayout layout) {
                     int flags = 0;
+                    if (layout != null) layout.setEndIconMode(TextInputLayout.END_ICON_NONE);
                     textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
 
                     String type = field.getAttribute("type");
@@ -1360,6 +1362,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                         if (type.equals("text-private")) {
                             textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                            if (layout != null) layout.setEndIconMode(TextInputLayout.END_ICON_PASSWORD_TOGGLE);
                         }
                     }
 
@@ -1576,7 +1579,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     Element validate = field.findChild("validate", "http://jabber.org/protocol/xdata-validate");
                     binding.open.setVisibility((validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null) ? View.VISIBLE : View.GONE);
                     binding.open.setText(mValue.getContent());
-                    setupInputType(field, binding.open);
+                    setupInputType(field, binding.open, null);
 
                     options.clear();
                     List<Option> theOptions = Option.forField(field);
@@ -1693,10 +1696,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                     String desc = field.findChildContent("desc", "jabber:x:data");
                     if (desc == null) {
-                        binding.desc.setVisibility(View.GONE);
+                        binding.textinputLayout.setHelperTextEnabled(false);
                     } else {
-                        binding.desc.setVisibility(View.VISIBLE);
-                        binding.desc.setText(desc);
+                        binding.textinputLayout.setHelperTextEnabled(true);
+                        binding.textinputLayout.setHelperText(desc);
                     }
 
                     mValue = field.findChild("value", "jabber:x:data");
@@ -1704,7 +1707,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         mValue = field.addChild("value", "jabber:x:data");
                     }
                     binding.textinput.setText(mValue.getContent());
-                    setupInputType(field, binding.textinput);
+                    setupInputType(field, binding.textinput, binding.textinputLayout);
                 }
 
                 @Override

@@ -47,7 +47,7 @@
             android:paddingLeft="16dp"
             android:paddingRight="8dp"
             android:textAppearance="@style/TextAppearance.Conversations.Status"
-            android:textColor="?attr/edit_text_color" />
+            android:textColor="?android:textColorSecondary" />
 
     </LinearLayout>
 </layout>
