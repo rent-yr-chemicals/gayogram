@@ -1541,6 +1541,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     setTextOrHide(binding.label, field.getLabel());
                     setTextOrHide(binding.desc, field.getDesc());
 
+                    if (field.error != null) {
+                        binding.desc.setVisibility(View.VISIBLE);
+                        binding.desc.setText(field.error);
+                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Design_Error);
+                    } else {
+                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Status);
+                    }
+
                     mValue = field.getValue();
 
                     Element validate = field.el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
@@ -1646,6 +1654,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     binding.textinputLayout.setHelperTextEnabled(field.getDesc().isPresent());
                     field.getDesc().ifPresent(binding.textinputLayout::setHelperText);
 
+                    binding.textinputLayout.setErrorEnabled(field.error != null);
+                    if (field.error != null) binding.textinputLayout.setError(field.error);
+
                     mValue = field.getValue();
                     binding.textinput.setText(mValue.getContent());
                     setupInputType(field.el, binding.textinput, binding.textinputLayout);
@@ -1686,15 +1697,31 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             class Item {
                 protected Element el;
                 protected int viewType;
+                protected String error = null;
 
                 Item(Element el, int viewType) {
                     this.el = el;
                     this.viewType = viewType;
                 }
+
+                public boolean validate() {
+                    error = null;
+                    return true;
+                }
             }
 
             class Field extends Item {
                 Field(Element el, int viewType) { super(el, viewType); }
+
+                @Override
+                public boolean validate() {
+                    if (!super.validate()) return false;
+                    if (el.findChild("required", "jabber:x:data") == null) return true;
+                    if (getValue().getContent() != null && !getValue().getContent().equals("")) return true;
+
+                    error = "this value is required";
+                    return false;
+                }
 
                 public Optional<String> getLabel() {
                     String label = el.getAttribute("label");
@@ -2040,6 +2067,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return mBinding.getRoot();
             }
 
+            public boolean validate() {
+                int count = getItemCount();
+                boolean isValid = true;
+                for (int i = 0; i < count; i++) {
+                    boolean oneIsValid = getItem(i).validate();
+                    isValid = isValid && oneIsValid;
+                }
+                notifyDataSetChanged();
+                return isValid;
+            }
+
             public boolean execute() {
                 return execute("execute");
             }
@@ -2049,6 +2087,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             public boolean execute(String action) {
+                if (!action.equals("cancel") && !validate()) return false;
                 if (response == null || responseElement == null) return true;
                 Element command = response.findChild("command", "http://jabber.org/protocol/commands");
                 if (command == null) return true;
