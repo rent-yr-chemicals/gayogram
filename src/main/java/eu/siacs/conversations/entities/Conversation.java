@@ -50,6 +50,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import eu.siacs.conversations.Config;
@@ -1343,6 +1344,15 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                 abstract public void bind(Item el);
 
+                protected void setTextOrHide(TextView v, Optional<String> s) {
+                    if (s == null || !s.isPresent()) {
+                        v.setVisibility(View.GONE);
+                    } else {
+                        v.setVisibility(View.VISIBLE);
+                        v.setText(s.get());
+                    }
+                }
+
                 protected void setupInputType(Element field, TextView textinput, TextInputLayout layout) {
                     int flags = 0;
                     if (layout != null) layout.setEndIconMode(TextInputLayout.END_ICON_NONE);
@@ -1440,23 +1450,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public ResultFieldViewHolder(CommandResultFieldBinding binding) { super(binding); }
 
                 @Override
-                public void bind(Item field) {
-                    String label = field.el.getAttribute("label");
-                    if (label == null) label = field.el.getAttribute("var");
-                    if (label == null) {
-                        binding.label.setVisibility(View.GONE);
-                    } else {
-                        binding.label.setVisibility(View.VISIBLE);
-                        binding.label.setText(label);
-                    }
-
-                    String desc = field.el.findChildContent("desc", "jabber:x:data");
-                    if (desc == null) {
-                        binding.desc.setVisibility(View.GONE);
-                    } else {
-                        binding.desc.setVisibility(View.VISIBLE);
-                        binding.desc.setText(desc);
-                    }
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    setTextOrHide(binding.label, field.getLabel());
+                    setTextOrHide(binding.desc, field.getDesc());
 
                     ArrayAdapter<String> values = new ArrayAdapter<String>(binding.getRoot().getContext(), R.layout.simple_list_item);
                     for (Element el : field.el.getChildren()) {
@@ -1480,8 +1477,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public ResultCellViewHolder(CommandResultCellBinding binding) { super(binding); }
 
                 @Override
-                public void bind(Item field) {
-                    Cell cell = (Cell) field;
+                public void bind(Item item) {
+                    Cell cell = (Cell) item;
 
                     if (cell.el == null) {
                         binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Subhead);
@@ -1504,25 +1501,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 protected Element mValue = null;
 
                 @Override
-                public void bind(Item field) {
-                    String label = field.el.getAttribute("label");
-                    if (label == null) label = field.el.getAttribute("var");
-                    if (label == null) label = "";
-                    binding.label.setText(label);
-
-                    String desc = field.el.findChildContent("desc", "jabber:x:data");
-                    if (desc == null) {
-                        binding.desc.setVisibility(View.GONE);
-                    } else {
-                        binding.desc.setVisibility(View.VISIBLE);
-                        binding.desc.setText(desc);
-                    }
-
-                    mValue = field.el.findChild("value", "jabber:x:data");
-                    if (mValue == null) {
-                        mValue = field.el.addChild("value", "jabber:x:data");
-                    }
-
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    binding.label.setText(field.getLabel().orElse(""));
+                    setTextOrHide(binding.desc, field.getDesc());
+                    mValue = field.getValue();
                     binding.checkbox.setChecked(mValue.getContent() != null && (mValue.getContent().equals("true") || mValue.getContent().equals("1")));
                 }
 
@@ -1553,28 +1536,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 protected ArrayAdapter<Option> options;
 
                 @Override
-                public void bind(Item field) {
-                    String label = field.el.getAttribute("label");
-                    if (label == null) label = field.el.getAttribute("var");
-                    if (label == null) {
-                        binding.label.setVisibility(View.GONE);
-                    } else {
-                        binding.label.setVisibility(View.VISIBLE);
-                        binding.label.setText(label);
-                    }
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    setTextOrHide(binding.label, field.getLabel());
+                    setTextOrHide(binding.desc, field.getDesc());
 
-                    String desc = field.el.findChildContent("desc", "jabber:x:data");
-                    if (desc == null) {
-                        binding.desc.setVisibility(View.GONE);
-                    } else {
-                        binding.desc.setVisibility(View.VISIBLE);
-                        binding.desc.setText(desc);
-                    }
-
-                    mValue = field.el.findChild("value", "jabber:x:data");
-                    if (mValue == null) {
-                        mValue = field.el.addChild("value", "jabber:x:data");
-                    }
+                    mValue = field.getValue();
 
                     Element validate = field.el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
                     binding.open.setVisibility((validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null) ? View.VISIBLE : View.GONE);
@@ -1582,7 +1549,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     setupInputType(field.el, binding.open, null);
 
                     options.clear();
-                    List<Option> theOptions = Option.forField(field.el);
+                    List<Option> theOptions = field.getOptions();
                     options.addAll(theOptions);
 
                     float screenWidth = binding.getRoot().getContext().getResources().getDisplayMetrics().widthPixels;
@@ -1634,33 +1601,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 protected Element mValue = null;
 
                 @Override
-                public void bind(Item field) {
-                    String label = field.el.getAttribute("label");
-                    if (label == null) label = field.el.getAttribute("var");
-                    if (label == null) {
-                        binding.label.setVisibility(View.GONE);
-                    } else {
-                        binding.label.setVisibility(View.VISIBLE);
-                        binding.label.setText(label);
-                        binding.spinner.setPrompt(label);
-                    }
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    setTextOrHide(binding.label, field.getLabel());
+                    binding.spinner.setPrompt(field.getLabel().orElse(""));
+                    setTextOrHide(binding.desc, field.getDesc());
 
-                    String desc = field.el.findChildContent("desc", "jabber:x:data");
-                    if (desc == null) {
-                        binding.desc.setVisibility(View.GONE);
-                    } else {
-                        binding.desc.setVisibility(View.VISIBLE);
-                        binding.desc.setText(desc);
-                    }
-
-                    mValue = field.el.findChild("value", "jabber:x:data");
-                    if (mValue == null) {
-                        mValue = field.el.addChild("value", "jabber:x:data");
-                    }
+                    mValue = field.getValue();
 
                     ArrayAdapter<Option> options = new ArrayAdapter<Option>(binding.getRoot().getContext(), android.R.layout.simple_spinner_item);
                     options.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-                    options.addAll(Option.forField(field.el));
+                    options.addAll(field.getOptions());
 
                     binding.spinner.setAdapter(options);
                     binding.spinner.setSelection(options.getPosition(new Option(mValue.getContent(), null)));
@@ -1688,24 +1639,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 protected Element mValue = null;
 
                 @Override
-                public void bind(Item field) {
-                    String label = field.el.getAttribute("label");
-                    if (label == null) label = field.el.getAttribute("var");
-                    if (label == null) label = "";
-                    binding.textinputLayout.setHint(label);
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    binding.textinputLayout.setHint(field.getLabel().orElse(""));
 
-                    String desc = field.el.findChildContent("desc", "jabber:x:data");
-                    if (desc == null) {
-                        binding.textinputLayout.setHelperTextEnabled(false);
-                    } else {
-                        binding.textinputLayout.setHelperTextEnabled(true);
-                        binding.textinputLayout.setHelperText(desc);
-                    }
+                    binding.textinputLayout.setHelperTextEnabled(field.getDesc().isPresent());
+                    field.getDesc().ifPresent(binding.textinputLayout::setHelperText);
 
-                    mValue = field.el.findChild("value", "jabber:x:data");
-                    if (mValue == null) {
-                        mValue = field.el.addChild("value", "jabber:x:data");
-                    }
+                    mValue = field.getValue();
                     binding.textinput.setText(mValue.getContent());
                     setupInputType(field.el, binding.textinput, binding.textinputLayout);
                 }
@@ -1752,6 +1693,32 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
+            class Field extends Item {
+                Field(Element el, int viewType) { super(el, viewType); }
+
+                public Optional<String> getLabel() {
+                    String label = el.getAttribute("label");
+                    if (label == null) label = el.getAttribute("var");
+                    return Optional.ofNullable(label);
+                }
+
+                public Optional<String> getDesc() {
+                    return Optional.ofNullable(el.findChildContent("desc", "jabber:x:data"));
+                }
+
+                public Element getValue() {
+                    Element value = el.findChild("value", "jabber:x:data");
+                    if (value == null) {
+                        value = el.addChild("value", "jabber:x:data");
+                    }
+                    return value;
+                }
+
+                public List<Option> getOptions() {
+                    return Option.forField(el);
+                }
+            }
+
             class Cell extends Item {
                 protected Element reported;
 
@@ -1793,6 +1760,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                     viewType = TYPE_TEXT_FIELD;
                                 }
                             }
+
+                            Field field = new Field(el, viewType);
+                            items.put(pos, field);
+                            return field;
                         }
                     }
                 } else if (response != null) {
