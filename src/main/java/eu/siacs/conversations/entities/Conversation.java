@@ -1343,33 +1343,61 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 abstract public void bind(Element el);
 
                 protected void setupInputType(Element field, TextView textinput) {
-                    textinput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
+                    int flags = 0;
+                    textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
+
+                    String type = field.getAttribute("type");
+                    if (type != null) {
+                        if (type.equals("text-multi") || type.equals("jid-multi")) {
+                            flags |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
+                        }
+
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
+
+                        if (type.equals("jid-single") || type.equals("jid-multi")) {
+                            textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+                        }
+
+                        if (type.equals("text-private")) {
+                            textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                        }
+                    }
+
                     Element validate = field.findChild("validate", "http://jabber.org/protocol/xdata-validate");
                     if (validate == null) return;
                     String datatype = validate.getAttribute("datatype");
+                    if (datatype == null) return;
 
                     if (datatype.equals("xs:integer") || datatype.equals("xs:int") || datatype.equals("xs:long") || datatype.equals("xs:short") || datatype.equals("xs:byte")) {
-                        textinput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
                     }
 
                     if (datatype.equals("xs:decimal") || datatype.equals("xs:double")) {
-                        textinput.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL);
                     }
 
                     if (datatype.equals("xs:date")) {
-                        textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_DATE);
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_DATE);
                     }
 
                     if (datatype.equals("xs:dateTime")) {
-                        textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_NORMAL);
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_NORMAL);
                     }
 
                     if (datatype.equals("xs:time")) {
-                        textinput.setInputType(InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
                     }
 
                     if (datatype.equals("xs:anyURI")) {
-                        textinput.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+                    }
+
+                    if (datatype.equals("html:tel")) {
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_PHONE);
+                    }
+
+                    if (datatype.equals("html:email")) {
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
                     }
                 }
             }
