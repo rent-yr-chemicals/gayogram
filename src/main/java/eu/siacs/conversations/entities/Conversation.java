@@ -2088,16 +2088,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             public boolean execute(String action) {
                 if (!action.equals("cancel") && !validate()) return false;
-                if (response == null || responseElement == null) return true;
+                if (response == null) return true;
                 Element command = response.findChild("command", "http://jabber.org/protocol/commands");
                 if (command == null) return true;
                 String status = command.getAttribute("status");
                 if (status == null || !status.equals("executing")) return true;
-                if (!responseElement.getName().equals("x") || !responseElement.getNamespace().equals("jabber:x:data")) return true;
-                String formType = responseElement.getAttribute("type");
-                if (formType == null || !formType.equals("form")) return true;
-
-                responseElement.setAttribute("type", "submit");
 
                 final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
                 packet.setTo(response.getFrom());
@@ -2105,7 +2100,16 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 c.setAttribute("node", command.getAttribute("node"));
                 c.setAttribute("sessionid", command.getAttribute("sessionid"));
                 c.setAttribute("action", action);
-                c.addChild(responseElement);
+
+                String formType = responseElement == null ? null : responseElement.getAttribute("type");
+                if (responseElement != null &&
+                    responseElement.getName().equals("x") &&
+                    responseElement.getNamespace().equals("jabber:x:data") &&
+                    formType != null && formType.equals("form")) {
+
+                    responseElement.setAttribute("type", "submit");
+                    c.addChild(responseElement);
+                }
 
                 xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
                     getView().post(() -> {
