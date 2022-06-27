@@ -2102,7 +2102,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 c.setAttribute("action", action);
 
                 String formType = responseElement == null ? null : responseElement.getAttribute("type");
-                if (responseElement != null &&
+                if (!action.equals("cancel") &&
+                    responseElement != null &&
                     responseElement.getName().equals("x") &&
                     responseElement.getNamespace().equals("jabber:x:data") &&
                     formType != null && formType.equals("form")) {
