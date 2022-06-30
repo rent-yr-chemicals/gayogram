@@ -55,6 +55,9 @@
     <attr name="message_bubble_sent" format="reference" />
     <attr name="message_bubble_received_green" format="reference" />
 
+    <attr name="message_bubble_received_bg"  format="color" />
+    <attr name="message_bubble_sent_bg"  format="color" />
+
     <attr name="unread_count" format="reference|color" />
 
     <attr name="conversations_overview_background" format="reference|color" />
