@@ -63,7 +63,7 @@
         <item name="ic_make_video_call" type="reference">@drawable/ic_videocam_black54_24dp</item>
 
         <item name="message_bubble_received_monochrome" type="reference">
-            @drawable/message_bubble_received_white
+            @drawable/message_bubble_received
         </item>
         <item name="message_bubble_sent" type="reference">@drawable/message_bubble_sent</item>
         <item name="message_bubble_received_green" type="reference">
@@ -219,11 +219,11 @@
         <item name="ic_attach_record" type="reference">@drawable/ic_attach_record_white</item>
 
         <item name="message_bubble_received_monochrome" type="reference">
-            @drawable/message_bubble_received_grey
+            @drawable/message_bubble_received
         </item>
-        <item name="message_bubble_sent" type="reference">@drawable/message_bubble_sent_grey</item>
+        <item name="message_bubble_sent" type="reference">@drawable/message_bubble_sent</item>
         <item name="message_bubble_received_green" type="reference">
-            @drawable/message_bubble_received_dark
+            @drawable/message_bubble_received
         </item>
 
         <item name="unread_count">@color/perpy</item>
@@ -315,11 +315,11 @@
         <item name="color_background_overlay">@color/black26</item>
 
         <item name="message_bubble_received_monochrome" type="reference">
-            @drawable/message_bubble_received_grey
+            @drawable/message_bubble_received
         </item>
-        <item name="message_bubble_sent" type="reference">@drawable/message_bubble_sent_grey</item>
+        <item name="message_bubble_sent" type="reference">@drawable/message_bubble_sent</item>
         <item name="message_bubble_received_green" type="reference">
-            @drawable/message_bubble_received_obsidian
+            @drawable/message_bubble_received
         </item>
 
         <item name="unread_count">#1E0036</item>
