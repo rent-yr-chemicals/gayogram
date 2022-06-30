@@ -656,7 +656,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                     viewHolder.audioPlayer = view.findViewById(R.id.audio_player);
                     break;
                 case RECEIVED:
-                    view = activity.getLayoutInflater().inflate(R.layout.message_received, parent, false);
+                    view = activity.getLayoutInflater().inflate(R.layout.message_bubble_received, parent, false);
                     viewHolder.message_box = view.findViewById(R.id.message_box);
                     viewHolder.contact_picture = view.findViewById(R.id.message_photo);
                     viewHolder.download_button = view.findViewById(R.id.download_button);
@@ -852,14 +852,14 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             if (isInValidSession) {
                 int bubble;
                 if (!mUseGreenBackground) {
-                    bubble = activity.getThemeResource(R.attr.message_bubble_received_monochrome, R.drawable.message_bubble_received_white);
+                    bubble = activity.getThemeResource(R.attr.message_bubble_received_monochrome, R.drawable.message_bubble_received);
                 } else {
                     bubble = activity.getThemeResource(R.attr.message_bubble_received_green, R.drawable.message_bubble_received);
                 }
                 viewHolder.message_box.setBackgroundResource(bubble);
                 viewHolder.encryption.setVisibility(View.GONE);
             } else {
-                viewHolder.message_box.setBackgroundResource(R.drawable.message_bubble_received_warning);
+                viewHolder.message_box.setBackgroundResource(R.drawable.message_bubble_received);
                 viewHolder.encryption.setVisibility(View.VISIBLE);
                 if (omemoEncryption && !message.isTrusted()) {
                     viewHolder.encryption.setText(R.string.not_trusted);
