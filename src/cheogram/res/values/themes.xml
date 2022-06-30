@@ -7,6 +7,9 @@
         <item name="colorAccent">#1E0036</item>
         <item name="popupOverlayStyle">@style/ThemeOverlay.AppCompat.Light</item>
 
+        <item name="message_bubble_received_bg">@color/perpy</item>
+        <item name="message_bubble_sent_bg">#D8D8D8</item>
+
         <item name="color_background_primary">@color/grey50</item>
         <item name="color_background_secondary">@color/grey200</item>
         <item name="color_background_tertiary">@color/grey300</item>
@@ -154,6 +157,9 @@
         <item name="colorAccent">@color/yeller</item>
         <item name="popupOverlayStyle">@style/ThemeOverlay.AppCompat.Dark</item>
         <item name="android:navigationBarColor" tools:targetApi="21">@color/black</item>
+
+        <item name="message_bubble_received_bg">@color/perpy</item>
+        <item name="message_bubble_sent_bg">@color/black26</item>
 
         <item name="color_background_primary">@color/grey800</item>
         <item name="color_background_secondary">@color/grey900</item>
@@ -309,10 +315,15 @@
         <item name="colorPrimaryDark">#1E0036</item>
         <item name="colorAccent">@color/yeller</item>
 
+        <item name="message_bubble_received_bg">@color/grey900</item>
+        <item name="message_bubble_sent_bg">#1E0036</item>
+
         <item name="color_background_primary">#0E0020</item>
         <item name="color_background_secondary">@color/black</item>
         <item name="color_background_tertiary">#1E0036</item>
         <item name="color_background_overlay">@color/black26</item>
+
+
 
         <item name="message_bubble_received_monochrome" type="reference">
             @drawable/message_bubble_received

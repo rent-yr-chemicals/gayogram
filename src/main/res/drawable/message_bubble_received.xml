@@ -15,5 +15,5 @@
     <size
         android:width="10dp"
         android:height="10dp" />
-    <solid android:color="@color/perpy" />
+    <solid android:color="?message_bubble_received_bg" />
 </shape>
