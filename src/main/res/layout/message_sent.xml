@@ -41,7 +41,6 @@
         android:layout_marginRight="5dp"
         android:layout_toLeftOf="@+id/message_photo_box"
         android:background="@drawable/message_bubble_sent"
-        android:backgroundTint="#D8D8D8"
         android:longClickable="true"
         android:minHeight="53dp">
 

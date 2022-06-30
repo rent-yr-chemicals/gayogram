@@ -26,7 +26,6 @@
         android:layout_marginLeft="5dp"
         android:layout_toRightOf="@+id/message_photo"
         android:background="@drawable/message_bubble_received"
-        android:backgroundTint="#D8D8D8"
         android:longClickable="true"
         android:minHeight="53dp">
 
