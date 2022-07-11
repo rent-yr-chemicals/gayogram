@@ -197,6 +197,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		protected String sessionId = null;
 		protected Stack<String> postDial = new Stack<>();
 		protected Icon gatewayIcon;
+		protected CallAudioState pendingState = null;
 		protected WeakReference<JingleRtpConnection> rtpConnection = null;
 
 		CheogramConnection(Account account, Jid with, String postDialString) {
@@ -222,7 +223,8 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			);
 			setAudioModeIsVoip(true);
 			setConnectionCapabilities(
-				Connection.CAPABILITY_CAN_SEND_RESPONSE_VIA_CONNECTION
+				Connection.CAPABILITY_CAN_SEND_RESPONSE_VIA_CONNECTION |
+				Connection.CAPABILITY_MUTE
 			);
 		}
 
@@ -271,6 +273,8 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		public void onAudioDeviceChanged(AppRTCAudioManager.AudioDevice selectedAudioDevice, Set<AppRTCAudioManager.AudioDevice> availableAudioDevices) {
 			if (Build.VERSION.SDK_INT < 26) return;
 
+			if (pendingState != null) onCallAudioStateChanged(pendingState);
+
 			switch(selectedAudioDevice) {
 				case SPEAKER_PHONE:
 					setAudioRoute(CallAudioState.ROUTE_SPEAKER);
@@ -282,6 +286,22 @@ public class ConnectionService extends android.telecom.ConnectionService {
 					setAudioRoute(CallAudioState.ROUTE_BLUETOOTH);
 				default:
 					setAudioRoute(CallAudioState.ROUTE_WIRED_OR_EARPIECE);
+			}
+		}
+
+		@Override
+		public void onCallAudioStateChanged(CallAudioState state) {
+			pendingState = null;
+			if (rtpConnection == null || rtpConnection.get() == null) {
+				pendingState = state;
+				return;
+			}
+
+			try {
+				rtpConnection.get().setMicrophoneEnabled(!state.isMuted());
+			} catch (final IllegalStateException e) {
+				pendingState = state;
+				Log.w("com.cheogram.android.CheogramConnection", "Could not set microphone mute to " + (state.isMuted() ? "true" : "false") + ": " + e.toString());
 			}
 		}
 
