@@ -1682,6 +1682,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 @Override
                 public void bind(Item oob) {
                     binding.webview.getSettings().setJavaScriptEnabled(true);
+                    binding.webview.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Mobile Safari/537.36");
+                    binding.webview.getSettings().setDatabaseEnabled(true);
+                    binding.webview.getSettings().setDomStorageEnabled(true);
                     binding.webview.setWebViewClient(new WebViewClient() {
                         @Override
                         public void onPageFinished(WebView view, String url) {
