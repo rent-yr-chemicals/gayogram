@@ -131,7 +131,7 @@ class ToneManager {
 
     private void scheduleWaitingTone() {
         this.currentTone = JingleConnectionManager.SCHEDULED_EXECUTOR_SERVICE.scheduleAtFixedRate(() -> {
-            startTone(ToneGenerator.TONE_CDMA_DIAL_TONE_LITE, 750);
+            startTone(ToneGenerator.TONE_CDMA_NETWORK_USA_RINGBACK, 750);
         }, 0, 3, TimeUnit.SECONDS);
     }
 
