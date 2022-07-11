@@ -9,7 +9,8 @@
 
         <service android:name="com.cheogram.android.ConnectionService"
             android:label="Cheogram"
-            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE">
+            android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.telecom.ConnectionService" />
             </intent-filter>
@@ -38,7 +39,8 @@
         <activity
             android:name=".ui.ImportBackupActivity"
             android:label="@string/restore_backup"
-            android:launchMode="singleTask">
+            android:launchMode="singleTask"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
