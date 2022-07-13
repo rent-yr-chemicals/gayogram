@@ -1609,9 +1609,11 @@ public class NotificationService {
         intent.setAction(XmppConnectionService.ACTION_CLEAR_MISSED_CALL_NOTIFICATION);
         if (conversation != null) {
             intent.putExtra("uuid", conversation.getUuid());
-            return PendingIntent.getService(mXmppConnectionService, generateRequestCode(conversation, 21), intent, 0);
+            return PendingIntent.getService(mXmppConnectionService, generateRequestCode(conversation, 21), intent,
+                s() ? PendingIntent.FLAG_IMMUTABLE : 0);
         }
-        return PendingIntent.getService(mXmppConnectionService, 1, intent, 0);
+        return PendingIntent.getService(mXmppConnectionService, 1, intent,
+                s() ? PendingIntent.FLAG_IMMUTABLE : 0);
     }
 
     private PendingIntent createReplyIntent(
