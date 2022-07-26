@@ -2543,6 +2543,7 @@ public class ConversationFragment extends XmppFragment
 
                 activity.runOnUiThread(() -> {
                     if (iq.getType() == IqPacket.TYPE.RESULT) {
+                        binding.commandsViewProgressbar.setVisibility(View.GONE);
                         commandAdapter.clear();
                         for (Element child : iq.query().getChildren()) {
                             if (!"item".equals(child.getName()) || !Namespace.DISCO_ITEMS.equals(child.getNamespace())) continue;
