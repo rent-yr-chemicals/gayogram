@@ -1527,6 +1527,9 @@ public class ConversationFragment extends XmppFragment
             case R.id.action_toggle_pinned:
                 togglePinned();
                 break;
+            case R.id.action_refresh_feature_discovery:
+                refreshFeatureDiscovery();
+                break;
             default:
                 break;
         }
@@ -1563,6 +1566,17 @@ public class ConversationFragment extends XmppFragment
                 }
             }
             activity.startActivity(intent);
+        }
+    }
+
+    private void refreshFeatureDiscovery() {
+        for (Map.Entry<String, Presence> entry : conversation.getContact().getPresences().getPresencesMap().entrySet()) {
+            Jid jid = conversation.getContact().getJid();
+            if (!entry.getKey().equals("")) jid = jid.withResource(entry.getKey());
+            activity.xmppConnectionService.fetchCaps(conversation.getAccount(), jid, entry.getValue(), () -> {
+                if (activity == null) return;
+                activity.runOnUiThread(() -> { refresh(); });
+            });
         }
     }
 
@@ -2510,29 +2524,36 @@ public class ConversationFragment extends XmppFragment
             binding.commandsView.setOnItemClickListener((parent, view, position, id) -> {
                 conversation.startCommand(commandAdapter.getItem(position), activity.xmppConnectionService);
             });
-            Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
-            if (commandJid == null) {
-                conversation.hideViewPager();
-            } else {
-                binding.tabLayout.setVisibility(View.VISIBLE);
-                activity.xmppConnectionService.fetchCommands(conversation.getAccount(), commandJid, (a, iq) -> {
-                    if (activity == null) return;
-
-                    activity.runOnUiThread(() -> {
-                        if (iq.getType() == IqPacket.TYPE.RESULT) {
-                            for (Element child : iq.query().getChildren()) {
-                                if (!"item".equals(child.getName()) || !Namespace.DISCO_ITEMS.equals(child.getNamespace())) continue;
-                                commandAdapter.add(child);
-                            }
-                        }
-
-                        if (commandAdapter.getCount() < 1) conversation.hideViewPager();
-                    });
-                });
-            }
+            refreshCommands();
         }
 
         return true;
+    }
+
+    protected void refreshCommands() {
+        if (commandAdapter == null) return;
+
+        Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
+        if (commandJid == null) {
+            conversation.hideViewPager();
+        } else {
+            conversation.showViewPager();
+            activity.xmppConnectionService.fetchCommands(conversation.getAccount(), commandJid, (a, iq) -> {
+                if (activity == null) return;
+
+                activity.runOnUiThread(() -> {
+                    if (iq.getType() == IqPacket.TYPE.RESULT) {
+                        commandAdapter.clear();
+                        for (Element child : iq.query().getChildren()) {
+                            if (!"item".equals(child.getName()) || !Namespace.DISCO_ITEMS.equals(child.getNamespace())) continue;
+                            commandAdapter.add(child);
+                        }
+                    }
+
+                    if (commandAdapter.getCount() < 1) conversation.hideViewPager();
+                });
+            });
+        }
     }
 
     private void resetUnreadMessagesCount() {
@@ -2833,6 +2854,7 @@ public class ConversationFragment extends XmppFragment
                 }
                 updateSendButton();
                 updateEditablity();
+                refreshCommands();
             }
         }
     }
