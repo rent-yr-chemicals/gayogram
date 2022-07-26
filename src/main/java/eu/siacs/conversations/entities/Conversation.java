@@ -24,6 +24,7 @@ import android.widget.Toast;
 import android.widget.Spinner;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.webkit.WebChromeClient;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
@@ -52,6 +53,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
@@ -62,6 +65,7 @@ import eu.siacs.conversations.databinding.CommandNoteBinding;
 import eu.siacs.conversations.databinding.CommandResultFieldBinding;
 import eu.siacs.conversations.databinding.CommandResultCellBinding;
 import eu.siacs.conversations.databinding.CommandCheckboxFieldBinding;
+import eu.siacs.conversations.databinding.CommandProgressBarBinding;
 import eu.siacs.conversations.databinding.CommandRadioEditFieldBinding;
 import eu.siacs.conversations.databinding.CommandSpinnerFieldBinding;
 import eu.siacs.conversations.databinding.CommandTextFieldBinding;
@@ -1694,6 +1698,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     binding.webview.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Mobile Safari/537.36");
                     binding.webview.getSettings().setDatabaseEnabled(true);
                     binding.webview.getSettings().setDomStorageEnabled(true);
+                    binding.webview.setWebChromeClient(new WebChromeClient() {
+                        @Override
+                        public void onProgressChanged(WebView view, int newProgress) {
+                            binding.progressbar.setVisibility(newProgress < 100 ? View.VISIBLE : View.GONE);
+                            binding.progressbar.setProgress(newProgress);
+                        }
+                    });
                     binding.webview.setWebViewClient(new WebViewClient() {
                         @Override
                         public void onPageFinished(WebView view, String url) {
@@ -1704,6 +1715,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     });
                     binding.webview.loadUrl(oob.el.findChildContent("url", "jabber:x:oob"));
                 }
+            }
+
+            class ProgressBarViewHolder extends ViewHolder<CommandProgressBarBinding> {
+                public ProgressBarViewHolder(CommandProgressBarBinding binding) { super(binding); }
+
+                @Override
+                public void bind(Item item) { }
             }
 
             class Item {
@@ -1837,7 +1855,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_SPINNER_FIELD = 7;
             final int TYPE_RADIO_EDIT_FIELD = 8;
             final int TYPE_RESULT_CELL = 9;
+            final int TYPE_PROGRESSBAR = 10;
 
+            protected boolean loading = false;
+            protected Timer loadingTimer = new Timer();
             protected String mTitle;
             protected CommandPageBinding mBinding = null;
             protected IqPacket response = null;
@@ -1849,6 +1870,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected GridLayoutManager layoutManager;
 
             CommandSession(String title, XmppConnectionService xmppConnectionService) {
+                loading();
                 mTitle = title;
                 this.xmppConnectionService = xmppConnectionService;
                 setupLayoutManager();
@@ -1883,6 +1905,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             public void updateWithResponse(IqPacket iq) {
+                this.loadingTimer.cancel();
+                this.loadingTimer = new Timer();
+                this.loading = false;
                 this.responseElement = null;
                 this.reported = null;
                 this.response = iq;
@@ -1967,6 +1992,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             @Override
             public int getItemCount() {
+                if (loading) return 1;
                 if (response == null) return 0;
                 if (response.getType() == IqPacket.TYPE.RESULT && responseElement != null && responseElement.getNamespace().equals("jabber:x:data")) {
                     int i = 0;
@@ -1991,6 +2017,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             public Item getItem(int position) {
+                if (loading) return new Item(null, TYPE_PROGRESSBAR);
                 if (items.get(position) != null) return items.get(position);
                 if (response == null) return null;
 
@@ -2090,6 +2117,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         CommandTextFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_text_field, container, false);
                         return new TextFieldViewHolder(binding);
                     }
+                    case TYPE_PROGRESSBAR: {
+                        CommandProgressBarBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_progress_bar, container, false);
+                        return new ProgressBarViewHolder(binding);
+                    }
                     default:
                         throw new IllegalArgumentException("Unknown viewType: " + viewType);
                 }
@@ -2155,7 +2186,20 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     });
                 });
 
+                loading();
                 return false;
+            }
+
+            protected void loading() {
+                loadingTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        getView().post(() -> {
+                            loading = true;
+                            notifyDataSetChanged();
+                        });
+                    }
+                }, 500);
             }
 
             protected GridLayoutManager setupLayoutManager() {
