@@ -22,6 +22,7 @@ import android.widget.CompoundButton;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Spinner;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
@@ -1713,7 +1714,20 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             ConversationPagerAdapter.this.notifyDataSetChanged();
                         }
                     });
+                    binding.webview.addJavascriptInterface(new JsObject(), "xmpp_xep0050");
                     binding.webview.loadUrl(oob.el.findChildContent("url", "jabber:x:oob"));
+                }
+
+                class JsObject {
+                    @JavascriptInterface
+                    public void execute() { execute("execute"); }
+                    public void execute(String action) {
+                        getView().post(() -> {
+                            if(CommandSession.this.execute(action)) {
+                                removeSession(CommandSession.this);
+                            }
+                        });
+                    }
                 }
             }
 
