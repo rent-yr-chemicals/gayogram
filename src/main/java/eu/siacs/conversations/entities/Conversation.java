@@ -1482,7 +1482,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                     if (cell.el == null) {
                         binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Subhead);
-                        binding.text.setText(cell.reported.getAttribute("label"));
+                        setTextOrHide(binding.text, cell.reported.getLabel());
                     } else {
                         binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Body1);
                         binding.text.setText(cell.el.findChildContent("value", "jabber:x:data"));
@@ -1726,9 +1726,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     return false;
                 }
 
+                public String getVar() {
+                    return el.getAttribute("var");
+                }
+
                 public Optional<String> getLabel() {
                     String label = el.getAttribute("label");
-                    if (label == null) label = el.getAttribute("var");
+                    if (label == null) label = getVar();
                     return Optional.ofNullable(label);
                 }
 
@@ -1750,12 +1754,43 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             class Cell extends Item {
-                protected Element reported;
+                protected Field reported;
 
-                Cell(Element reported, Element item) {
+                Cell(Field reported, Element item) {
                     super(item, TYPE_RESULT_CELL);
                     this.reported = reported;
                 }
+            }
+
+            protected Field mkField(Element el) {
+                int viewType = -1;
+
+                String formType = responseElement.getAttribute("type");
+                if (formType != null) {
+                    String fieldType = el.getAttribute("type");
+                    if (fieldType == null) fieldType = "text-single";
+
+                    if (formType.equals("result") || fieldType.equals("fixed")) {
+                        viewType = TYPE_RESULT_FIELD;
+                    } else if (formType.equals("form")) {
+                        if (fieldType.equals("boolean")) {
+                            viewType = TYPE_CHECKBOX_FIELD;
+                        } else if (fieldType.equals("list-single")) {
+                            Element validate = el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                            if (el.findChild("value", "jabber:x:data") == null || (validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null)) {
+                                viewType = TYPE_RADIO_EDIT_FIELD;
+                            } else {
+                                viewType = TYPE_SPINNER_FIELD;
+                            }
+                        } else {
+                            viewType = TYPE_TEXT_FIELD;
+                        }
+                    }
+
+                    return new Field(el, viewType);
+                }
+
+                return null;
             }
 
             protected Item mkItem(Element el, int pos) {
@@ -1769,29 +1804,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     } else if (el.getName().equals("instructions") && el.getNamespace().equals("jabber:x:data")) {
                         viewType = TYPE_NOTE;
                     } else if (el.getName().equals("field") && el.getNamespace().equals("jabber:x:data")) {
-                        String formType = responseElement.getAttribute("type");
-                        if (formType != null) {
-                            String fieldType = el.getAttribute("type");
-                            if (fieldType == null) fieldType = "text-single";
-
-                            if (formType.equals("result") || fieldType.equals("fixed")) {
-                                viewType = TYPE_RESULT_FIELD;
-                            } else if (formType.equals("form")) {
-                                if (fieldType.equals("boolean")) {
-                                    viewType = TYPE_CHECKBOX_FIELD;
-                                } else if (fieldType.equals("list-single")) {
-                                    Element validate = el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
-                                    if (el.findChild("value", "jabber:x:data") == null || (validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null)) {
-                                        viewType = TYPE_RADIO_EDIT_FIELD;
-                                    } else {
-                                        viewType = TYPE_SPINNER_FIELD;
-                                    }
-                                } else {
-                                    viewType = TYPE_TEXT_FIELD;
-                                }
-                            }
-
-                            Field field = new Field(el, viewType);
+                        Field field = mkField(el);
+                        if (field != null) {
                             items.put(pos, field);
                             return field;
                         }
@@ -1819,7 +1833,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected CommandPageBinding mBinding = null;
             protected IqPacket response = null;
             protected Element responseElement = null;
-            protected Element reported = null;
+            protected List<Field> reported = null;
             protected SparseArray<Item> items = new SparseArray<>();
             protected XmppConnectionService xmppConnectionService;
             protected ArrayAdapter<String> actionsAdapter;
@@ -1887,8 +1901,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                             if (el.getAttribute("type").equals("result") || el.getAttribute("type").equals("form")) {
                                 this.responseElement = el;
-                                this.reported = el.findChild("reported", "jabber:x:data");
-                                layoutManager.setSpanCount(this.reported == null ? 1 : this.reported.getChildren().size());
+                                setupReported(el.findChild("reported", "jabber:x:data"));
+                                layoutManager.setSpanCount(this.reported == null ? 1 : this.reported.size());
                             }
                             break;
                         }
@@ -1929,6 +1943,19 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 notifyDataSetChanged();
             }
 
+            protected void setupReported(Element el) {
+                if (el == null) {
+                    reported = null;
+                    return;
+                }
+
+                reported = new ArrayList<>();
+                for (Element fieldEl : el.getChildren()) {
+                    if (!fieldEl.getName().equals("field") || !fieldEl.getNamespace().equals("jabber:x:data")) continue;
+                    reported.add(mkField(fieldEl));
+                }
+            }
+
             @Override
             public int getItemCount() {
                 if (response == null) return 0;
@@ -1943,7 +1970,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         }
 
                         if (el.getName().equals("reported") || el.getName().equals("item")) {
-                            i += el.getChildren().size();
+                            if (reported != null) i += reported.size();
                             continue;
                         }
 
@@ -1970,33 +1997,31 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             }
 
                             if (el.getName().equals("reported") || el.getName().equals("item")) {
-                                int col = 0;
-                                for (Element subel : el.getChildren()) {
-                                    if (i < position) {
-                                        i++;
-                                        col++;
+                                Cell cell = null;
+
+                                if (reported != null) {
+                                    if (reported.size() > position - i) {
+                                        Field reportedField = reported.get(position - i);
+                                        Element itemField = null;
+                                        if (el.getName().equals("item")) {
+                                            for (Element subel : el.getChildren()) {
+                                                if (subel.getAttribute("var").equals(reportedField.getVar())) {
+                                                   itemField = subel;
+                                                   break;
+                                                }
+                                            }
+                                        }
+                                        cell = new Cell(reportedField, itemField);
+                                    } else {
+                                        i += reported.size();
                                         continue;
                                     }
+                                }
 
-                                    Element reportedField = null;
-                                    if (reported != null) {
-                                        int rCol = 0;
-                                        for (Element field : reported.getChildren()) {
-                                            if (!field.getName().equals("field") || !field.getNamespace().equals("jabber:x:data")) continue;
-                                            if (rCol < col) {
-                                                rCol++;
-                                                continue;
-                                            }
-                                            reportedField = field;
-                                            break;
-                                        }
-                                    }
-                                    Cell cell = new Cell(reportedField, el.getName().equals("item") ? subel : null);
+                                if (cell != null) {
                                     items.put(position, cell);
                                     return cell;
                                 }
-
-                                i--;
                             }
 
                             if (i < position) {
