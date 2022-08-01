@@ -1243,12 +1243,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 sessions = new ArrayList<>();
                 notifyDataSetChanged();
             }
-            mTabs.setVisibility(View.VISIBLE);
+            if (mTabs != null) mTabs.setVisibility(View.VISIBLE);
         }
 
         public void hide() {
-            mPager.setCurrentItem(0);
-            mTabs.setVisibility(View.GONE);
+            if (mPager != null) mPager.setCurrentItem(0);
+            if (mTabs != null) mTabs.setVisibility(View.GONE);
             sessions = null;
             notifyDataSetChanged();
         }
