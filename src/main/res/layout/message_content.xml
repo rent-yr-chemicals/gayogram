@@ -28,6 +28,14 @@
         android:longClickable="true"
         android:visibility="gone"/>
 
+    <ListView
+        android:id="@+id/commands_list"
+        android:visibility="gone"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="0dp"></ListView>
+
     <RelativeLayout
         android:id="@+id/audio_player"
         android:layout_width="@dimen/audio_player_width"

@@ -585,6 +585,11 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                 }
             }
             message.markable = packet.hasChild("markable", "urn:xmpp:chat-markers:0");
+            for (Element el : packet.getChildren()) {
+                if (el.getName().equals("query") && el.getNamespace().equals("http://jabber.org/protocol/disco#items") && el.getAttribute("node").equals("http://jabber.org/protocol/commands")) {
+                    message.addPayload(el);
+                }
+            }
             if (conversationMultiMode) {
                 message.setMucUser(conversation.getMucOptions().findUserByFullJid(counterpart));
                 final Jid fallback = conversation.getMucOptions().getTrueCounterpart(counterpart);

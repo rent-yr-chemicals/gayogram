@@ -244,6 +244,14 @@ public class DatabaseBackend extends SQLiteOpenHelper {
                 db.execSQL("PRAGMA cheogram.user_version = 2");
             }
 
+            if(cheogramVersion < 3) {
+                db.execSQL(
+                    "ALTER TABLE cheogram." + Message.TABLENAME + " " +
+                    "ADD COLUMN payloads TEXT"
+                );
+                db.execSQL("PRAGMA cheogram.user_version = 3");
+            }
+
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
