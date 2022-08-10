@@ -5,6 +5,7 @@ import android.content.ClipboardManager;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.DataSetObserver;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.text.Editable;
 import android.text.InputType;
@@ -13,12 +14,14 @@ import android.text.TextPaint;
 import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Spinner;
@@ -2217,10 +2220,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             protected GridLayoutManager setupLayoutManager() {
-                layoutManager = new GridLayoutManager(mPager.getContext(), layoutManager == null ? 1 : layoutManager.getSpanCount()) {
-                    @Override
-                    public boolean canScrollVertically() { return getItemCount() > 1; }
-                };
+                layoutManager = new GridLayoutManager(mPager.getContext(), layoutManager == null ? 1 : layoutManager.getSpanCount());
                 layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                     @Override
                     public int getSpanSize(int position) {
@@ -2233,6 +2233,35 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             public void setBinding(CommandPageBinding b) {
                 mBinding = b;
+                // https://stackoverflow.com/a/32350474/8611
+                mBinding.form.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+                    @Override
+                    public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+                        if(rv.getChildCount() > 0) {
+                            int[] location = new int[2];
+                            rv.getLocationOnScreen(location);
+                            View childView = rv.findChildViewUnder(e.getX(), e.getY());
+                            if (childView instanceof ViewGroup) {
+                                childView = findViewAt((ViewGroup) childView, location[0] + e.getX(), location[1] + e.getY());
+                            }
+                            if (childView instanceof ListView || childView instanceof WebView) {
+                                int action = e.getAction();
+                                switch (action) {
+                                    case MotionEvent.ACTION_DOWN:
+                                        rv.requestDisallowInterceptTouchEvent(true);
+                                }
+                            }
+                        }
+
+                        return false;
+                    }
+
+                    @Override
+                    public void onRequestDisallowInterceptTouchEvent(boolean disallow) { }
+
+                    @Override
+                    public void onTouchEvent(RecyclerView rv, MotionEvent e) { }
+                });
                 mBinding.form.setLayoutManager(setupLayoutManager());
                 mBinding.form.setAdapter(this);
                 mBinding.actions.setAdapter(actionsAdapter);
@@ -2243,6 +2272,28 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 });
 
                 actionsAdapter.notifyDataSetChanged();
+            }
+
+            // https://stackoverflow.com/a/36037991/8611
+            private View findViewAt(ViewGroup viewGroup, float x, float y) {
+                for(int i = 0; i < viewGroup.getChildCount(); i++) {
+                    View child = viewGroup.getChildAt(i);
+                    if (child instanceof ViewGroup && !(child instanceof ListView) && !(child instanceof WebView)) {
+                        View foundView = findViewAt((ViewGroup) child, x, y);
+                        if (foundView != null && foundView.isShown()) {
+                            return foundView;
+                        }
+                    } else {
+                        int[] location = new int[2];
+                        child.getLocationOnScreen(location);
+                        Rect rect = new Rect(location[0], location[1], location[0] + child.getWidth(), location[1] + child.getHeight());
+                        if (rect.contains((int)x, (int)y)) {
+                            return child;
+                        }
+                    }
+                }
+
+                return null;
             }
         }
     }
