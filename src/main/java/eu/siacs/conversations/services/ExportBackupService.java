@@ -267,6 +267,30 @@ public class ExportBackupService extends Service {
         }
     }
 
+    private void messageExportCheogram(SQLiteDatabase db, String uuid, PrintWriter writer, Progress progress) {
+        Cursor cursor = db.rawQuery("select cheogram.messages.* from messages joing cheogram.messages using (uuid) join conversations on conversations.uuid=messages.conversationUuid where conversations.accountUuid=?", new String[]{uuid});
+        int size = cursor != null ? cursor.getCount() : 0;
+        Log.d(Config.LOGTAG, "exporting " + size + " cheogram messages for account " + uuid);
+        int i = 0;
+        int p = 0;
+        while (cursor != null && cursor.moveToNext()) {
+            writer.write(cursorToString("cheogram." + Message.TABLENAME, cursor, PAGE_SIZE, false));
+            if (i + PAGE_SIZE > size) {
+                i = size;
+            } else {
+                i += PAGE_SIZE;
+            }
+            final int percentage = i * 100 / size;
+            if (p < percentage) {
+                p = percentage;
+                notificationManager.notify(NOTIFICATION_ID, progress.build(p));
+            }
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
+    }
+
     private List<File> export() throws Exception {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getBaseContext(), "backup");
         mBuilder.setContentTitle(getString(R.string.notification_create_backup_title))
@@ -316,6 +340,7 @@ public class ExportBackupService extends Service {
             accountExport(db, uuid, writer);
             simpleExport(db, Conversation.TABLENAME, Conversation.ACCOUNT, uuid, writer);
             messageExport(db, uuid, writer, progress);
+            messageExportCheogram(db, uuid, writer, progress);
             for (String table : Arrays.asList(SQLiteAxolotlStore.PREKEY_TABLENAME, SQLiteAxolotlStore.SIGNED_PREKEY_TABLENAME, SQLiteAxolotlStore.SESSION_TABLENAME, SQLiteAxolotlStore.IDENTITIES_TABLENAME)) {
                 simpleExport(db, table, SQLiteAxolotlStore.ACCOUNT, uuid, writer);
             }
