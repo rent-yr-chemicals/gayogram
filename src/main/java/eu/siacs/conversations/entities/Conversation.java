@@ -2269,6 +2269,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     formType != null && formType.equals("form")) {
 
                     responseElement.setAttribute("type", "submit");
+                    Element rsm = responseElement.findChild("set", "http://jabber.org/protocol/rsm");
+                    if (rsm != null) {
+                        Element max = new Element("max", "http://jabber.org/protocol/rsm");
+                        max.setContent("1000");
+                        rsm.addChild(max);
+                    }
                     c.addChild(responseElement);
                 }
 
