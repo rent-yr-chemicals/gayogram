@@ -165,6 +165,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			(XmppConnectionService.OnJingleRtpConnectionUpdate) connection
 		);
 
+		xmppConnectionService.setDiallerIntegrationActive(true);
 		return connection;
 	}
 
