@@ -57,6 +57,7 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -71,6 +72,7 @@ import eu.siacs.conversations.databinding.CommandResultCellBinding;
 import eu.siacs.conversations.databinding.CommandCheckboxFieldBinding;
 import eu.siacs.conversations.databinding.CommandProgressBarBinding;
 import eu.siacs.conversations.databinding.CommandRadioEditFieldBinding;
+import eu.siacs.conversations.databinding.CommandSearchListFieldBinding;
 import eu.siacs.conversations.databinding.CommandSpinnerFieldBinding;
 import eu.siacs.conversations.databinding.CommandTextFieldBinding;
 import eu.siacs.conversations.databinding.CommandWebviewBinding;
@@ -1534,6 +1536,72 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
+            class SearchListFieldViewHolder extends ViewHolder<CommandSearchListFieldBinding> implements TextWatcher {
+                public SearchListFieldViewHolder(CommandSearchListFieldBinding binding) {
+                    super(binding);
+                    binding.search.addTextChangedListener(this);
+                }
+                protected Element mValue = null;
+                List<Option> options = new ArrayList<>();
+                protected ArrayAdapter<Option> adapter;
+                protected boolean open;
+
+                @Override
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    setTextOrHide(binding.label, field.getLabel());
+                    setTextOrHide(binding.desc, field.getDesc());
+
+                    if (field.error != null) {
+                        binding.desc.setVisibility(View.VISIBLE);
+                        binding.desc.setText(field.error);
+                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Design_Error);
+                    } else {
+                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Status);
+                    }
+
+                    mValue = field.getValue();
+
+                    Element validate = field.el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                    open = validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null;
+                    setupInputType(field.el, binding.search, null);
+
+                    options = field.getOptions();
+                    binding.list.setOnItemClickListener((parent, view, position, id) -> {
+                        mValue.setContent(adapter.getItem(binding.list.getCheckedItemPosition()).getValue());
+                        if (open) binding.search.setText(mValue.getContent());
+                    });
+                    search("");
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    if (open) mValue.setContent(s.toString());
+                    search(s.toString());
+                }
+
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int count, int after) { }
+
+                protected void search(String s) {
+                    List<Option> filteredOptions;
+                    final String q = s.replaceAll("\\W", "").toLowerCase();
+                    if (q == null || q.equals("")) {
+                        filteredOptions = options;
+                    } else {
+                        filteredOptions = options.stream().filter(o -> o.toString().replaceAll("\\W", "").toLowerCase().contains(q)).collect(Collectors.toList());
+                    }
+                    adapter = new ArrayAdapter(binding.getRoot().getContext(), R.layout.simple_list_item, filteredOptions);
+                    binding.list.setAdapter(adapter);
+
+                    int checkedPos = filteredOptions.indexOf(new Option(mValue.getContent(), ""));
+                    if (checkedPos >= 0) binding.list.setItemChecked(checkedPos, true);
+                }
+            }
+
             class RadioEditFieldViewHolder extends ViewHolder<CommandRadioEditFieldBinding> implements CompoundButton.OnCheckedChangeListener, TextWatcher {
                 public RadioEditFieldViewHolder(CommandRadioEditFieldBinding binding) {
                     super(binding);
@@ -1821,7 +1889,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             viewType = TYPE_CHECKBOX_FIELD;
                         } else if (fieldType.equals("list-single")) {
                             Element validate = el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
-                            if (el.findChild("value", "jabber:x:data") == null || (validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null)) {
+                            if (Option.forField(el).size() > 9) {
+                                viewType = TYPE_SEARCH_LIST_FIELD;
+                            } else if (el.findChild("value", "jabber:x:data") == null || (validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null)) {
                                 viewType = TYPE_RADIO_EDIT_FIELD;
                             } else {
                                 viewType = TYPE_SPINNER_FIELD;
@@ -1873,6 +1943,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_RADIO_EDIT_FIELD = 8;
             final int TYPE_RESULT_CELL = 9;
             final int TYPE_PROGRESSBAR = 10;
+            final int TYPE_SEARCH_LIST_FIELD = 11;
 
             protected boolean loading = false;
             protected Timer loadingTimer = new Timer();
@@ -2121,6 +2192,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     case TYPE_CHECKBOX_FIELD: {
                         CommandCheckboxFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_checkbox_field, container, false);
                         return new CheckboxFieldViewHolder(binding);
+                    }
+                    case TYPE_SEARCH_LIST_FIELD: {
+                        CommandSearchListFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_search_list_field, container, false);
+                        return new SearchListFieldViewHolder(binding);
                     }
                     case TYPE_RADIO_EDIT_FIELD: {
                         CommandRadioEditFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_radio_edit_field, container, false);
