@@ -460,8 +460,11 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         setTitle(mucOptions.isPrivateAndNonAnonymous() ? R.string.action_muc_details : R.string.channel_details);
         this.binding.editMucNameButton.setVisibility((self.getAffiliation().ranks(MucOptions.Affiliation.OWNER) || mucOptions.canChangeSubject()) ? View.VISIBLE : View.GONE);
         this.binding.detailsAccount.setText(getString(R.string.using_account, account));
+        this.binding.truejid.setVisibility(View.GONE);
         if (mConversation.isPrivateAndNonAnonymous()) {
             this.binding.jid.setText(getString(R.string.hosted_on, mConversation.getJid().getDomain()));
+            this.binding.truejid.setText(mConversation.getJid().asBareJid().toEscapedString());
+            if (mAdvancedMode) this.binding.truejid.setVisibility(View.VISIBLE);
         } else {
             this.binding.jid.setText(mConversation.getJid().asBareJid().toEscapedString());
         }
