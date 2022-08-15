@@ -1331,7 +1331,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         final Optional<OngoingRtpSession> ongoingRtpSession = activity.xmppConnectionService.getJingleConnectionManager().getOngoingRtpConnection(conversation.getContact());
         if (ongoingRtpSession.isPresent()) {
             final OngoingRtpSession id = ongoingRtpSession.get();
-            final Intent intent = new Intent(getActivity(), RtpSessionActivity.class);
+            final Intent intent = new Intent(activity, RtpSessionActivity.class);
             intent.putExtra(RtpSessionActivity.EXTRA_ACCOUNT, id.getAccount().getJid().asBareJid().toEscapedString());
             intent.putExtra(RtpSessionActivity.EXTRA_WITH, id.getWith().toEscapedString());
             if (id instanceof AbstractJingleConnection.Id) {
@@ -1344,7 +1344,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
                     intent.setAction(RtpSessionActivity.ACTION_MAKE_VOICE_CALL);
                 }
             }
-            startActivity(intent);
+            activity.startActivity(intent);
         }
 
     }
@@ -1652,13 +1652,13 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
     }
 
     protected void muteConversationDialog(final Conversation conversation) {
-        final AlertDialog.Builder builder = new AlertDialog.Builder(requireActivity());
+        final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
         builder.setTitle(R.string.disable_notifications);
-        final int[] durations = getResources().getIntArray(R.array.mute_options_durations);
+        final int[] durations = activity.getResources().getIntArray(R.array.mute_options_durations);
         final CharSequence[] labels = new CharSequence[durations.length];
         for (int i = 0; i < durations.length; ++i) {
             if (durations[i] == -1) {
-                labels[i] = getString(R.string.until_further_notice);
+                labels[i] = activity.getString(R.string.until_further_notice);
             } else {
                 labels[i] = TimeFrameUtils.resolve(activity, 1000L * durations[i]);
             }
@@ -1674,7 +1674,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
             activity.xmppConnectionService.updateConversation(conversation);
             activity.onConversationsListItemUpdated();
             refresh();
-            requireActivity().invalidateOptionsMenu();
+            activity.invalidateOptionsMenu();
         });
         builder.create().show();
     }
@@ -1706,7 +1706,7 @@ public class ConversationFragment extends XmppFragment implements EditMessage.Ke
         this.activity.xmppConnectionService.updateConversation(conversation);
         this.activity.onConversationsListItemUpdated();
         refresh();
-        requireActivity().invalidateOptionsMenu();
+        this.activity.invalidateOptionsMenu();
     }
 
 

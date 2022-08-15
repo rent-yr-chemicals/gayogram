@@ -2,6 +2,7 @@ package eu.siacs.conversations.ui.adapter;
 
 import android.graphics.Typeface;
 import android.util.Pair;
+import android.view.MenuItem;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -237,8 +238,8 @@ public class ConversationAdapter extends RecyclerView.Adapter<ConversationAdapte
         private ConversationViewHolder(ConversationListRowBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
+            binding.getRoot().setLongClickable(true);
         }
-
     }
 
 }
