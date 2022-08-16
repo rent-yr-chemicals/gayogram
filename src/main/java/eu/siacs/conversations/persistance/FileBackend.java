@@ -70,7 +70,6 @@ import eu.siacs.conversations.services.AttachFileToConversationRunnable;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.ui.adapter.MediaAdapter;
 import eu.siacs.conversations.ui.util.Attachment;
-import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.FileUtils;
 import eu.siacs.conversations.utils.FileWriterException;
@@ -404,25 +403,23 @@ public class FileBackend {
 
     public static Uri getMediaUri(Context context, File file) {
         final String filePath = file.getAbsolutePath();
-        final Cursor cursor;
-        try {
-            cursor =
-                    context.getContentResolver()
-                            .query(
-                                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                                    new String[] {MediaStore.Images.Media._ID},
-                                    MediaStore.Images.Media.DATA + "=? ",
-                                    new String[] {filePath},
-                                    null);
-        } catch (SecurityException e) {
-            return null;
-        }
-        if (cursor != null && cursor.moveToFirst()) {
-            final int id = cursor.getInt(cursor.getColumnIndex(MediaStore.MediaColumns._ID));
-            cursor.close();
-            return Uri.withAppendedPath(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI, String.valueOf(id));
-        } else {
+        try (final Cursor cursor =
+                context.getContentResolver()
+                        .query(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                new String[] {MediaStore.Images.Media._ID},
+                                MediaStore.Images.Media.DATA + "=? ",
+                                new String[] {filePath},
+                                null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                final int id =
+                        cursor.getInt(cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID));
+                return Uri.withAppendedPath(
+                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI, String.valueOf(id));
+            } else {
+                return null;
+            }
+        } catch (final Exception e) {
             return null;
         }
     }
@@ -1533,43 +1530,69 @@ public class FileBackend {
         updateFileParams(message, null);
     }
 
-    public void updateFileParams(Message message, String url) {
-        DownloadableFile file = getFile(message);
+    public void updateFileParams(final Message message, final String url) {
+        final boolean encrypted =
+                message.getEncryption() == Message.ENCRYPTION_PGP
+                        || message.getEncryption() == Message.ENCRYPTION_DECRYPTED;
+        final DownloadableFile file = getFile(message);
         final String mime = file.getMimeType();
         final boolean privateMessage = message.isPrivateMessage();
         final boolean image =
                 message.getType() == Message.TYPE_IMAGE
                         || (mime != null && mime.startsWith("image/"));
-        final boolean video = mime != null && mime.startsWith("video/");
-        final boolean audio = mime != null && mime.startsWith("audio/");
-        final boolean pdf = "application/pdf".equals(mime);
         Message.FileParams fileParams = new Message.FileParams();
         if (url != null) {
             fileParams.url = url;
         }
-        fileParams.size = file.getSize();
-        if (image || video || pdf) {
-            try {
-                final Dimensions dimensions;
-                if (video) {
-                    dimensions = getVideoDimensions(file);
-                } else if (pdf) {
-                    dimensions = getPdfDocumentDimensions(file);
-                } else {
-                    dimensions = getImageDimensions(file);
+        if (encrypted && !file.exists()) {
+            Log.d(Config.LOGTAG, "skipping updateFileParams because file is encrypted");
+            final DownloadableFile encryptedFile = getFile(message, false);
+            fileParams.size = encryptedFile.getSize();
+        } else {
+            Log.d(Config.LOGTAG, "running updateFileParams");
+            final boolean ambiguous = MimeUtils.AMBIGUOUS_CONTAINER_FORMATS.contains(mime);
+            final boolean video = mime != null && mime.startsWith("video/");
+            final boolean audio = mime != null && mime.startsWith("audio/");
+            final boolean pdf = "application/pdf".equals(mime);
+            fileParams.size = file.getSize();
+            if (ambiguous) {
+                try {
+                    final Dimensions dimensions = getVideoDimensions(file);
+                    if (dimensions.valid()) {
+                        Log.d(Config.LOGTAG, "ambiguous file " + mime + " is video");
+                        fileParams.width = dimensions.width;
+                        fileParams.height = dimensions.height;
+                    } else {
+                        Log.d(Config.LOGTAG, "ambiguous file " + mime + " is audio");
+                        fileParams.runtime = getMediaRuntime(file);
+                    }
+                } catch (final NotAVideoFile e) {
+                    Log.d(Config.LOGTAG, "ambiguous file " + mime + " is audio");
+                    fileParams.runtime = getMediaRuntime(file);
                 }
-                if (dimensions.valid()) {
-                    fileParams.width = dimensions.width;
-                    fileParams.height = dimensions.height;
+            } else if (image || video || pdf) {
+                try {
+                    final Dimensions dimensions;
+                    if (video) {
+                        dimensions = getVideoDimensions(file);
+                    } else if (pdf) {
+                        dimensions = getPdfDocumentDimensions(file);
+                    } else {
+                        dimensions = getImageDimensions(file);
+                    }
+                    if (dimensions.valid()) {
+                        fileParams.width = dimensions.width;
+                        fileParams.height = dimensions.height;
+                    }
+                } catch (NotAVideoFile notAVideoFile) {
+                    Log.d(
+                            Config.LOGTAG,
+                            "file with mime type " + file.getMimeType() + " was not a video file");
+                    // fall threw
                 }
-            } catch (NotAVideoFile notAVideoFile) {
-                Log.d(
-                        Config.LOGTAG,
-                        "file with mime type " + file.getMimeType() + " was not a video file");
-                // fall threw
+            } else if (audio) {
+                fileParams.runtime = getMediaRuntime(file);
             }
-        } else if (audio) {
-            fileParams.runtime = getMediaRuntime(file);
         }
         message.setFileParams(fileParams);
         message.setDeleted(false);
@@ -1579,14 +1602,18 @@ public class FileBackend {
                         : (image ? Message.TYPE_IMAGE : Message.TYPE_FILE));
     }
 
-    private int getMediaRuntime(File file) {
+    private int getMediaRuntime(final File file) {
         try {
-            MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
+            final MediaMetadataRetriever mediaMetadataRetriever = new MediaMetadataRetriever();
             mediaMetadataRetriever.setDataSource(file.toString());
-            return Integer.parseInt(
+            final String value =
                     mediaMetadataRetriever.extractMetadata(
-                            MediaMetadataRetriever.METADATA_KEY_DURATION));
-        } catch (RuntimeException e) {
+                            MediaMetadataRetriever.METADATA_KEY_DURATION);
+            if (Strings.isNullOrEmpty(value)) {
+                return 0;
+            }
+            return Integer.parseInt(value);
+        } catch (final IllegalArgumentException e) {
             return 0;
         }
     }

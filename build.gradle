@@ -103,7 +103,7 @@ dependencies {
     implementation 'io.michaelrocks:libphonenumber-android:8.12.49'
     implementation 'io.github.nishkarsh:android-permissions:2.1.6'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
-    implementation urlFile('https://cloudflare-ipfs.com/ipfs/QmeqMiLxHi8AAjXobxr3QTfa1bSSLyAu86YviAqQnjxCjM/libwebrtc.aar', 'libwebrtc.aar')
+    implementation 'ch.threema:webrtc-android:100.0.0'
     // INSERT
 }
 

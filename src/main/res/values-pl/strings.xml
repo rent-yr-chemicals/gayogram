@@ -423,6 +423,7 @@
     <string name="video">plik wideo</string>
     <string name="image">obraz</string>
     <string name="vector_graphic">grafika wektorowa</string>
+    <string name="multimedia_file">plik multimediów</string>
     <string name="pdf_document">Dokument PDF</string>
     <string name="apk">Aplikacja Androida</string>
     <string name="vcard">Kontakt</string>
@@ -1003,4 +1004,6 @@ Administrator twojego serwera będzie mógł czytać twoje wiadomości, ale moż
     <string name="plain_text_document">Dokument zwykłego tekstu</string>
     <string name="account_registrations_are_not_supported">Rejestracja kont nie jest wspierana</string>
     <string name="no_xmpp_adddress_found">Nie znaleziono adresu XMPP</string>
-    </resources>
+    <string name="account_status_temporary_auth_failure">Tymczasowy błąd uwierzytelniania</string>
+
+</resources>

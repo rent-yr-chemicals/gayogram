@@ -1,5 +1,7 @@
 package eu.siacs.conversations.services;
 
+import static eu.siacs.conversations.utils.Compatibility.s;
+
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -15,6 +17,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.google.common.base.CharMatcher;
 import com.google.common.base.Strings;
 
 import java.io.DataOutputStream;
@@ -114,7 +117,7 @@ public class ExportBackupService extends Service {
                     }
                     builder.append(intValue);
                 } else {
-                    DatabaseUtils.appendEscapedSQLString(builder, value);
+                    appendEscapedSQLString(builder, value);
                 }
             }
             builder.append(")");
@@ -125,6 +128,10 @@ public class ExportBackupService extends Service {
             accountCursor.close();
         }
         writer.append(builder.toString());
+    }
+
+    private static void appendEscapedSQLString(final StringBuilder sb, final String sqlString) {
+        DatabaseUtils.appendEscapedSQLString(sb, CharMatcher.is('\u0000').removeFrom(sqlString));
     }
 
     private static void simpleExport(SQLiteDatabase db, String table, String column, String uuid, PrintWriter writer) {
@@ -201,7 +208,7 @@ public class ExportBackupService extends Service {
             } else if (value.matches("[0-9]+")) {
                 builder.append(value);
             } else {
-                DatabaseUtils.appendEscapedSQLString(builder, value);
+                appendEscapedSQLString(builder, value);
             }
         }
         builder.append(")");
@@ -364,9 +371,11 @@ public class ExportBackupService extends Service {
 
         PendingIntent openFolderIntent = null;
 
-        for (Intent intent : getPossibleFileOpenIntents(this, path)) {
+        for (final Intent intent : getPossibleFileOpenIntents(this, path)) {
             if (intent.resolveActivityInfo(getPackageManager(), 0) != null) {
-                openFolderIntent = PendingIntent.getActivity(this, 189, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                openFolderIntent = PendingIntent.getActivity(this, 189, intent, s()
+                        ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                        : PendingIntent.FLAG_UPDATE_CURRENT);
                 break;
             }
         }
@@ -382,7 +391,9 @@ public class ExportBackupService extends Service {
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             intent.setType(MIME_TYPE);
             final Intent chooser = Intent.createChooser(intent, getString(R.string.share_backup_files));
-            shareFilesIntent = PendingIntent.getActivity(this, 190, chooser, PendingIntent.FLAG_UPDATE_CURRENT);
+            shareFilesIntent = PendingIntent.getActivity(this, 190, chooser, s()
+                    ? PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT
+                    : PendingIntent.FLAG_UPDATE_CURRENT);
         }
 
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getBaseContext(), "backup");

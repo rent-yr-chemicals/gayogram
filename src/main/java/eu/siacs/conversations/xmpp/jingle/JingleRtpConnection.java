@@ -802,7 +802,7 @@ public class JingleRtpConnection extends AbstractJingleConnection
         } catch (final WebRTCWrapper.InitializationException e) {
             Log.d(Config.LOGTAG, id.account.getJid().asBareJid() + ": unable to initialize WebRTC");
             webRTCWrapper.close();
-            sendSessionTerminate(Reason.FAILED_APPLICATION);
+            sendSessionTerminate(Reason.FAILED_APPLICATION, e.getMessage());
             return;
         }
         final org.webrtc.SessionDescription sdp =
@@ -933,10 +933,10 @@ public class JingleRtpConnection extends AbstractJingleConnection
         }
     }
 
-    void deliverFailedProceed() {
+    void deliverFailedProceed(final String message) {
         Log.d(
                 Config.LOGTAG,
-                id.account.getJid().asBareJid() + ": receive message error for proceed message");
+                id.account.getJid().asBareJid() + ": receive message error for proceed message ("+Strings.nullToEmpty(message)+")");
         if (transition(State.TERMINATED_CONNECTIVITY_ERROR)) {
             webRTCWrapper.close();
             Log.d(
@@ -1277,7 +1277,7 @@ public class JingleRtpConnection extends AbstractJingleConnection
         webRTCWrapper.close();
         final Reason reason = Reason.ofThrowable(throwable);
         if (isInState(targetState)) {
-            sendSessionTerminate(reason);
+            sendSessionTerminate(reason, throwable.getMessage());
         } else {
             sendRetract(reason);
         }

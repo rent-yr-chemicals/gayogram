@@ -22,12 +22,14 @@ import android.provider.OpenableColumns;
 import android.util.Log;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -40,6 +42,13 @@ import eu.siacs.conversations.services.ExportBackupService;
  * Used to implement java.net.URLConnection and android.webkit.MimeTypeMap.
  */
 public final class MimeUtils {
+
+    public static final List<String> AMBIGUOUS_CONTAINER_FORMATS = ImmutableList.of(
+            "application/ogg",
+            "video/3gpp", // .3gp files can contain audio, video or both
+            "video/3gpp2"
+    );
+
     private static final Map<String, String> mimeTypeToExtensionMap = new HashMap<>();
     private static final Map<String, String> extensionToMimeTypeMap = new HashMap<>();
 
@@ -229,36 +238,8 @@ public final class MimeUtils {
         add("video/3gpp", "3gp");
         add("video/3gpp2", "3gpp2");
         add("video/3gpp2", "3g2");
-        add("video/avi", "avi");
-        add("video/dl", "dl");
-        add("video/dv", "dif");
-        add("video/dv", "dv");
-        add("video/fli", "fli");
-        add("video/m4v", "m4v");
-        add("video/mp2ts", "ts");
-        add("video/ogg", "ogv");
-        add("video/mpeg", "mpeg");
-        add("video/mpeg", "mpg");
-        add("video/mpeg", "mpe");
-        add("video/mp4", "mp4");
-        add("video/mpeg", "VOB");
-        add("video/quicktime", "qt");
-        add("video/quicktime", "mov");
-        add("video/vnd.mpegurl", "mxu");
-        add("video/webm", "webm");
-        add("video/x-la-asf", "lsf");
-        add("video/x-la-asf", "lsx");
-        add("video/x-matroska", "mkv");
-        add("video/x-mng", "mng");
-        add("video/x-ms-asf", "asf");
-        add("video/x-ms-asf", "asx");
-        add("video/x-ms-wm", "wm");
-        add("video/x-ms-wmv", "wmv");
-        add("video/x-ms-wmx", "wmx");
-        add("video/x-ms-wvx", "wvx");
-        add("video/x-sgi-movie", "movie");
-        add("video/x-webex", "wrf");
         add("audio/3gpp", "3gpp");
+        add("audio/3gpp", "3gp");
         add("audio/aac", "aac");
         add("audio/aac-adts", "aac");
         add("audio/amr", "amr");
@@ -398,6 +379,35 @@ public final class MimeUtils {
         add("text/x-tex", "cls");
         add("text/x-vcalendar", "vcs");
         add("text/x-vcard", "vcf");
+        add("video/avi", "avi");
+        add("video/dl", "dl");
+        add("video/dv", "dif");
+        add("video/dv", "dv");
+        add("video/fli", "fli");
+        add("video/m4v", "m4v");
+        add("video/mp2ts", "ts");
+        add("video/ogg", "ogv");
+        add("video/mpeg", "mpeg");
+        add("video/mpeg", "mpg");
+        add("video/mpeg", "mpe");
+        add("video/mp4", "mp4");
+        add("video/mpeg", "VOB");
+        add("video/quicktime", "qt");
+        add("video/quicktime", "mov");
+        add("video/vnd.mpegurl", "mxu");
+        add("video/webm", "webm");
+        add("video/x-la-asf", "lsf");
+        add("video/x-la-asf", "lsx");
+        add("video/x-matroska", "mkv");
+        add("video/x-mng", "mng");
+        add("video/x-ms-asf", "asf");
+        add("video/x-ms-asf", "asx");
+        add("video/x-ms-wm", "wm");
+        add("video/x-ms-wmv", "wmv");
+        add("video/x-ms-wmx", "wmx");
+        add("video/x-ms-wvx", "wvx");
+        add("video/x-sgi-movie", "movie");
+        add("video/x-webex", "wrf");
         add("x-conference/x-cooltalk", "ice");
         add("x-epoc/x-sisx-app", "sisx");
         applyOverrides();
