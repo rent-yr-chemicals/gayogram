@@ -395,8 +395,6 @@
     <string name="pref_privacy">Personvern</string>
     <string name="pref_theme_options">Drakt</string>
     <string name="pref_theme_options_summary">Velg fargepalett </string>
-    <string name="pref_use_green_background">Grønn bakgrunn</string>
-    <string name="pref_use_green_background_summary">Bruk grønn bakgrunn for mottatte meldinger</string>
     <string name="this_device_is_no_longer_in_use">Denne enheten er ikke lenger i bruk</string>
     <string name="type_pc">Datamaskin</string>
     <string name="type_phone">Mobiltelefon</string>

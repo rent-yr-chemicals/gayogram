@@ -568,8 +568,6 @@
     <string name="pref_theme_automatic">自動</string>
     <string name="pref_theme_light">明</string>
     <string name="pref_theme_dark">暗</string>
-    <string name="pref_use_green_background">緑の背景</string>
-    <string name="pref_use_green_background_summary">受信したメッセージに緑の背景を使用します</string>
     <string name="unable_to_connect_to_keychain">OpenKeychain に接続できません</string>
     <string name="this_device_is_no_longer_in_use">このデバイスは、現在使用されていません</string>
     <string name="type_pc">コンピューター</string>

@@ -578,8 +578,6 @@
     <string name="pref_theme_automatic">Automatico</string>
     <string name="pref_theme_light">Chiaro</string>
     <string name="pref_theme_dark">Scuro</string>
-    <string name="pref_use_green_background">Sfondo verde</string>
-    <string name="pref_use_green_background_summary">Usa uno sfondo verde per i messaggi ricevuti</string>
     <string name="unable_to_connect_to_keychain">Impossibile connettersi a OpenKeychain</string>
     <string name="this_device_is_no_longer_in_use">Questo dispositivo non è più in uso</string>
     <string name="type_pc">Computer</string>

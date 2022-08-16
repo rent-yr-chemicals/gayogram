@@ -573,8 +573,6 @@
     <string name="pref_theme_automatic">Automatisk</string>
     <string name="pref_theme_light">Lys</string>
     <string name="pref_theme_dark">Mørk</string>
-    <string name="pref_use_green_background">Grøn baggrund</string>
-    <string name="pref_use_green_background_summary">Brug grøn baggrund til modtaget beskeder</string>
     <string name="unable_to_connect_to_keychain">Kunne ikke forbinde til OpenKeychain</string>
     <string name="this_device_is_no_longer_in_use">Denne enhed er ikke længere i brug</string>
     <string name="type_pc">Computer</string>

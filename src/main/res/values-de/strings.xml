@@ -574,8 +574,6 @@
     <string name="pref_theme_automatic">Automatisch</string>
     <string name="pref_theme_light">Hell</string>
     <string name="pref_theme_dark">Dunkel</string>
-    <string name="pref_use_green_background">Grüner Hintergrund</string>
-    <string name="pref_use_green_background_summary">Für empfangene Nachrichten grünen Hintergrund verwenden</string>
     <string name="unable_to_connect_to_keychain">Verbindung zu OpenKeychain konnte nicht hergestellt werden</string>
     <string name="this_device_is_no_longer_in_use">Dieses Gerät ist nicht länger in Benutzung</string>
     <string name="type_pc">Computer</string>

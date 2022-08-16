@@ -579,8 +579,6 @@
     <string name="pref_theme_automatic">Automată</string>
     <string name="pref_theme_light">Luminoasă</string>
     <string name="pref_theme_dark">Întunecată</string>
-    <string name="pref_use_green_background">Fundal verde</string>
-    <string name="pref_use_green_background_summary">Pentru mesajele primite</string>
     <string name="unable_to_connect_to_keychain">Nu s-a putut face conectarea la OpenKeychain</string>
     <string name="this_device_is_no_longer_in_use">Acest dispozitiv nu mai este in uz</string>
     <string name="type_pc">PC</string>

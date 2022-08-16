@@ -464,8 +464,6 @@
     <string name="pref_theme_options">Gaia</string>
     <string name="pref_theme_options_summary">Kolore paleta hautatu</string>
     <string name="pref_theme_automatic">Automatikoa</string>
-    <string name="pref_use_green_background">Atzealde berdea</string>
-    <string name="pref_use_green_background_summary">Atzealde berdea erabili jasotako mezuentzat</string>
     <string name="this_device_is_no_longer_in_use">Gailu hau ez da gehiago erabiltzen</string>
     <string name="type_pc">Ordenagailua</string>
     <string name="type_phone">Mugikorra</string>

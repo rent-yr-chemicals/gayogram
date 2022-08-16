@@ -451,8 +451,6 @@
     <string name="pref_privacy">Súkromie</string>
     <string name="pref_theme_options">Téma</string>
     <string name="pref_theme_options_summary">Zvoľte si farebnú schému</string>
-    <string name="pref_use_green_background">Zelené pozadie</string>
-    <string name="pref_use_green_background_summary">Použiť zelené pozadie pre prijaté správy</string>
     <string name="pref_delete_omemo_identities">Vymazať OMEMO identifikátory</string>
     <string name="pref_delete_omemo_identities_summary">Re-generuje vaše kľúče OMEMO. Všetky vaše kontakty vás budú musieť znova overiť. Použite to ako poslednú možnosť.</string>
     <string name="delete_selected_keys">Odstrániť označené kľúče</string>

@@ -569,8 +569,6 @@
     <string name="pref_theme_automatic">自动</string>
     <string name="pref_theme_light">明亮</string>
     <string name="pref_theme_dark">灰暗</string>
-    <string name="pref_use_green_background">绿色背景</string>
-    <string name="pref_use_green_background_summary">接收到的消息使用绿色背景</string>
     <string name="unable_to_connect_to_keychain">无法连接到OpenKeychain</string>
     <string name="this_device_is_no_longer_in_use">不再使用此设备</string>
     <string name="type_pc">电脑</string>

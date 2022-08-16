@@ -424,8 +424,6 @@
     <string name="pref_privacy">Privasi</string>
     <string name="pref_theme_options">Tema</string>
     <string name="pref_theme_automatic">Otomatis</string>
-    <string name="pref_use_green_background">Latar Hijau</string>
-    <string name="pref_use_green_background_summary">Gunakan latar hijau untuk pesan masuk</string>
     <string name="this_device_is_no_longer_in_use">Perangkat ini tidak dipergunakan lagi</string>
     <string name="type_pc">Komputer</string>
     <string name="type_phone">Ponsel</string>

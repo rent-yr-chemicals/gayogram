@@ -608,8 +608,6 @@
     <string name="pref_theme_automatic">Autōmatycznie</string>
     <string name="pref_theme_light">Jasny</string>
     <string name="pref_theme_dark">Ciymny</string>
-    <string name="pref_use_green_background">Zielōny zadek</string>
-    <string name="pref_use_green_background_summary">Używej zielōnego zadku dlo dostanych wiadōmości</string>
     <string name="unable_to_connect_to_keychain">Niy idzie sie połōnczyć z OpenKeychain</string>
     <string name="this_device_is_no_longer_in_use">Ta maszina juz niy je używano</string>
     <string name="type_pc">Kōmputer</string>

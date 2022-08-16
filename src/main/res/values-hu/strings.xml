@@ -552,8 +552,6 @@
     <string name="pref_theme_automatic">Automatikus</string>
     <string name="pref_theme_light">Világos</string>
     <string name="pref_theme_dark">Sötét</string>
-    <string name="pref_use_green_background">Zöld háttér</string>
-    <string name="pref_use_green_background_summary">Zöld háttér használata a fogadott üzenetekhez</string>
     <string name="this_device_is_no_longer_in_use">Ez az eszköz többé nincs használatban</string>
     <string name="type_pc">Számítógép</string>
     <string name="type_phone">Mobiltelefon</string>

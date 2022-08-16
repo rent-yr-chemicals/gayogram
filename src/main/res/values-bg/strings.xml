@@ -571,8 +571,6 @@
     <string name="pref_theme_automatic">Автоматично</string>
     <string name="pref_theme_light">Светла</string>
     <string name="pref_theme_dark">Тъмна</string>
-    <string name="pref_use_green_background">Зелен фон</string>
-    <string name="pref_use_green_background_summary">Получените съобщения ще бъдат на зелен фон</string>
     <string name="unable_to_connect_to_keychain">Свързването с OpenKeychain е невъзможно</string>
     <string name="this_device_is_no_longer_in_use">Това устройство вече не се използва</string>
     <string name="type_pc">Компютър</string>

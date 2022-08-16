@@ -495,8 +495,6 @@
     <string name="pref_theme_options">Thema</string>
     <string name="pref_theme_options_summary">Kies het kleurenpalet</string>
     <string name="pref_theme_automatic">Automatisch</string>
-    <string name="pref_use_green_background">Groene achtergrond</string>
-    <string name="pref_use_green_background_summary">Gebruik groene achtergrond voor ontvangen berichten</string>
     <string name="this_device_is_no_longer_in_use">Dit apparaat wordt niet meer gebruikt</string>
     <string name="type_pc">Computer</string>
     <string name="type_phone">Mobiele telefoon</string>

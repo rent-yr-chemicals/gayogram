@@ -391,8 +391,6 @@
     <string name="pref_privacy">Privacidade</string>
     <string name="pref_theme_options">Tema</string>
     <string name="pref_theme_options_summary">Escolher a palete de cores</string>
-    <string name="pref_use_green_background">Fundo Verde</string>
-    <string name="pref_use_green_background_summary">Usar fundo verde para mensagens recebidas</string>
     <string name="this_device_is_no_longer_in_use">Este dispositivo já não está em uso</string>
     <string name="type_pc">Computador</string>
     <string name="type_phone">Telefone móvel</string>
