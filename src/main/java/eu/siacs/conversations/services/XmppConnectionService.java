@@ -4673,6 +4673,7 @@ public class XmppConnectionService extends Service {
         if (result != null) {
             return result;
         } else {
+            if (key.first == null || key.second == null) return null;
             result = databaseBackend.findDiscoveryResult(key.first, key.second);
             if (result != null) {
                 discoCache.put(key, result);
@@ -4700,6 +4701,10 @@ public class XmppConnectionService extends Service {
     }
 
     public void fetchCaps(Account account, final Jid jid, final Presence presence) {
+        fetchCaps(account, jid, presence, null);
+    }
+
+    public void fetchCaps(Account account, final Jid jid, final Presence presence, Runnable cb) {
         final Pair<String, String> key = new Pair<>(presence.getHash(), presence.getVer());
         final ServiceDiscoveryResult disco = getCachedServiceDiscoveryResult(key);
 
@@ -4726,14 +4731,15 @@ public class XmppConnectionService extends Service {
             sendIqPacket(account, request, (a, response) -> {
                 if (response.getType() == IqPacket.TYPE.RESULT) {
                     final ServiceDiscoveryResult discoveryResult = new ServiceDiscoveryResult(response);
-                    if (presence.getVer().equals(discoveryResult.getVer())) {
+                    if (presence.getVer() == null || presence.getVer().equals(discoveryResult.getVer())) {
                         databaseBackend.insertDiscoveryResult(discoveryResult);
-                        injectServiceDiscoveryResult(a.getRoster(), presence.getHash(), presence.getVer(), discoveryResult);
+                        injectServiceDiscoveryResult(a.getRoster(), presence.getHash(), presence.getVer(), jid.getResource(), discoveryResult);
                         if (discoveryResult.hasIdentity("gateway", "pstn")) {
                             final Contact contact = account.getRoster().getContact(jid);
                             contact.registerAsPhoneAccount(this);
                             mQuickConversationsService.considerSyncBackground(false);
                         }
+                        if (cb != null) cb.run();
                     } else {
                         Log.d(Config.LOGTAG, a.getJid().asBareJid() + ": mismatch in caps for contact " + jid + " " + presence.getVer() + " vs " + discoveryResult.getVer());
                     }
@@ -4744,14 +4750,26 @@ public class XmppConnectionService extends Service {
         }
     }
 
-    private void injectServiceDiscoveryResult(Roster roster, String hash, String ver, ServiceDiscoveryResult disco) {
+    public void fetchCommands(Account account, final Jid jid, OnIqPacketReceived callback) {
+        final IqPacket request = mIqGenerator.queryDiscoItems(jid, "http://jabber.org/protocol/commands");
+        sendIqPacket(account, request, callback);
+    }
+
+    private void injectServiceDiscoveryResult(Roster roster, String hash, String ver, String resource, ServiceDiscoveryResult disco) {
         boolean rosterNeedsSync = false;
         for (final Contact contact : roster.getContacts()) {
             boolean serviceDiscoverySet = false;
-            for (final Presence presence : contact.getPresences().getPresences()) {
-                if (hash.equals(presence.getHash()) && ver.equals(presence.getVer())) {
-                    presence.setServiceDiscoveryResult(disco);
-                    serviceDiscoverySet = true;
+            Presence onePresence = contact.getPresences().get(resource == null ? "" : resource);
+            if (onePresence != null) {
+                onePresence.setServiceDiscoveryResult(disco);
+                serviceDiscoverySet = true;
+            }
+            if (hash != null && ver != null) {
+                for (final Presence presence : contact.getPresences().getPresences()) {
+                    if (hash.equals(presence.getHash()) && ver.equals(presence.getVer())) {
+                        presence.setServiceDiscoveryResult(disco);
+                        serviceDiscoverySet = true;
+                    }
                 }
             }
             if (serviceDiscoverySet) {

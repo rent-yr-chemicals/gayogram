@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
 
+import com.google.common.io.ByteSource;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Longs;
@@ -13,6 +14,7 @@ import com.google.common.primitives.Longs;
 import org.json.JSONException;
 
 import java.lang.ref.WeakReference;
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -20,6 +22,7 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import eu.siacs.conversations.Config;
@@ -35,6 +38,9 @@ import eu.siacs.conversations.utils.MessageUtils;
 import eu.siacs.conversations.utils.MimeUtils;
 import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.xmpp.Jid;
+import eu.siacs.conversations.xml.Element;
+import eu.siacs.conversations.xml.Tag;
+import eu.siacs.conversations.xml.XmlReader;
 
 public class Message extends AbstractEntity implements AvatarService.Avatarable {
 
@@ -107,6 +113,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     protected boolean carbon = false;
     private boolean oob = false;
     protected URI oobUri = null;
+    protected List<Element> payloads = new ArrayList<>();
     protected List<Edit> edits = new ArrayList<>();
     protected String relativeFilePath;
     protected boolean read = true;
@@ -161,6 +168,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 null,
                 null,
                 null,
+                null,
                 null);
     }
 
@@ -189,6 +197,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 null,
                 null,
                 null,
+                null,
                 null);
     }
 
@@ -198,7 +207,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                       final String remoteMsgId, final String relativeFilePath,
                       final String serverMsgId, final String fingerprint, final boolean read,
                       final String edited, final boolean oob, final String errorMessage, final Set<ReadByMarker> readByMarkers,
-                      final boolean markable, final boolean deleted, final String bodyLanguage, final String subject, final String oobUri, final String fileParams) {
+                      final boolean markable, final boolean deleted, final String bodyLanguage, final String subject, final String oobUri, final String fileParams, final List<Element> payloads) {
         this.conversation = conversation;
         this.uuid = uuid;
         this.conversationUuid = conversationUUid;
@@ -225,9 +234,21 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         this.bodyLanguage = bodyLanguage;
         this.subject = subject;
         if (fileParams != null) this.fileParams = new FileParams(fileParams);
+        if (payloads != null) this.payloads = payloads;
     }
 
-    public static Message fromCursor(Cursor cursor, Conversation conversation) {
+    public static Message fromCursor(Cursor cursor, Conversation conversation) throws IOException {
+        String payloadsStr = cursor.getString(cursor.getColumnIndex("payloads"));
+        List<Element> payloads = new ArrayList<>();
+        if (payloadsStr != null) {
+            final XmlReader xmlReader = new XmlReader();
+            xmlReader.setInputStream(ByteSource.wrap(payloadsStr.getBytes()).openStream());
+            Tag tag;
+            while ((tag = xmlReader.readTag()) != null) {
+                payloads.add(xmlReader.readElement(tag));
+            }
+        }
+
         return new Message(conversation,
                 cursor.getString(cursor.getColumnIndex(UUID)),
                 cursor.getString(cursor.getColumnIndex(CONVERSATION)),
@@ -253,7 +274,8 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 cursor.getString(cursor.getColumnIndex(BODY_LANGUAGE)),
                 cursor.getString(cursor.getColumnIndex("subject")),
                 cursor.getString(cursor.getColumnIndex("oobUri")),
-                cursor.getString(cursor.getColumnIndex("fileParams"))
+                cursor.getString(cursor.getColumnIndex("fileParams")),
+                payloads
         );
     }
 
@@ -289,6 +311,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         values.put("subject", subject);
         values.put("oobUri", oobUri == null ? null : oobUri.toString());
         values.put("fileParams", fileParams == null ? null : fileParams.toString());
+        values.put("payloads", payloads.size() < 1 ? null : payloads.stream().map(Object::toString).collect(Collectors.joining()));
         return values;
     }
 
@@ -839,6 +862,22 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             this.oobUri = null;
         }
         this.oob = this.oobUri != null;
+    }
+
+    public void addPayload(Element el) {
+        this.payloads.add(el);
+    }
+
+    public List<Element> getCommands() {
+        if (this.payloads == null) return null;
+
+        for (Element el : this.payloads) {
+            if (el.getName().equals("query") && el.getNamespace().equals("http://jabber.org/protocol/disco#items") && el.getAttribute("node").equals("http://jabber.org/protocol/commands")) {
+                return el.getChildren();
+            }
+        }
+
+        return null;
     }
 
     public String getMimeType() {

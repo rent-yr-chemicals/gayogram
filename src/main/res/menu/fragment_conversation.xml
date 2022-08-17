@@ -135,6 +135,12 @@
                 android:orderInCategory="73"
                 android:title="@string/add_to_favorites"
                 app:showAsAction="never" />
+
+            <item
+                android:id="@+id/action_refresh_feature_discovery"
+                android:orderInCategory="74"
+                android:title="Refresh Feature Discovery"
+                app:showAsAction="never" />
         </menu>
     </item>
 

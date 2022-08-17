@@ -24,6 +24,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -75,6 +76,7 @@ import eu.siacs.conversations.utils.TimeFrameUtils;
 import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.mam.MamReference;
+import eu.siacs.conversations.xml.Element;
 
 public class MessageAdapter extends ArrayAdapter<Message> {
 
@@ -616,6 +618,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         final boolean isInValidSession = message.isValidInSession() && (!omemoEncryption || message.isTrusted());
         final Conversational conversation = message.getConversation();
         final Account account = conversation.getAccount();
+        final List<Element> commands = message.getCommands();
         final int type = getItemViewType(position);
         ViewHolder viewHolder;
         if (view == null) {
@@ -661,6 +664,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                     viewHolder.indicatorReceived = view.findViewById(R.id.indicator_received);
                     viewHolder.encryption = view.findViewById(R.id.message_encryption);
                     viewHolder.audioPlayer = view.findViewById(R.id.audio_player);
+                    viewHolder.commands_list = view.findViewById(R.id.commands_list);
                     break;
                 case STATUS:
                     view = activity.getLayoutInflater().inflate(R.layout.message_status, parent, false);
@@ -830,6 +834,16 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         }
 
         if (type == RECEIVED) {
+            if (commands != null && conversation instanceof Conversation) {
+                CommandButtonAdapter adapter = new CommandButtonAdapter(activity);
+                adapter.addAll(commands);
+                viewHolder.commands_list.setAdapter(adapter);
+                viewHolder.commands_list.setVisibility(View.VISIBLE);
+                viewHolder.commands_list.setOnItemClickListener((p, v, pos, id) -> {
+                    ((Conversation) conversation).startCommand(adapter.getItem(pos), activity.xmppConnectionService);
+                });
+            }
+
             if (isInValidSession) {
                 int bubble;
                 if (!mUseGreenBackground) {
@@ -938,5 +952,6 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         protected ImageView contact_picture;
         protected TextView status_message;
         protected TextView encryption;
+        protected ListView commands_list;
     }
 }

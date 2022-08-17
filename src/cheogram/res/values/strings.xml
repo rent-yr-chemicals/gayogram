@@ -13,4 +13,10 @@
     <string name="if_contact_is_nearby_use_qr">If your contact is nearby, they can also scan the code below to accept your invitation.</string>
     <string name="easy_invite_share_text">Join %1$s and chat with me: %2$s</string>
     <string name="share_invite_with">Share invite with…</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_next">Next</string>
+    <string name="action_prev">Back</string>
+    <string name="action_complete">Finish</string>
+    <string name="action_close">Close</string>
+    <string name="action_execute">Go</string>
 </resources>

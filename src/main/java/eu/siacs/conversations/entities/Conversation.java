@@ -1,12 +1,48 @@
 package eu.siacs.conversations.entities;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.database.DataSetObserver;
+import android.graphics.Rect;
+import android.net.Uri;
+import android.text.Editable;
+import android.text.InputType;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.text.TextUtils;
+import android.text.TextWatcher;
+import android.view.LayoutInflater;
+import android.view.MotionEvent;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
+import android.widget.CompoundButton;
+import android.widget.ListView;
+import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.Spinner;
+import android.webkit.JavascriptInterface;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.webkit.WebChromeClient;
+import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.databinding.DataBindingUtil;
+import androidx.databinding.ViewDataBinding;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.viewpager.widget.ViewPager;
 
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
 
@@ -19,20 +55,41 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import eu.siacs.conversations.Config;
+import eu.siacs.conversations.R;
 import eu.siacs.conversations.crypto.OmemoSetting;
 import eu.siacs.conversations.crypto.PgpDecryptionService;
+import eu.siacs.conversations.databinding.CommandPageBinding;
+import eu.siacs.conversations.databinding.CommandNoteBinding;
+import eu.siacs.conversations.databinding.CommandResultFieldBinding;
+import eu.siacs.conversations.databinding.CommandResultCellBinding;
+import eu.siacs.conversations.databinding.CommandCheckboxFieldBinding;
+import eu.siacs.conversations.databinding.CommandProgressBarBinding;
+import eu.siacs.conversations.databinding.CommandRadioEditFieldBinding;
+import eu.siacs.conversations.databinding.CommandSearchListFieldBinding;
+import eu.siacs.conversations.databinding.CommandSpinnerFieldBinding;
+import eu.siacs.conversations.databinding.CommandTextFieldBinding;
+import eu.siacs.conversations.databinding.CommandWebviewBinding;
 import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.QuickConversationsService;
+import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.utils.MessageUtils;
 import eu.siacs.conversations.utils.UIHelper;
+import eu.siacs.conversations.xml.Element;
+import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.Jid;
+import eu.siacs.conversations.xmpp.Option;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
 import eu.siacs.conversations.xmpp.mam.MamReference;
+import eu.siacs.conversations.xmpp.stanzas.IqPacket;
 
 import static eu.siacs.conversations.entities.Bookmark.printableValue;
 
@@ -84,6 +141,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
     private ChatState mOutgoingChatState = Config.DEFAULT_CHAT_STATE;
     private ChatState mIncomingChatState = Config.DEFAULT_CHAT_STATE;
     private String mFirstMamReference = null;
+    protected int mCurrentTab = -1;
+    protected ConversationPagerAdapter pagerAdapter = new ConversationPagerAdapter();
 
     public Conversation(final String name, final Account account, final Jid contactJid,
                         final int mode) {
@@ -1109,6 +1168,36 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         return getName().toString();
     }
 
+    public void setCurrentTab(int tab) {
+        mCurrentTab = tab;
+    }
+
+    public int getCurrentTab() {
+        if (mCurrentTab >= 0) return mCurrentTab;
+
+        if (!isRead() || getContact().resourceWhichSupport(Namespace.COMMANDS) == null) {
+            return 0;
+        }
+
+        return 1;
+    }
+
+    public void startCommand(Element command, XmppConnectionService xmppConnectionService) {
+        pagerAdapter.startCommand(command, xmppConnectionService);
+    }
+
+    public void setupViewPager(ViewPager pager, TabLayout tabs) {
+        pagerAdapter.setupViewPager(pager, tabs);
+    }
+
+    public void showViewPager() {
+        pagerAdapter.show();
+    }
+
+    public void hideViewPager() {
+        pagerAdapter.hide();
+    }
+
     public interface OnMessageFound {
         void onMessageFound(final Message message);
     }
@@ -1128,6 +1217,1165 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
         public String getMessage() {
             return message;
+        }
+    }
+
+    public class ConversationPagerAdapter extends PagerAdapter {
+        protected ViewPager mPager = null;
+        protected TabLayout mTabs = null;
+        ArrayList<CommandSession> sessions = new ArrayList<>();
+
+        public void setupViewPager(ViewPager pager, TabLayout tabs) {
+            mPager = pager;
+            mTabs = tabs;
+            show();
+            pager.setAdapter(this);
+            tabs.setupWithViewPager(mPager);
+            pager.setCurrentItem(getCurrentTab());
+
+            mPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+                public void onPageScrollStateChanged(int state) { }
+                public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+
+                public void onPageSelected(int position) {
+                    setCurrentTab(position);
+                }
+            });
+        }
+
+        public void show() {
+            if (sessions == null) {
+                sessions = new ArrayList<>();
+                notifyDataSetChanged();
+            }
+            if (mTabs != null) mTabs.setVisibility(View.VISIBLE);
+        }
+
+        public void hide() {
+            if (mPager != null) mPager.setCurrentItem(0);
+            if (mTabs != null) mTabs.setVisibility(View.GONE);
+            sessions = null;
+            notifyDataSetChanged();
+        }
+
+        public void startCommand(Element command, XmppConnectionService xmppConnectionService) {
+            CommandSession session = new CommandSession(command.getAttribute("name"), xmppConnectionService);
+
+            final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
+            packet.setTo(command.getAttributeAsJid("jid"));
+            final Element c = packet.addChild("command", Namespace.COMMANDS);
+            c.setAttribute("node", command.getAttribute("node"));
+            c.setAttribute("action", "execute");
+            xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
+                mPager.post(() -> {
+                    session.updateWithResponse(iq);
+                });
+            });
+
+            sessions.add(session);
+            notifyDataSetChanged();
+            mPager.setCurrentItem(getCount() - 1);
+        }
+
+        public void removeSession(CommandSession session) {
+            sessions.remove(session);
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public Object instantiateItem(@NonNull ViewGroup container, int position) {
+            if (position < 2) {
+              return mPager.getChildAt(position);
+            }
+
+            CommandSession session = sessions.get(position-2);
+            CommandPageBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_page, container, false);
+            container.addView(binding.getRoot());
+            session.setBinding(binding);
+            return session;
+        }
+
+        @Override
+        public void destroyItem(@NonNull ViewGroup container, int position, Object o) {
+            if (position < 2) return;
+
+            container.removeView(((CommandSession) o).getView());
+        }
+
+        @Override
+        public int getItemPosition(Object o) {
+            if (o == mPager.getChildAt(0)) return PagerAdapter.POSITION_UNCHANGED;
+            if (o == mPager.getChildAt(1)) return PagerAdapter.POSITION_UNCHANGED;
+
+            int pos = sessions.indexOf(o);
+            if (pos < 0) return PagerAdapter.POSITION_NONE;
+            return pos + 2;
+        }
+
+        @Override
+        public int getCount() {
+            if (sessions == null) return 1;
+
+            int count = 2 + sessions.size();
+            if (count > 2) {
+                mTabs.setTabMode(TabLayout.MODE_SCROLLABLE);
+            } else {
+                mTabs.setTabMode(TabLayout.MODE_FIXED);
+            }
+            return count;
+        }
+
+        @Override
+        public boolean isViewFromObject(@NonNull View view, @NonNull Object o) {
+            if (view == o) return true;
+
+            if (o instanceof CommandSession) {
+                return ((CommandSession) o).getView() == view;
+            }
+
+            return false;
+        }
+
+        @Nullable
+        @Override
+        public CharSequence getPageTitle(int position) {
+            switch (position) {
+                case 0:
+                    return "Conversation";
+                case 1:
+                    return "Commands";
+                default:
+                    CommandSession session = sessions.get(position-2);
+                    if (session == null) return super.getPageTitle(position);
+                    return session.getTitle();
+            }
+        }
+
+        class CommandSession extends RecyclerView.Adapter<CommandSession.ViewHolder> {
+            abstract class ViewHolder<T extends ViewDataBinding> extends RecyclerView.ViewHolder {
+                protected T binding;
+
+                public ViewHolder(T binding) {
+                    super(binding.getRoot());
+                    this.binding = binding;
+                }
+
+                abstract public void bind(Item el);
+
+                protected void setTextOrHide(TextView v, Optional<String> s) {
+                    if (s == null || !s.isPresent()) {
+                        v.setVisibility(View.GONE);
+                    } else {
+                        v.setVisibility(View.VISIBLE);
+                        v.setText(s.get());
+                    }
+                }
+
+                protected void setupInputType(Element field, TextView textinput, TextInputLayout layout) {
+                    int flags = 0;
+                    if (layout != null) layout.setEndIconMode(TextInputLayout.END_ICON_NONE);
+                    textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
+
+                    String type = field.getAttribute("type");
+                    if (type != null) {
+                        if (type.equals("text-multi") || type.equals("jid-multi")) {
+                            flags |= InputType.TYPE_TEXT_FLAG_MULTI_LINE;
+                        }
+
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_WEB_EDIT_TEXT);
+
+                        if (type.equals("jid-single") || type.equals("jid-multi")) {
+                            textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+                        }
+
+                        if (type.equals("text-private")) {
+                            textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                            if (layout != null) layout.setEndIconMode(TextInputLayout.END_ICON_PASSWORD_TOGGLE);
+                        }
+                    }
+
+                    Element validate = field.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                    if (validate == null) return;
+                    String datatype = validate.getAttribute("datatype");
+                    if (datatype == null) return;
+
+                    if (datatype.equals("xs:integer") || datatype.equals("xs:int") || datatype.equals("xs:long") || datatype.equals("xs:short") || datatype.equals("xs:byte")) {
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED);
+                    }
+
+                    if (datatype.equals("xs:decimal") || datatype.equals("xs:double")) {
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_SIGNED | InputType.TYPE_NUMBER_FLAG_DECIMAL);
+                    }
+
+                    if (datatype.equals("xs:date")) {
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_DATE);
+                    }
+
+                    if (datatype.equals("xs:dateTime")) {
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_NORMAL);
+                    }
+
+                    if (datatype.equals("xs:time")) {
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_DATETIME | InputType.TYPE_DATETIME_VARIATION_TIME);
+                    }
+
+                    if (datatype.equals("xs:anyURI")) {
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+                    }
+
+                    if (datatype.equals("html:tel")) {
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_PHONE);
+                    }
+
+                    if (datatype.equals("html:email")) {
+                        textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+                    }
+                }
+            }
+
+            class ErrorViewHolder extends ViewHolder<CommandNoteBinding> {
+                public ErrorViewHolder(CommandNoteBinding binding) { super(binding); }
+
+                @Override
+                public void bind(Item iq) {
+                    binding.errorIcon.setVisibility(View.VISIBLE);
+
+                    Element error = iq.el.findChild("error");
+                    if (error == null) return;
+                    String text = error.findChildContent("text", "urn:ietf:params:xml:ns:xmpp-stanzas");
+                    if (text == null || text.equals("")) {
+                        text = error.getChildren().get(0).getName();
+                    }
+                    binding.message.setText(text);
+                }
+            }
+
+            class NoteViewHolder extends ViewHolder<CommandNoteBinding> {
+                public NoteViewHolder(CommandNoteBinding binding) { super(binding); }
+
+                @Override
+                public void bind(Item note) {
+                    binding.message.setText(note.el.getContent());
+
+                    String type = note.el.getAttribute("type");
+                    if (type != null && type.equals("error")) {
+                        binding.errorIcon.setVisibility(View.VISIBLE);
+                    }
+                }
+            }
+
+            class ResultFieldViewHolder extends ViewHolder<CommandResultFieldBinding> {
+                public ResultFieldViewHolder(CommandResultFieldBinding binding) { super(binding); }
+
+                @Override
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    setTextOrHide(binding.label, field.getLabel());
+                    setTextOrHide(binding.desc, field.getDesc());
+
+                    ArrayAdapter<String> values = new ArrayAdapter<String>(binding.getRoot().getContext(), R.layout.simple_list_item);
+                    for (Element el : field.el.getChildren()) {
+                        if (el.getName().equals("value") && el.getNamespace().equals("jabber:x:data")) {
+                            values.add(el.getContent());
+                        }
+                    }
+                    binding.values.setAdapter(values);
+
+                    ClipboardManager clipboard = binding.getRoot().getContext().getSystemService(ClipboardManager.class);
+                    binding.values.setOnItemLongClickListener((arg0, arg1, pos, id) -> {
+                        ClipData myClip = ClipData.newPlainText("text", values.getItem(pos));
+                        clipboard.setPrimaryClip(myClip);
+                        Toast.makeText(binding.getRoot().getContext(), R.string.message_copied_to_clipboard, Toast.LENGTH_SHORT).show();
+                        return true;
+                    });
+                }
+            }
+
+            class ResultCellViewHolder extends ViewHolder<CommandResultCellBinding> {
+                public ResultCellViewHolder(CommandResultCellBinding binding) { super(binding); }
+
+                @Override
+                public void bind(Item item) {
+                    Cell cell = (Cell) item;
+
+                    if (cell.el == null) {
+                        binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Subhead);
+                        setTextOrHide(binding.text, cell.reported.getLabel());
+                    } else {
+                        binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Body1);
+                        binding.text.setText(cell.el.findChildContent("value", "jabber:x:data"));
+                    }
+                }
+            }
+
+            class CheckboxFieldViewHolder extends ViewHolder<CommandCheckboxFieldBinding> implements CompoundButton.OnCheckedChangeListener {
+                public CheckboxFieldViewHolder(CommandCheckboxFieldBinding binding) {
+                    super(binding);
+                    binding.row.setOnClickListener((v) -> {
+                        binding.checkbox.toggle();
+                    });
+                    binding.checkbox.setOnCheckedChangeListener(this);
+                }
+                protected Element mValue = null;
+
+                @Override
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    binding.label.setText(field.getLabel().orElse(""));
+                    setTextOrHide(binding.desc, field.getDesc());
+                    mValue = field.getValue();
+                    binding.checkbox.setChecked(mValue.getContent() != null && (mValue.getContent().equals("true") || mValue.getContent().equals("1")));
+                }
+
+                @Override
+                public void onCheckedChanged(CompoundButton checkbox, boolean isChecked) {
+                    if (mValue == null) return;
+
+                    mValue.setContent(isChecked ? "true" : "false");
+                }
+            }
+
+            class SearchListFieldViewHolder extends ViewHolder<CommandSearchListFieldBinding> implements TextWatcher {
+                public SearchListFieldViewHolder(CommandSearchListFieldBinding binding) {
+                    super(binding);
+                    binding.search.addTextChangedListener(this);
+                }
+                protected Element mValue = null;
+                List<Option> options = new ArrayList<>();
+                protected ArrayAdapter<Option> adapter;
+                protected boolean open;
+
+                @Override
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    setTextOrHide(binding.label, field.getLabel());
+                    setTextOrHide(binding.desc, field.getDesc());
+
+                    if (field.error != null) {
+                        binding.desc.setVisibility(View.VISIBLE);
+                        binding.desc.setText(field.error);
+                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Design_Error);
+                    } else {
+                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Status);
+                    }
+
+                    mValue = field.getValue();
+
+                    Element validate = field.el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                    open = validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null;
+                    setupInputType(field.el, binding.search, null);
+
+                    options = field.getOptions();
+                    binding.list.setOnItemClickListener((parent, view, position, id) -> {
+                        mValue.setContent(adapter.getItem(binding.list.getCheckedItemPosition()).getValue());
+                        if (open) binding.search.setText(mValue.getContent());
+                    });
+                    search("");
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    if (open) mValue.setContent(s.toString());
+                    search(s.toString());
+                }
+
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int count, int after) { }
+
+                protected void search(String s) {
+                    List<Option> filteredOptions;
+                    final String q = s.replaceAll("\\W", "").toLowerCase();
+                    if (q == null || q.equals("")) {
+                        filteredOptions = options;
+                    } else {
+                        filteredOptions = options.stream().filter(o -> o.toString().replaceAll("\\W", "").toLowerCase().contains(q)).collect(Collectors.toList());
+                    }
+                    adapter = new ArrayAdapter(binding.getRoot().getContext(), R.layout.simple_list_item, filteredOptions);
+                    binding.list.setAdapter(adapter);
+
+                    int checkedPos = filteredOptions.indexOf(new Option(mValue.getContent(), ""));
+                    if (checkedPos >= 0) binding.list.setItemChecked(checkedPos, true);
+                }
+            }
+
+            class RadioEditFieldViewHolder extends ViewHolder<CommandRadioEditFieldBinding> implements CompoundButton.OnCheckedChangeListener, TextWatcher {
+                public RadioEditFieldViewHolder(CommandRadioEditFieldBinding binding) {
+                    super(binding);
+                    binding.open.addTextChangedListener(this);
+                    options = new ArrayAdapter<Option>(binding.getRoot().getContext(), R.layout.radio_grid_item) {
+                        @Override
+                        public View getView(int position, View convertView, ViewGroup parent) {
+                            CompoundButton v = (CompoundButton) super.getView(position, convertView, parent);
+                            v.setId(position);
+                            v.setChecked(getItem(position).getValue().equals(mValue.getContent()));
+                            v.setOnCheckedChangeListener(RadioEditFieldViewHolder.this);
+                            return v;
+                        }
+                    };
+                }
+                protected Element mValue = null;
+                protected ArrayAdapter<Option> options;
+
+                @Override
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    setTextOrHide(binding.label, field.getLabel());
+                    setTextOrHide(binding.desc, field.getDesc());
+
+                    if (field.error != null) {
+                        binding.desc.setVisibility(View.VISIBLE);
+                        binding.desc.setText(field.error);
+                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Design_Error);
+                    } else {
+                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Status);
+                    }
+
+                    mValue = field.getValue();
+
+                    Element validate = field.el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                    binding.open.setVisibility((validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null) ? View.VISIBLE : View.GONE);
+                    binding.open.setText(mValue.getContent());
+                    setupInputType(field.el, binding.open, null);
+
+                    options.clear();
+                    List<Option> theOptions = field.getOptions();
+                    options.addAll(theOptions);
+
+                    float screenWidth = binding.getRoot().getContext().getResources().getDisplayMetrics().widthPixels;
+                    TextPaint paint = ((TextView) LayoutInflater.from(binding.getRoot().getContext()).inflate(R.layout.radio_grid_item, null)).getPaint();
+                    float maxColumnWidth = theOptions.stream().map((x) ->
+                        StaticLayout.getDesiredWidth(x.toString(), paint)
+                    ).max(Float::compare).orElse(new Float(0.0));
+                    if (maxColumnWidth * theOptions.size() < 0.90 * screenWidth) {
+                        binding.radios.setNumColumns(theOptions.size());
+                    } else if (maxColumnWidth * (theOptions.size() / 2) < 0.90 * screenWidth) {
+                        binding.radios.setNumColumns(theOptions.size() / 2);
+                    } else {
+                        binding.radios.setNumColumns(1);
+                    }
+                    binding.radios.setAdapter(options);
+                }
+
+                @Override
+                public void onCheckedChanged(CompoundButton radio, boolean isChecked) {
+                    if (mValue == null) return;
+
+                    if (isChecked) {
+                        mValue.setContent(options.getItem(radio.getId()).getValue());
+                        binding.open.setText(mValue.getContent());
+                    }
+                    options.notifyDataSetChanged();
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    if (mValue == null) return;
+
+                    mValue.setContent(s.toString());
+                    options.notifyDataSetChanged();
+                }
+
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int count, int after) { }
+            }
+
+            class SpinnerFieldViewHolder extends ViewHolder<CommandSpinnerFieldBinding> implements AdapterView.OnItemSelectedListener {
+                public SpinnerFieldViewHolder(CommandSpinnerFieldBinding binding) {
+                    super(binding);
+                    binding.spinner.setOnItemSelectedListener(this);
+                }
+                protected Element mValue = null;
+
+                @Override
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    setTextOrHide(binding.label, field.getLabel());
+                    binding.spinner.setPrompt(field.getLabel().orElse(""));
+                    setTextOrHide(binding.desc, field.getDesc());
+
+                    mValue = field.getValue();
+
+                    ArrayAdapter<Option> options = new ArrayAdapter<Option>(binding.getRoot().getContext(), android.R.layout.simple_spinner_item);
+                    options.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    options.addAll(field.getOptions());
+
+                    binding.spinner.setAdapter(options);
+                    binding.spinner.setSelection(options.getPosition(new Option(mValue.getContent(), null)));
+                }
+
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                    Option o = (Option) parent.getItemAtPosition(pos);
+                    if (mValue == null) return;
+
+                    mValue.setContent(o == null ? "" : o.getValue());
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    mValue.setContent("");
+                }
+            }
+
+            class TextFieldViewHolder extends ViewHolder<CommandTextFieldBinding> implements TextWatcher {
+                public TextFieldViewHolder(CommandTextFieldBinding binding) {
+                    super(binding);
+                    binding.textinput.addTextChangedListener(this);
+                }
+                protected Element mValue = null;
+
+                @Override
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    binding.textinputLayout.setHint(field.getLabel().orElse(""));
+
+                    binding.textinputLayout.setHelperTextEnabled(field.getDesc().isPresent());
+                    field.getDesc().ifPresent(binding.textinputLayout::setHelperText);
+
+                    binding.textinputLayout.setErrorEnabled(field.error != null);
+                    if (field.error != null) binding.textinputLayout.setError(field.error);
+
+                    mValue = field.getValue();
+                    binding.textinput.setText(mValue.getContent());
+                    setupInputType(field.el, binding.textinput, binding.textinputLayout);
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    if (mValue == null) return;
+
+                    mValue.setContent(s.toString());
+                }
+
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int count, int after) { }
+            }
+
+            class WebViewHolder extends ViewHolder<CommandWebviewBinding> {
+                public WebViewHolder(CommandWebviewBinding binding) { super(binding); }
+
+                @Override
+                public void bind(Item oob) {
+                    binding.webview.getSettings().setJavaScriptEnabled(true);
+                    binding.webview.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Mobile Safari/537.36");
+                    binding.webview.getSettings().setDatabaseEnabled(true);
+                    binding.webview.getSettings().setDomStorageEnabled(true);
+                    binding.webview.setWebChromeClient(new WebChromeClient() {
+                        @Override
+                        public void onProgressChanged(WebView view, int newProgress) {
+                            binding.progressbar.setVisibility(newProgress < 100 ? View.VISIBLE : View.GONE);
+                            binding.progressbar.setProgress(newProgress);
+                        }
+                    });
+                    binding.webview.setWebViewClient(new WebViewClient() {
+                        @Override
+                        public void onPageFinished(WebView view, String url) {
+                            super.onPageFinished(view, url);
+                            mTitle = view.getTitle();
+                            ConversationPagerAdapter.this.notifyDataSetChanged();
+                        }
+                    });
+                    binding.webview.addJavascriptInterface(new JsObject(), "xmpp_xep0050");
+                    binding.webview.loadUrl(oob.el.findChildContent("url", "jabber:x:oob"));
+                }
+
+                class JsObject {
+                    @JavascriptInterface
+                    public void execute() { execute("execute"); }
+                    public void execute(String action) {
+                        getView().post(() -> {
+                            if(CommandSession.this.execute(action)) {
+                                removeSession(CommandSession.this);
+                            }
+                        });
+                    }
+                }
+            }
+
+            class ProgressBarViewHolder extends ViewHolder<CommandProgressBarBinding> {
+                public ProgressBarViewHolder(CommandProgressBarBinding binding) { super(binding); }
+
+                @Override
+                public void bind(Item item) { }
+            }
+
+            class Item {
+                protected Element el;
+                protected int viewType;
+                protected String error = null;
+
+                Item(Element el, int viewType) {
+                    this.el = el;
+                    this.viewType = viewType;
+                }
+
+                public boolean validate() {
+                    error = null;
+                    return true;
+                }
+            }
+
+            class Field extends Item {
+                Field(Element el, int viewType) { super(el, viewType); }
+
+                @Override
+                public boolean validate() {
+                    if (!super.validate()) return false;
+                    if (el.findChild("required", "jabber:x:data") == null) return true;
+                    if (getValue().getContent() != null && !getValue().getContent().equals("")) return true;
+
+                    error = "this value is required";
+                    return false;
+                }
+
+                public String getVar() {
+                    return el.getAttribute("var");
+                }
+
+                public Optional<String> getLabel() {
+                    String label = el.getAttribute("label");
+                    if (label == null) label = getVar();
+                    return Optional.ofNullable(label);
+                }
+
+                public Optional<String> getDesc() {
+                    return Optional.ofNullable(el.findChildContent("desc", "jabber:x:data"));
+                }
+
+                public Element getValue() {
+                    Element value = el.findChild("value", "jabber:x:data");
+                    if (value == null) {
+                        value = el.addChild("value", "jabber:x:data");
+                    }
+                    return value;
+                }
+
+                public List<Option> getOptions() {
+                    return Option.forField(el);
+                }
+            }
+
+            class Cell extends Item {
+                protected Field reported;
+
+                Cell(Field reported, Element item) {
+                    super(item, TYPE_RESULT_CELL);
+                    this.reported = reported;
+                }
+            }
+
+            protected Field mkField(Element el) {
+                int viewType = -1;
+
+                String formType = responseElement.getAttribute("type");
+                if (formType != null) {
+                    String fieldType = el.getAttribute("type");
+                    if (fieldType == null) fieldType = "text-single";
+
+                    if (formType.equals("result") || fieldType.equals("fixed")) {
+                        viewType = TYPE_RESULT_FIELD;
+                    } else if (formType.equals("form")) {
+                        if (fieldType.equals("boolean")) {
+                            viewType = TYPE_CHECKBOX_FIELD;
+                        } else if (fieldType.equals("list-single")) {
+                            Element validate = el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                            if (Option.forField(el).size() > 9) {
+                                viewType = TYPE_SEARCH_LIST_FIELD;
+                            } else if (el.findChild("value", "jabber:x:data") == null || (validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null)) {
+                                viewType = TYPE_RADIO_EDIT_FIELD;
+                            } else {
+                                viewType = TYPE_SPINNER_FIELD;
+                            }
+                        } else {
+                            viewType = TYPE_TEXT_FIELD;
+                        }
+                    }
+
+                    return new Field(el, viewType);
+                }
+
+                return null;
+            }
+
+            protected Item mkItem(Element el, int pos) {
+                int viewType = -1;
+
+                if (response != null && response.getType() == IqPacket.TYPE.RESULT) {
+                    if (el.getName().equals("note")) {
+                        viewType = TYPE_NOTE;
+                    } else if (el.getNamespace().equals("jabber:x:oob")) {
+                        viewType = TYPE_WEB;
+                    } else if (el.getName().equals("instructions") && el.getNamespace().equals("jabber:x:data")) {
+                        viewType = TYPE_NOTE;
+                    } else if (el.getName().equals("field") && el.getNamespace().equals("jabber:x:data")) {
+                        Field field = mkField(el);
+                        if (field != null) {
+                            items.put(pos, field);
+                            return field;
+                        }
+                    }
+                } else if (response != null) {
+                    viewType = TYPE_ERROR;
+                }
+
+                Item item = new Item(el, viewType);
+                items.put(pos, item);
+                return item;
+            }
+
+            final int TYPE_ERROR = 1;
+            final int TYPE_NOTE = 2;
+            final int TYPE_WEB = 3;
+            final int TYPE_RESULT_FIELD = 4;
+            final int TYPE_TEXT_FIELD = 5;
+            final int TYPE_CHECKBOX_FIELD = 6;
+            final int TYPE_SPINNER_FIELD = 7;
+            final int TYPE_RADIO_EDIT_FIELD = 8;
+            final int TYPE_RESULT_CELL = 9;
+            final int TYPE_PROGRESSBAR = 10;
+            final int TYPE_SEARCH_LIST_FIELD = 11;
+
+            protected boolean loading = false;
+            protected Timer loadingTimer = new Timer();
+            protected String mTitle;
+            protected CommandPageBinding mBinding = null;
+            protected IqPacket response = null;
+            protected Element responseElement = null;
+            protected List<Field> reported = null;
+            protected SparseArray<Item> items = new SparseArray<>();
+            protected XmppConnectionService xmppConnectionService;
+            protected ArrayAdapter<String> actionsAdapter;
+            protected GridLayoutManager layoutManager;
+
+            CommandSession(String title, XmppConnectionService xmppConnectionService) {
+                loading();
+                mTitle = title;
+                this.xmppConnectionService = xmppConnectionService;
+                setupLayoutManager();
+                actionsAdapter = new ArrayAdapter<String>(xmppConnectionService, R.layout.simple_list_item) {
+                    @Override
+                    public View getView(int position, View convertView, ViewGroup parent) {
+                        View v = super.getView(position, convertView, parent);
+                        TextView tv = (TextView) v.findViewById(android.R.id.text1);
+                        tv.setGravity(Gravity.CENTER);
+                        int resId = xmppConnectionService.getResources().getIdentifier("action_" + tv.getText() , "string" , xmppConnectionService.getPackageName());
+                        if (resId != 0) tv.setText(xmppConnectionService.getResources().getString(resId));
+                        tv.setTextColor(ContextCompat.getColor(xmppConnectionService, R.color.white));
+                        tv.setBackgroundColor(UIHelper.getColorForName(tv.getText().toString()));
+                        return v;
+                    }
+                };
+                actionsAdapter.registerDataSetObserver(new DataSetObserver() {
+                    @Override
+                    public void onChanged() {
+                        if (mBinding == null) return;
+
+                        mBinding.actions.setNumColumns(actionsAdapter.getCount() > 1 ? 2 : 1);
+                    }
+
+                    @Override
+                    public void onInvalidated() {}
+                });
+            }
+
+            public String getTitle() {
+                return mTitle;
+            }
+
+            public void updateWithResponse(IqPacket iq) {
+                this.loadingTimer.cancel();
+                this.loadingTimer = new Timer();
+                this.loading = false;
+                this.responseElement = null;
+                this.reported = null;
+                this.response = iq;
+                this.items.clear();
+                this.actionsAdapter.clear();
+                layoutManager.setSpanCount(1);
+
+                Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
+                if (iq.getType() == IqPacket.TYPE.RESULT && command != null) {
+                    for (Element el : command.getChildren()) {
+                        if (el.getName().equals("actions") && el.getNamespace().equals("http://jabber.org/protocol/commands")) {
+                            for (Element action : el.getChildren()) {
+                                if (!el.getNamespace().equals("http://jabber.org/protocol/commands")) continue;
+                                if (action.getName().equals("execute")) continue;
+
+                                actionsAdapter.add(action.getName());
+                            }
+                        }
+                        if (el.getName().equals("x") && el.getNamespace().equals("jabber:x:data")) {
+                            String title = el.findChildContent("title", "jabber:x:data");
+                            if (title != null) {
+                                mTitle = title;
+                                ConversationPagerAdapter.this.notifyDataSetChanged();
+                            }
+
+                            if (el.getAttribute("type").equals("result") || el.getAttribute("type").equals("form")) {
+                                this.responseElement = el;
+                                setupReported(el.findChild("reported", "jabber:x:data"));
+                                layoutManager.setSpanCount(this.reported == null ? 1 : this.reported.size());
+                            }
+                            break;
+                        }
+                        if (el.getName().equals("x") && el.getNamespace().equals("jabber:x:oob")) {
+                            String url = el.findChildContent("url", "jabber:x:oob");
+                            if (url != null) {
+                                String scheme = Uri.parse(url).getScheme();
+                                if (scheme.equals("http") || scheme.equals("https")) {
+                                    this.responseElement = el;
+                                    break;
+                                }
+                            }
+                        }
+                        if (el.getName().equals("note") && el.getNamespace().equals("http://jabber.org/protocol/commands")) {
+                            this.responseElement = el;
+                            break;
+                        }
+                    }
+
+                    if (responseElement == null && (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled"))) {
+                        removeSession(this);
+                        return;
+                    }
+
+                    if (command.getAttribute("status").equals("executing") && actionsAdapter.getCount() < 1) {
+                        // No actions have been given, but we are not done?
+                        // This is probably a spec violation, but we should do *something*
+                        actionsAdapter.add("execute");
+                    }
+                }
+
+                if (actionsAdapter.getCount() > 0) {
+                    if (actionsAdapter.getPosition("cancel") < 0) actionsAdapter.insert("cancel", 0);
+                } else {
+                    actionsAdapter.add("close");
+                }
+
+                notifyDataSetChanged();
+            }
+
+            protected void setupReported(Element el) {
+                if (el == null) {
+                    reported = null;
+                    return;
+                }
+
+                reported = new ArrayList<>();
+                for (Element fieldEl : el.getChildren()) {
+                    if (!fieldEl.getName().equals("field") || !fieldEl.getNamespace().equals("jabber:x:data")) continue;
+                    reported.add(mkField(fieldEl));
+                }
+            }
+
+            @Override
+            public int getItemCount() {
+                if (loading) return 1;
+                if (response == null) return 0;
+                if (response.getType() == IqPacket.TYPE.RESULT && responseElement != null && responseElement.getNamespace().equals("jabber:x:data")) {
+                    int i = 0;
+                    for (Element el : responseElement.getChildren()) {
+                        if (!el.getNamespace().equals("jabber:x:data")) continue;
+                        if (el.getName().equals("title")) continue;
+                        if (el.getName().equals("field")) {
+                            String type = el.getAttribute("type");
+                            if (type != null && type.equals("hidden")) continue;
+                        }
+
+                        if (el.getName().equals("reported") || el.getName().equals("item")) {
+                            if (reported != null) i += reported.size();
+                            continue;
+                        }
+
+                        i++;
+                    }
+                    return i;
+                }
+                return 1;
+            }
+
+            public Item getItem(int position) {
+                if (loading) return new Item(null, TYPE_PROGRESSBAR);
+                if (items.get(position) != null) return items.get(position);
+                if (response == null) return null;
+
+                if (response.getType() == IqPacket.TYPE.RESULT && responseElement != null) {
+                    if (responseElement.getNamespace().equals("jabber:x:data")) {
+                        int i = 0;
+                        for (Element el : responseElement.getChildren()) {
+                            if (!el.getNamespace().equals("jabber:x:data")) continue;
+                            if (el.getName().equals("title")) continue;
+                            if (el.getName().equals("field")) {
+                                String type = el.getAttribute("type");
+                                if (type != null && type.equals("hidden")) continue;
+                            }
+
+                            if (el.getName().equals("reported") || el.getName().equals("item")) {
+                                Cell cell = null;
+
+                                if (reported != null) {
+                                    if (reported.size() > position - i) {
+                                        Field reportedField = reported.get(position - i);
+                                        Element itemField = null;
+                                        if (el.getName().equals("item")) {
+                                            for (Element subel : el.getChildren()) {
+                                                if (subel.getAttribute("var").equals(reportedField.getVar())) {
+                                                   itemField = subel;
+                                                   break;
+                                                }
+                                            }
+                                        }
+                                        cell = new Cell(reportedField, itemField);
+                                    } else {
+                                        i += reported.size();
+                                        continue;
+                                    }
+                                }
+
+                                if (cell != null) {
+                                    items.put(position, cell);
+                                    return cell;
+                                }
+                            }
+
+                            if (i < position) {
+                                i++;
+                                continue;
+                            }
+
+                            return mkItem(el, position);
+                        }
+                    }
+                }
+
+                return mkItem(responseElement == null ? response : responseElement, position);
+            }
+
+            @Override
+            public int getItemViewType(int position) {
+                return getItem(position).viewType;
+            }
+
+            @Override
+            public ViewHolder onCreateViewHolder(ViewGroup container, int viewType) {
+                switch(viewType) {
+                    case TYPE_ERROR: {
+                        CommandNoteBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_note, container, false);
+                        return new ErrorViewHolder(binding);
+                    }
+                    case TYPE_NOTE: {
+                        CommandNoteBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_note, container, false);
+                        return new NoteViewHolder(binding);
+                    }
+                    case TYPE_WEB: {
+                        CommandWebviewBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_webview, container, false);
+                        return new WebViewHolder(binding);
+                    }
+                    case TYPE_RESULT_FIELD: {
+                        CommandResultFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_result_field, container, false);
+                        return new ResultFieldViewHolder(binding);
+                    }
+                    case TYPE_RESULT_CELL: {
+                        CommandResultCellBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_result_cell, container, false);
+                        return new ResultCellViewHolder(binding);
+                    }
+                    case TYPE_CHECKBOX_FIELD: {
+                        CommandCheckboxFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_checkbox_field, container, false);
+                        return new CheckboxFieldViewHolder(binding);
+                    }
+                    case TYPE_SEARCH_LIST_FIELD: {
+                        CommandSearchListFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_search_list_field, container, false);
+                        return new SearchListFieldViewHolder(binding);
+                    }
+                    case TYPE_RADIO_EDIT_FIELD: {
+                        CommandRadioEditFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_radio_edit_field, container, false);
+                        return new RadioEditFieldViewHolder(binding);
+                    }
+                    case TYPE_SPINNER_FIELD: {
+                        CommandSpinnerFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_spinner_field, container, false);
+                        return new SpinnerFieldViewHolder(binding);
+                    }
+                    case TYPE_TEXT_FIELD: {
+                        CommandTextFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_text_field, container, false);
+                        return new TextFieldViewHolder(binding);
+                    }
+                    case TYPE_PROGRESSBAR: {
+                        CommandProgressBarBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_progress_bar, container, false);
+                        return new ProgressBarViewHolder(binding);
+                    }
+                    default:
+                        throw new IllegalArgumentException("Unknown viewType: " + viewType);
+                }
+            }
+
+            @Override
+            public void onBindViewHolder(ViewHolder viewHolder, int position) {
+                viewHolder.bind(getItem(position));
+            }
+
+            public View getView() {
+                return mBinding.getRoot();
+            }
+
+            public boolean validate() {
+                int count = getItemCount();
+                boolean isValid = true;
+                for (int i = 0; i < count; i++) {
+                    boolean oneIsValid = getItem(i).validate();
+                    isValid = isValid && oneIsValid;
+                }
+                notifyDataSetChanged();
+                return isValid;
+            }
+
+            public boolean execute() {
+                return execute("execute");
+            }
+
+            public boolean execute(int actionPosition) {
+                return execute(actionsAdapter.getItem(actionPosition));
+            }
+
+            public boolean execute(String action) {
+                if (!action.equals("cancel") && !validate()) return false;
+                if (response == null) return true;
+                Element command = response.findChild("command", "http://jabber.org/protocol/commands");
+                if (command == null) return true;
+                String status = command.getAttribute("status");
+                if (status == null || !status.equals("executing")) return true;
+
+                final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
+                packet.setTo(response.getFrom());
+                final Element c = packet.addChild("command", Namespace.COMMANDS);
+                c.setAttribute("node", command.getAttribute("node"));
+                c.setAttribute("sessionid", command.getAttribute("sessionid"));
+                c.setAttribute("action", action);
+
+                String formType = responseElement == null ? null : responseElement.getAttribute("type");
+                if (!action.equals("cancel") &&
+                    responseElement != null &&
+                    responseElement.getName().equals("x") &&
+                    responseElement.getNamespace().equals("jabber:x:data") &&
+                    formType != null && formType.equals("form")) {
+
+                    responseElement.setAttribute("type", "submit");
+                    Element rsm = responseElement.findChild("set", "http://jabber.org/protocol/rsm");
+                    if (rsm != null) {
+                        Element max = new Element("max", "http://jabber.org/protocol/rsm");
+                        max.setContent("1000");
+                        rsm.addChild(max);
+                    }
+                    c.addChild(responseElement);
+                }
+
+                xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
+                    getView().post(() -> {
+                        updateWithResponse(iq);
+                    });
+                });
+
+                loading();
+                return false;
+            }
+
+            protected void loading() {
+                loadingTimer.schedule(new TimerTask() {
+                    @Override
+                    public void run() {
+                        getView().post(() -> {
+                            loading = true;
+                            notifyDataSetChanged();
+                        });
+                    }
+                }, 500);
+            }
+
+            protected GridLayoutManager setupLayoutManager() {
+                layoutManager = new GridLayoutManager(mPager.getContext(), layoutManager == null ? 1 : layoutManager.getSpanCount());
+                layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+                    @Override
+                    public int getSpanSize(int position) {
+                        if (getItemViewType(position) != TYPE_RESULT_CELL) return layoutManager.getSpanCount();
+                        return 1;
+                    }
+                });
+                return layoutManager;
+            }
+
+            public void setBinding(CommandPageBinding b) {
+                mBinding = b;
+                // https://stackoverflow.com/a/32350474/8611
+                mBinding.form.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+                    @Override
+                    public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+                        if(rv.getChildCount() > 0) {
+                            int[] location = new int[2];
+                            rv.getLocationOnScreen(location);
+                            View childView = rv.findChildViewUnder(e.getX(), e.getY());
+                            if (childView instanceof ViewGroup) {
+                                childView = findViewAt((ViewGroup) childView, location[0] + e.getX(), location[1] + e.getY());
+                            }
+                            if (childView instanceof ListView || childView instanceof WebView) {
+                                int action = e.getAction();
+                                switch (action) {
+                                    case MotionEvent.ACTION_DOWN:
+                                        rv.requestDisallowInterceptTouchEvent(true);
+                                }
+                            }
+                        }
+
+                        return false;
+                    }
+
+                    @Override
+                    public void onRequestDisallowInterceptTouchEvent(boolean disallow) { }
+
+                    @Override
+                    public void onTouchEvent(RecyclerView rv, MotionEvent e) { }
+                });
+                mBinding.form.setLayoutManager(setupLayoutManager());
+                mBinding.form.setAdapter(this);
+                mBinding.actions.setAdapter(actionsAdapter);
+                mBinding.actions.setOnItemClickListener((parent, v, pos, id) -> {
+                    if (execute(pos)) {
+                        removeSession(CommandSession.this);
+                    }
+                });
+
+                actionsAdapter.notifyDataSetChanged();
+            }
+
+            // https://stackoverflow.com/a/36037991/8611
+            private View findViewAt(ViewGroup viewGroup, float x, float y) {
+                for(int i = 0; i < viewGroup.getChildCount(); i++) {
+                    View child = viewGroup.getChildAt(i);
+                    if (child instanceof ViewGroup && !(child instanceof ListView) && !(child instanceof WebView)) {
+                        View foundView = findViewAt((ViewGroup) child, x, y);
+                        if (foundView != null && foundView.isShown()) {
+                            return foundView;
+                        }
+                    } else {
+                        int[] location = new int[2];
+                        child.getLocationOnScreen(location);
+                        Rect rect = new Rect(location[0], location[1], location[0] + child.getWidth(), location[1] + child.getHeight());
+                        if (rect.contains((int)x, (int)y)) {
+                            return child;
+                        }
+                    }
+                }
+
+                return null;
+            }
         }
     }
 }

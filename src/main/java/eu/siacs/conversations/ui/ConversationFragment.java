@@ -55,11 +55,14 @@ import android.widget.Toast;
 
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.view.inputmethod.InputConnectionCompat;
 import androidx.core.view.inputmethod.InputContentInfoCompat;
 import androidx.databinding.DataBindingUtil;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -73,6 +76,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -92,6 +96,7 @@ import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.entities.MucOptions;
 import eu.siacs.conversations.entities.MucOptions.User;
 import eu.siacs.conversations.entities.Presence;
+import eu.siacs.conversations.entities.Presences;
 import eu.siacs.conversations.entities.ReadByMarker;
 import eu.siacs.conversations.entities.Transferable;
 import eu.siacs.conversations.entities.TransferablePlaceholder;
@@ -100,6 +105,7 @@ import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.services.MessageArchiveService;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.services.XmppConnectionService;
+import eu.siacs.conversations.ui.adapter.CommandAdapter;
 import eu.siacs.conversations.ui.adapter.MediaPreviewAdapter;
 import eu.siacs.conversations.ui.adapter.MessageAdapter;
 import eu.siacs.conversations.ui.util.ActivityResult;
@@ -129,6 +135,7 @@ import eu.siacs.conversations.utils.QuickLoader;
 import eu.siacs.conversations.utils.StylingHelper;
 import eu.siacs.conversations.utils.TimeFrameUtils;
 import eu.siacs.conversations.utils.UIHelper;
+import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.XmppConnection;
@@ -139,6 +146,7 @@ import eu.siacs.conversations.xmpp.jingle.JingleFileTransferConnection;
 import eu.siacs.conversations.xmpp.jingle.Media;
 import eu.siacs.conversations.xmpp.jingle.OngoingRtpSession;
 import eu.siacs.conversations.xmpp.jingle.RtpCapability;
+import eu.siacs.conversations.xmpp.stanzas.IqPacket;
 
 public class ConversationFragment extends XmppFragment
         implements EditMessage.KeyboardListener,
@@ -185,6 +193,7 @@ public class ConversationFragment extends XmppFragment
     private final PendingItem<Message> pendingMessage = new PendingItem<>();
     public Uri mPendingEditorContent = null;
     protected MessageAdapter messageListAdapter;
+    protected CommandAdapter commandAdapter;
     private MediaPreviewAdapter mediaPreviewAdapter;
     private String lastMessageUuid = null;
     private Conversation conversation;
@@ -1518,6 +1527,9 @@ public class ConversationFragment extends XmppFragment
             case R.id.action_toggle_pinned:
                 togglePinned();
                 break;
+            case R.id.action_refresh_feature_discovery:
+                refreshFeatureDiscovery();
+                break;
             default:
                 break;
         }
@@ -1554,6 +1566,17 @@ public class ConversationFragment extends XmppFragment
                 }
             }
             activity.startActivity(intent);
+        }
+    }
+
+    private void refreshFeatureDiscovery() {
+        for (Map.Entry<String, Presence> entry : conversation.getContact().getPresences().getPresencesMap().entrySet()) {
+            Jid jid = conversation.getContact().getJid();
+            if (!entry.getKey().equals("")) jid = jid.withResource(entry.getKey());
+            activity.xmppConnectionService.fetchCaps(conversation.getAccount(), jid, entry.getValue(), () -> {
+                if (activity == null) return;
+                activity.runOnUiThread(() -> { refresh(); });
+            });
         }
     }
 
@@ -2493,7 +2516,45 @@ public class ConversationFragment extends XmppFragment
         activity.xmppConnectionService
                 .getNotificationService()
                 .setOpenConversation(this.conversation);
+
+        if (commandAdapter == null) {
+            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout);
+            commandAdapter = new CommandAdapter((XmppActivity) getActivity());
+            binding.commandsView.setAdapter(commandAdapter);
+            binding.commandsView.setOnItemClickListener((parent, view, position, id) -> {
+                conversation.startCommand(commandAdapter.getItem(position), activity.xmppConnectionService);
+            });
+            refreshCommands();
+        }
+
         return true;
+    }
+
+    protected void refreshCommands() {
+        if (commandAdapter == null) return;
+
+        Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
+        if (commandJid == null) {
+            conversation.hideViewPager();
+        } else {
+            conversation.showViewPager();
+            activity.xmppConnectionService.fetchCommands(conversation.getAccount(), commandJid, (a, iq) -> {
+                if (activity == null) return;
+
+                activity.runOnUiThread(() -> {
+                    if (iq.getType() == IqPacket.TYPE.RESULT) {
+                        binding.commandsViewProgressbar.setVisibility(View.GONE);
+                        commandAdapter.clear();
+                        for (Element child : iq.query().getChildren()) {
+                            if (!"item".equals(child.getName()) || !Namespace.DISCO_ITEMS.equals(child.getNamespace())) continue;
+                            commandAdapter.add(child);
+                        }
+                    }
+
+                    if (commandAdapter.getCount() < 1) conversation.hideViewPager();
+                });
+            });
+        }
     }
 
     private void resetUnreadMessagesCount() {
@@ -2794,6 +2855,7 @@ public class ConversationFragment extends XmppFragment
                 }
                 updateSendButton();
                 updateEditablity();
+                refreshCommands();
             }
         }
     }

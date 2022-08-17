@@ -149,6 +149,19 @@ public class Presences {
         return false;
     }
 
+    public String firstWhichSupport(final String namespace) {
+        for (Map.Entry<String, Presence> entry : this.presences.entrySet()) {
+            String resource = entry.getKey();
+            Presence presence = entry.getValue();
+            ServiceDiscoveryResult disco = presence.getServiceDiscoveryResult();
+            if (disco != null && disco.getFeatures().contains(namespace)) {
+                return resource;
+            }
+        }
+
+        return null;
+    }
+
     public boolean anyIdentity(final String category, final String type) {
         synchronized (this.presences) {
             if (this.presences.size() == 0) {
