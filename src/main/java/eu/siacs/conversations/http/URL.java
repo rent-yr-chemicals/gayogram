@@ -9,7 +9,7 @@ import okhttp3.HttpUrl;
 
 public class URL {
 
-    public static final List<String> WELL_KNOWN_SCHEMES = Arrays.asList("http", "https", AesGcmURL.PROTOCOL_NAME);
+    public static final List<String> WELL_KNOWN_SCHEMES = Arrays.asList("http", "https", AesGcmURL.PROTOCOL_NAME, "cid");
 
     public static String tryParse(String url) {
         final URI uri;
