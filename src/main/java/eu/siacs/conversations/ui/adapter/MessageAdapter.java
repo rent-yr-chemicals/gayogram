@@ -496,21 +496,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             if (highlightedTerm != null) {
                 StylingHelper.highlight(activity, body, highlightedTerm, StylingHelper.isDarkText(viewHolder.messageBody));
             }
-            MyLinkify.addLinks(body, true);
-            Roster roster = message.getConversation().getAccount().getRoster();
-            for (final URLSpan urlspan : body.getSpans(0, body.length() - 1, URLSpan.class)) {
-                Uri uri = Uri.parse(urlspan.getURL());
-                if ("xmpp".equals(uri.getScheme())) {
-                    try {
-                        Contact contact = roster.getContact(Jid.of(uri.getSchemeSpecificPart()));
-                        body.replace(
-                            body.getSpanStart(urlspan),
-                            body.getSpanEnd(urlspan),
-                            contact.getDisplayName()
-                        );
-                    } catch (final IllegalArgumentException e) { /* bad JID */ }
-                }
-            }
+            MyLinkify.addLinks(body, message.getConversation().getAccount());
             viewHolder.messageBody.setAutoLinkMask(0);
             viewHolder.messageBody.setText(body);
             viewHolder.messageBody.setMovementMethod(ClickableMovementMethod.getInstance());
