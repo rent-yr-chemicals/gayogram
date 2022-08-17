@@ -930,7 +930,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 fileParams.size = this.transferable.getFileSize();
             }
 
-            if (oobUri != null && ("http".equalsIgnoreCase(oobUri.getScheme()) || "https".equalsIgnoreCase(oobUri.getScheme()))) {
+            if (oobUri != null && ("http".equalsIgnoreCase(oobUri.getScheme()) || "https".equalsIgnoreCase(oobUri.getScheme()) || "cid".equalsIgnoreCase(oobUri.getScheme()))) {
                 fileParams.url = oobUri.toString();
             }
         }

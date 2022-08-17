@@ -64,11 +64,14 @@ import androidx.databinding.DataBindingUtil;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
+import com.cheogram.android.BobTransfer;
+
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1925,9 +1928,19 @@ public class ConversationFragment extends XmppFragment
                     .show();
             return;
         }
-        activity.xmppConnectionService
-                .getHttpConnectionManager()
-                .createNewDownloadConnection(message, true);
+        if (message.getOob() != null && message.getOob().getScheme().equalsIgnoreCase("cid")) {
+            try {
+                BobTransfer transfer = new BobTransfer(message, activity.xmppConnectionService);
+                message.setTransferable(transfer);
+                transfer.start();
+            } catch (URISyntaxException e) {
+                Log.d(Config.LOGTAG, "BobTransfer failed to parse URI");
+            }
+        } else {
+            activity.xmppConnectionService
+                    .getHttpConnectionManager()
+                    .createNewDownloadConnection(message, true);
+        }
     }
 
     @SuppressLint("InflateParams")

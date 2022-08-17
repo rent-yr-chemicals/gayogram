@@ -3,6 +3,9 @@ package eu.siacs.conversations.parser;
 import android.util.Log;
 import android.util.Pair;
 
+import com.cheogram.android.BobTransfer;
+
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -746,7 +749,17 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             mXmppConnectionService.databaseBackend.createMessage(message);
             final HttpConnectionManager manager = this.mXmppConnectionService.getHttpConnectionManager();
             if (message.trusted() && message.treatAsDownloadable() && manager.getAutoAcceptFileSize() > 0) {
-                manager.createNewDownloadConnection(message);
+                if (message.getOob() != null && message.getOob().getScheme().equalsIgnoreCase("cid")) {
+                    try {
+                        BobTransfer transfer = new BobTransfer(message, mXmppConnectionService);
+                        message.setTransferable(transfer);
+                        transfer.start();
+                    } catch (URISyntaxException e) {
+                        Log.d(Config.LOGTAG, "BobTransfer failed to parse URI");
+                    }
+                } else {
+                    manager.createNewDownloadConnection(message);
+                }
             } else if (notify) {
                 if (query != null && query.isCatchup()) {
                     mXmppConnectionService.getNotificationService().pushFromBacklog(message);
