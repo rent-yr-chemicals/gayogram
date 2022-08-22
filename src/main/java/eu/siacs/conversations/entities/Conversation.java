@@ -43,6 +43,7 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
 
@@ -55,7 +56,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.Timer;
@@ -1522,7 +1522,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 @Override
                 public void bind(Item item) {
                     Field field = (Field) item;
-                    binding.label.setText(field.getLabel().orElse(""));
+                    binding.label.setText(field.getLabel().or(""));
                     setTextOrHide(binding.desc, field.getDesc());
                     mValue = field.getValue();
                     binding.checkbox.setChecked(mValue.getContent() != null && (mValue.getContent().equals("true") || mValue.getContent().equals("1")));
@@ -1697,7 +1697,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public void bind(Item item) {
                     Field field = (Field) item;
                     setTextOrHide(binding.label, field.getLabel());
-                    binding.spinner.setPrompt(field.getLabel().orElse(""));
+                    binding.spinner.setPrompt(field.getLabel().or(""));
                     setTextOrHide(binding.desc, field.getDesc());
 
                     mValue = field.getValue();
@@ -1734,10 +1734,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 @Override
                 public void bind(Item item) {
                     Field field = (Field) item;
-                    binding.textinputLayout.setHint(field.getLabel().orElse(""));
+                    binding.textinputLayout.setHint(field.getLabel().or(""));
 
                     binding.textinputLayout.setHelperTextEnabled(field.getDesc().isPresent());
-                    field.getDesc().ifPresent(binding.textinputLayout::setHelperText);
+                    for (String desc : field.getDesc().asSet()) {
+                        binding.textinputLayout.setHelperText(desc);
+                    }
 
                     binding.textinputLayout.setErrorEnabled(field.error != null);
                     if (field.error != null) binding.textinputLayout.setError(field.error);
@@ -1845,11 +1847,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public Optional<String> getLabel() {
                     String label = el.getAttribute("label");
                     if (label == null) label = getVar();
-                    return Optional.ofNullable(label);
+                    return Optional.fromNullable(label);
                 }
 
                 public Optional<String> getDesc() {
-                    return Optional.ofNullable(el.findChildContent("desc", "jabber:x:data"));
+                    return Optional.fromNullable(el.findChildContent("desc", "jabber:x:data"));
                 }
 
                 public Element getValue() {
