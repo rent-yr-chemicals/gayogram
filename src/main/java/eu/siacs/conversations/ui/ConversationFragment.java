@@ -1495,7 +1495,7 @@ public class ConversationFragment extends XmppFragment
                 activity.switchToContactDetails(conversation.getContact());
                 break;
             case R.id.action_muc_details:
-                ConferenceDetailsActivity.open(getActivity(), conversation);
+                ConferenceDetailsActivity.open(activity, conversation);
                 break;
             case R.id.action_invite:
                 startActivityForResult(
