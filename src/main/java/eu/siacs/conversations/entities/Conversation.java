@@ -3,6 +3,7 @@ package eu.siacs.conversations.entities;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.graphics.Rect;
@@ -1482,7 +1483,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     }
                     binding.values.setAdapter(values);
 
-                    ClipboardManager clipboard = binding.getRoot().getContext().getSystemService(ClipboardManager.class);
+                    ClipboardManager clipboard = (ClipboardManager) binding.getRoot().getContext().getSystemService(Context.CLIPBOARD_SERVICE);
                     binding.values.setOnItemLongClickListener((arg0, arg1, pos, id) -> {
                         ClipData myClip = ClipData.newPlainText("text", values.getItem(pos));
                         clipboard.setPrimaryClip(myClip);
