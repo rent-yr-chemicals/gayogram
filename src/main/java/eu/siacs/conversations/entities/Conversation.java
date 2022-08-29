@@ -2057,11 +2057,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         // This is probably a spec violation, but we should do *something*
                         actionsAdapter.add("execute");
                     }
+
+                    if (!actionsAdapter.isEmpty()) {
+                        if (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled")) {
+                            actionsAdapter.add("close");
+                        } else if (actionsAdapter.getPosition("cancel") < 0) {
+                            actionsAdapter.insert("cancel", 0);
+                        }
+                    }
                 }
 
-                if (actionsAdapter.getCount() > 0) {
-                    if (actionsAdapter.getPosition("cancel") < 0) actionsAdapter.insert("cancel", 0);
-                } else {
+                if (actionsAdapter.isEmpty()) {
                     actionsAdapter.add("close");
                 }
 
@@ -2250,12 +2256,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             public boolean execute(String action) {
-                if (!action.equals("cancel") && !validate()) return false;
+                if (!action.equals("cancel") && !action.equals("prev") && !validate()) return false;
                 if (response == null) return true;
                 Element command = response.findChild("command", "http://jabber.org/protocol/commands");
                 if (command == null) return true;
                 String status = command.getAttribute("status");
-                if (status == null || !status.equals("executing")) return true;
+                if (status == null || (!status.equals("executing") && !action.equals("prev"))) return true;
 
                 final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
                 packet.setTo(response.getFrom());
@@ -2266,6 +2272,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                 String formType = responseElement == null ? null : responseElement.getAttribute("type");
                 if (!action.equals("cancel") &&
+                    !action.equals("prev") &&
                     responseElement != null &&
                     responseElement.getName().equals("x") &&
                     responseElement.getNamespace().equals("jabber:x:data") &&
