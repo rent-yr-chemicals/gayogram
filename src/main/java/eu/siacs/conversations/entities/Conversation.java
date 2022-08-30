@@ -1309,7 +1309,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             if (o == mPager.getChildAt(0)) return PagerAdapter.POSITION_UNCHANGED;
             if (o == mPager.getChildAt(1)) return PagerAdapter.POSITION_UNCHANGED;
 
-            int pos = sessions.indexOf(o);
+            int pos = sessions == null ? -1 : sessions.indexOf(o);
             if (pos < 0) return PagerAdapter.POSITION_NONE;
             return pos + 2;
         }
