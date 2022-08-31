@@ -95,8 +95,10 @@ public class FileBackend {
                         .add(
                                 Environment.DIRECTORY_DOWNLOADS,
                                 Environment.DIRECTORY_PICTURES,
-                                Environment.DIRECTORY_MOVIES,
-                                Environment.DIRECTORY_DOCUMENTS);
+                                Environment.DIRECTORY_MOVIES);
+        if (Build.VERSION.SDK_INT >= 19) {
+            builder.add(Environment.DIRECTORY_DOCUMENTS);
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             builder.add(Environment.DIRECTORY_RECORDINGS);
         }
