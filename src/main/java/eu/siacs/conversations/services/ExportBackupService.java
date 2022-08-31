@@ -275,7 +275,7 @@ public class ExportBackupService extends Service {
     }
 
     private void messageExportCheogram(SQLiteDatabase db, String uuid, PrintWriter writer, Progress progress) {
-        Cursor cursor = db.rawQuery("select cheogram.messages.* from messages join cheogram.messages using (uuid) join conversations on conversations.uuid=messages.conversationUuid where conversations.accountUuid=?", new String[]{uuid});
+        Cursor cursor = db.rawQuery("select cmessages.* from messages join cheogram.messages cmessages using (uuid) join conversations on conversations.uuid=messages.conversationUuid where conversations.accountUuid=?", new String[]{uuid});
         int size = cursor != null ? cursor.getCount() : 0;
         Log.d(Config.LOGTAG, "exporting " + size + " cheogram messages for account " + uuid);
         int i = 0;
