@@ -329,7 +329,9 @@ public class ConversationsOverviewFragment extends XmppFragment {
 		 final MenuItem menuOngoingCall = menu.findItem(R.id.action_ongoing_call);
 		 final MenuItem menuTogglePinned = menu.findItem(R.id.action_toggle_pinned);
 
-		 Conversation conversation = conversations.get(((AdapterContextMenuInfo) menuInfo).position);
+		 int pos = ((AdapterContextMenuInfo) menuInfo).position;
+		 if (pos < 0) return;
+		 Conversation conversation = conversations.get(pos);
 		 if (conversation != null) {
 			 if (conversation.getMode() == Conversation.MODE_MULTI) {
 				 menuContactDetails.setVisible(false);
