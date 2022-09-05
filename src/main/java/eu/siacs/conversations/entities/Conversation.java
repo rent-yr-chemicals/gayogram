@@ -1964,7 +1964,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 loading();
                 mTitle = title;
                 this.xmppConnectionService = xmppConnectionService;
-                setupLayoutManager();
+                if (mPager != null) setupLayoutManager();
                 actionsAdapter = new ArrayAdapter<String>(xmppConnectionService, R.layout.simple_list_item) {
                     @Override
                     public View getView(int position, View convertView, ViewGroup parent) {
