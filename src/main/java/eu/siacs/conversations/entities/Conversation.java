@@ -1260,6 +1260,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         }
 
         public void startCommand(Element command, XmppConnectionService xmppConnectionService) {
+            show();
             CommandSession session = new CommandSession(command.getAttribute("name"), xmppConnectionService);
 
             final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
