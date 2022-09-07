@@ -14,7 +14,7 @@
 	<description xml:lang="en">Cheogram is a freedomware client for the Jabber network (using the XMPP protocol) with a focus on features for gateway users.</description>
 
 	<homepage rdf:resource="https://cheogram.com/"/>
-	<bug-database rdf:resource="mailto:dev@singpolyma.net"/>
+	<bug-database rdf:resource="https://soprani.ca/todo"/>
 	<!-- See https://github.com/ewilderj/doap/issues/53 -->
 	<developer-forum rdf:resource="xmpp:discuss@conference.soprani.ca?join"/>
 	<support-forum rdf:resource="xmpp:discuss@conference.soprani.ca?join"/>
