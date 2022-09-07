@@ -61,6 +61,37 @@
 
 	<implements>
 		<xmpp:SupportedXep>
+			<xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0004.html"/>
+			<xmpp:status>partial</xmpp:status>
+			<xmpp:version>2.13.0</xmpp:version>
+			<xmpp:note xml:lang='en'>As part of XEP-0050 and XEP-0077</xmpp:note>
+		</xmpp:SupportedXep>
+	</implements>
+	<implements>
+		<xmpp:SupportedXep>
+			<xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0122.html"/>
+			<xmpp:status>partial</xmpp:status>
+			<xmpp:version>1.0.2</xmpp:version>
+			<xmpp:note xml:lang='en'>When used with XEP-0050</xmpp:note>
+		</xmpp:SupportedXep>
+	</implements>
+	<implements>
+		<xmpp:SupportedXep>
+			<xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0050.html"/>
+			<xmpp:status>complete</xmpp:status>
+			<xmpp:version>1.3.0</xmpp:version>
+		</xmpp:SupportedXep>
+	</implements>
+	<implements>
+		<xmpp:SupportedXep>
+			<xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0100.html"/>
+			<xmpp:status>partial</xmpp:status>
+			<xmpp:version>1.0</xmpp:version>
+			<xmpp:note xml:lang='en'>jabber:iq:gateway</xmpp:note>
+		</xmpp:SupportedXep>
+	</implements>
+	<implements>
+		<xmpp:SupportedXep>
 			<xmpp:xep rdf:resource="https://xmpp.org/extensions/xep-0027.html"/>
 			<xmpp:status>complete</xmpp:status>
 			<xmpp:version>1.4</xmpp:version>
