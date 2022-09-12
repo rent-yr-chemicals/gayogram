@@ -93,6 +93,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     private OnContactPictureClicked mOnContactPictureClickedListener;
     private OnContactPictureLongClicked mOnContactPictureLongClickedListener;
     private boolean mUseGreenBackground = false;
+    private boolean mForceNames = false;
 
     public MessageAdapter(XmppActivity activity, List<Message> messages) {
         super(activity, 0, messages);
@@ -102,6 +103,10 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         updatePreferences();
     }
 
+    public MessageAdapter(XmppActivity activity, List<Message> messages, boolean forceNames) {
+        this(activity, messages);
+        mForceNames = forceNames;
+    }
 
     private static void resetClickListener(View... views) {
         for (View view : views) {
@@ -239,7 +244,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 error = true;
                 break;
             default:
-                if (multiReceived) {
+                if (mForceNames || multiReceived) {
                     info = UIHelper.getMessageDisplayName(message);
                 }
                 break;
