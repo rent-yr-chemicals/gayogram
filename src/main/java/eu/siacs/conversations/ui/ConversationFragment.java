@@ -1578,7 +1578,10 @@ public class ConversationFragment extends XmppFragment
             if (!entry.getKey().equals("")) jid = jid.withResource(entry.getKey());
             activity.xmppConnectionService.fetchCaps(conversation.getAccount(), jid, entry.getValue(), () -> {
                 if (activity == null) return;
-                activity.runOnUiThread(() -> { refresh(); });
+                activity.runOnUiThread(() -> {
+                    refresh();
+                    refreshCommands();
+                });
             });
         }
     }
@@ -2868,7 +2871,6 @@ public class ConversationFragment extends XmppFragment
                 }
                 updateSendButton();
                 updateEditablity();
-                refreshCommands();
             }
         }
     }
