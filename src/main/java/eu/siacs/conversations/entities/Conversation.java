@@ -1253,6 +1253,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         }
 
         public void hide() {
+            if (!sessions.isEmpty()) return; // Do not hide during active session
             if (mPager != null) mPager.setCurrentItem(0);
             if (mTabs != null) mTabs.setVisibility(View.GONE);
             sessions = null;
