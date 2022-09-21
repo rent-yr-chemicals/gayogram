@@ -1255,6 +1255,7 @@ public class ConversationFragment extends XmppFragment
         Log.d(Config.LOGTAG, "ConversationFragment.onDestroyView()");
         messageListAdapter.setOnContactPictureClicked(null);
         messageListAdapter.setOnContactPictureLongClicked(null);
+        conversation.setupViewPager(null, null);
     }
 
     private void quoteText(String text) {
