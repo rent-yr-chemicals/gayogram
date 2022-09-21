@@ -87,7 +87,7 @@ public class WebRTCWrapper {
             .add("GT-I9505") // Samsung Galaxy S4 (jfltexx)
             .build();
 
-    private static final int TONE_DURATION = 200;
+    private static final int TONE_DURATION = 500;
     private static final Map<String,Integer> TONE_CODES;
     static {
         ImmutableMap.Builder<String,Integer> builder = new ImmutableMap.Builder<>();
