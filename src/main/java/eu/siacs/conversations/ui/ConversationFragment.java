@@ -1255,7 +1255,7 @@ public class ConversationFragment extends XmppFragment
         Log.d(Config.LOGTAG, "ConversationFragment.onDestroyView()");
         messageListAdapter.setOnContactPictureClicked(null);
         messageListAdapter.setOnContactPictureLongClicked(null);
-        conversation.setupViewPager(null, null);
+        if (conversation != null) conversation.setupViewPager(null, null);
     }
 
     private void quoteText(String text) {
@@ -2534,7 +2534,7 @@ public class ConversationFragment extends XmppFragment
                 .getNotificationService()
                 .setOpenConversation(this.conversation);
 
-        if (commandAdapter == null) {
+        if (commandAdapter == null && conversation != null) {
             conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout);
             commandAdapter = new CommandAdapter((XmppActivity) getActivity());
             binding.commandsView.setAdapter(commandAdapter);
