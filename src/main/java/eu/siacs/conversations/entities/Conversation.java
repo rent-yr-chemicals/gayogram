@@ -1774,6 +1774,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                 @Override
                 public void bind(Item oob) {
+                    setTextOrHide(binding.desc, Optional.fromNullable(oob.el.findChildContent("desc", "jabber:x:oob")));
                     binding.webview.getSettings().setJavaScriptEnabled(true);
                     binding.webview.getSettings().setUserAgentString("Mozilla/5.0 (Linux; Android 11) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.106 Mobile Safari/537.36");
                     binding.webview.getSettings().setDatabaseEnabled(true);
