@@ -1272,8 +1272,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final Element c = packet.addChild("command", Namespace.COMMANDS);
             c.setAttribute("node", command.getAttribute("node"));
             c.setAttribute("action", "execute");
+            View v = mPager;
             xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
-                mPager.post(() -> {
+                v.post(() -> {
                     session.updateWithResponse(iq);
                 });
             });
