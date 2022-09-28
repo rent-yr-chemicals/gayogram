@@ -20,6 +20,7 @@ repositories {
     google()
     mavenCentral()
     jcenter()
+    maven { url 'https://jitpack.io' }
 }
 
 // https://stackoverflow.com/a/38105112/8611
@@ -103,6 +104,7 @@ dependencies {
     implementation 'io.michaelrocks:libphonenumber-android:8.12.49'
     implementation 'io.github.nishkarsh:android-permissions:2.1.6'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'com.github.ipld:java-cid:v1.3.1'
     implementation urlFile('https://gateway.pinata.cloud/ipfs/QmeqMiLxHi8AAjXobxr3QTfa1bSSLyAu86YviAqQnjxCjM/libwebrtc.aar', 'libwebrtc.aar')
     // INSERT
 }

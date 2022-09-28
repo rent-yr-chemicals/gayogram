@@ -62,6 +62,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 
+import io.ipfs.cid.Cid;
+
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.DownloadableFile;
@@ -712,7 +714,8 @@ public class FileBackend {
         if ("ogg".equals(extension) && type != null && type.startsWith("audio/")) {
             extension = "oga";
         }
-        setupRelativeFilePath(message, String.format("%s.%s", message.getUuid(), extension));
+
+        setupRelativeFilePath(message, uri, extension);
         copyFileToPrivateStorage(mXmppConnectionService.getFileBackend().getFile(message), uri);
     }
 
@@ -850,8 +853,46 @@ public class FileBackend {
                 throw new IllegalStateException("Unknown image format");
         }
         setupRelativeFilePath(message, filename);
-        copyImageToPrivateStorage(getFile(message), image);
-        updateFileParams(message);
+        final File tmp = getFile(message);
+        copyImageToPrivateStorage(tmp, image);
+        final String extension = MimeUtils.extractRelevantExtension(filename);
+        try {
+            setupRelativeFilePath(message, new FileInputStream(tmp), extension);
+        } catch (final FileNotFoundException e) {
+            throw new FileCopyException(R.string.error_file_not_found);
+        } catch (final IOException e) {
+            throw new FileCopyException(R.string.error_io_exception);
+        }
+        tmp.renameTo(getFile(message));
+        updateFileParams(message, null, false);
+    }
+
+    public void setupRelativeFilePath(final Message message, final Uri uri, final String extension) throws FileCopyException {
+        try {
+            setupRelativeFilePath(message, mXmppConnectionService.getContentResolver().openInputStream(uri), extension);
+        } catch (final FileNotFoundException e) {
+            throw new FileCopyException(R.string.error_file_not_found);
+        } catch (final IOException e) {
+            throw new FileCopyException(R.string.error_io_exception);
+        }
+    }
+
+    public Cid[] calculateCids(final InputStream is) throws IOException {
+        try {
+            return CryptoHelper.cid(is, new String[]{"SHA-256", "SHA-1", "SHA-512"});
+        } catch (final NoSuchAlgorithmException e) {
+            throw new AssertionError(e);
+        }
+    }
+
+    public void setupRelativeFilePath(final Message message, final InputStream is, final String extension) throws IOException {
+        Cid[] cids = calculateCids(is);
+
+        setupRelativeFilePath(message, String.format("%s.%s", cids[0], extension));
+        File file = getFile(message);
+        for (int i = 0; i < cids.length; i++) {
+            mXmppConnectionService.saveCid(cids[i], file);
+        }
     }
 
     public void setupRelativeFilePath(final Message message, final String filename) {
@@ -1533,6 +1574,10 @@ public class FileBackend {
     }
 
     public void updateFileParams(final Message message, final String url) {
+        updateFileParams(message, url, true);
+    }
+
+    public void updateFileParams(final Message message, final String url, boolean updateCids) {
         final boolean encrypted =
                 message.getEncryption() == Message.ENCRYPTION_PGP
                         || message.getEncryption() == Message.ENCRYPTION_DECRYPTED;
@@ -1602,6 +1647,15 @@ public class FileBackend {
                 privateMessage
                         ? Message.TYPE_PRIVATE_FILE
                         : (image ? Message.TYPE_IMAGE : Message.TYPE_FILE));
+
+        if (updateCids) {
+            try {
+                Cid[] cids = calculateCids(new FileInputStream(getFile(message)));
+                for (int i = 0; i < cids.length; i++) {
+                    mXmppConnectionService.saveCid(cids[i], file);
+                }
+            } catch (final IOException e) { }
+        }
     }
 
     private int getMediaRuntime(final File file) {

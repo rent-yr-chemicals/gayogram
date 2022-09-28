@@ -86,6 +86,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+import io.ipfs.cid.Cid;
+
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.android.JabberIdContact;
@@ -545,6 +547,14 @@ public class XmppConnectionService extends Service {
 
     public FileBackend getFileBackend() {
         return this.fileBackend;
+    }
+
+    public File getFileForCid(Cid cid) {
+        return this.databaseBackend.getFileForCid(cid);
+    }
+
+    public void saveCid(Cid cid, File file) {
+        this.databaseBackend.saveCid(cid, file);
     }
 
     public AvatarService getAvatarService() {
