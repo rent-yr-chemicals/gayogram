@@ -2,9 +2,14 @@ package eu.siacs.conversations.entities;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import android.graphics.drawable.Drawable;
 import android.graphics.Color;
+import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
+
+import com.cheogram.android.BobTransfer;
+import com.cheogram.android.GetThumbnailForCid;
 
 import com.google.common.io.ByteSource;
 import com.google.common.base.Strings;
@@ -24,6 +29,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.concurrent.CopyOnWriteArraySet;
+
+import io.ipfs.cid.Cid;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.crypto.axolotl.AxolotlService;
@@ -762,8 +769,42 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     public static class MergeSeparator {
     }
 
+    public SpannableStringBuilder getSpannableBody(GetThumbnailForCid thumbnailer, Drawable fallbackImg) {
+        final Element html = getHtml();
+        if (html == null) {
+            return new SpannableStringBuilder(MessageUtils.filterLtrRtl(getBody()).trim());
+        } else {
+            SpannableStringBuilder spannable = new SpannableStringBuilder(Html.fromHtml(
+                MessageUtils.filterLtrRtl(html.toString()).trim(),
+                Html.FROM_HTML_MODE_COMPACT,
+                (source) -> {
+                   try {
+                       if (thumbnailer == null) return fallbackImg;
+                       Cid cid = BobTransfer.cid(new URI(source));
+                       if (cid == null) return fallbackImg;
+                       Drawable thumbnail = thumbnailer.getThumbnail(cid);
+                       if (thumbnail == null) return fallbackImg;
+                       return thumbnail;
+                   } catch (final URISyntaxException e) {
+                       return fallbackImg;
+                   }
+                },
+                (opening, tag, output, xmlReader) -> {}
+            ));
+
+            // https://stackoverflow.com/a/10187511/8611
+            int i = spannable.length();
+            while(--i >= 0 && Character.isWhitespace(spannable.charAt(i))) { }
+            return (SpannableStringBuilder) spannable.subSequence(0, i+1);
+        }
+    }
+
     public SpannableStringBuilder getMergedBody() {
-        SpannableStringBuilder body = new SpannableStringBuilder(MessageUtils.filterLtrRtl(getBody()).trim());
+        return getMergedBody(null, null);
+    }
+
+    public SpannableStringBuilder getMergedBody(GetThumbnailForCid thumbnailer, Drawable fallbackImg) {
+        SpannableStringBuilder body = getSpannableBody(thumbnailer, fallbackImg);
         Message current = this;
         while (current.mergeable(current.next())) {
             current = current.next();
@@ -773,7 +814,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             body.append("\n\n");
             body.setSpan(new MergeSeparator(), body.length() - 2, body.length(),
                     SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE);
-            body.append(MessageUtils.filterLtrRtl(current.getBody()).trim());
+            body.append(current.getSpannableBody(thumbnailer, fallbackImg));
         }
         return body;
     }
@@ -866,6 +907,18 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 
     public void addPayload(Element el) {
         this.payloads.add(el);
+    }
+
+    public Element getHtml() {
+        if (this.payloads == null) return null;
+
+        for (Element el : this.payloads) {
+            if (el.getName().equals("html") && el.getNamespace().equals("http://jabber.org/protocol/xhtml-im")) {
+                return el.getChildren().get(0);
+            }
+        }
+
+        return null;
     }
 
     public List<Element> getCommands() {

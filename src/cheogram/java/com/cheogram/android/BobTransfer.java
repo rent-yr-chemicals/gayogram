@@ -33,6 +33,7 @@ public class BobTransfer implements Transferable {
 	protected XmppConnectionService xmppConnectionService;
 
 	public static Cid cid(URI uri) {
+		if (!uri.getScheme().equals("cid")) return null;
 		String bobCid = uri.getSchemeSpecificPart();
 		if (!bobCid.contains("@") || !bobCid.contains("+")) return null;
 		String[] cidParts = bobCid.split("@")[0].split("\\+");
