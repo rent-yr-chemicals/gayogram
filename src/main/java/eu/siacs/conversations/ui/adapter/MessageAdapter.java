@@ -36,10 +36,14 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
+import com.cheogram.android.BobTransfer;
+
 import com.google.common.base.Strings;
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -450,7 +454,14 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             SpannableStringBuilder body = message.getMergedBody((cid) -> {
                 try {
                     DownloadableFile f = activity.xmppConnectionService.getFileForCid(cid);
-                    if (f == null) return null;
+                    if (f == null || !f.canRead()) {
+                        if (!message.trusted() && !message.getConversation().canInferPresence()) return null;
+
+                        try {
+                            new BobTransfer(BobTransfer.uri(cid), message.getConversation().getAccount(), message.getCounterpart(), activity.xmppConnectionService).start();
+                        } catch (final NoSuchAlgorithmException | URISyntaxException e) { }
+                        return null;
+                    }
 
                     Drawable d = activity.xmppConnectionService.getFileBackend().getThumbnail(f, activity.getResources(), (int) (metrics.density * 288), true);
                     if (d == null) {

@@ -887,19 +887,24 @@ public class FileBackend {
     }
 
     public void setupRelativeFilePath(final Message message, final InputStream is, final String extension) throws IOException {
-        Cid[] cids = calculateCids(is);
-
-        setupRelativeFilePath(message, String.format("%s.%s", cids[0], extension));
-        File file = getFile(message);
-        for (int i = 0; i < cids.length; i++) {
-            mXmppConnectionService.saveCid(cids[i], file);
-        }
+        message.setRelativeFilePath(getStorageLocation(is, extension).getAbsolutePath());
     }
 
     public void setupRelativeFilePath(final Message message, final String filename) {
         final String extension = MimeUtils.extractRelevantExtension(filename);
         final String mime = MimeUtils.guessMimeTypeFromExtension(extension);
         setupRelativeFilePath(message, filename, mime);
+    }
+
+    public File getStorageLocation(final InputStream is, final String extension) throws IOException {
+        final String mime = MimeUtils.guessMimeTypeFromExtension(extension);
+        Cid[] cids = calculateCids(is);
+
+        File file = getStorageLocation(String.format("%s.%s", cids[0], extension), mime);
+        for (int i = 0; i < cids.length; i++) {
+            mXmppConnectionService.saveCid(cids[i], file);
+        }
+        return file;
     }
 
     public File getStorageLocation(final String filename, final String mime) {

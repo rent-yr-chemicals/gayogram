@@ -765,7 +765,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             if (message.trusted() && message.treatAsDownloadable() && manager.getAutoAcceptFileSize() > 0) {
                 if (message.getOob() != null && message.getOob().getScheme().equalsIgnoreCase("cid")) {
                     try {
-                        BobTransfer transfer = new BobTransfer(message, mXmppConnectionService);
+                        BobTransfer transfer = new BobTransfer.ForMessage(message, mXmppConnectionService);
                         message.setTransferable(transfer);
                         transfer.start();
                     } catch (URISyntaxException e) {
