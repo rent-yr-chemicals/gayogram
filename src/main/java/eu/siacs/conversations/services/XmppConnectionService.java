@@ -103,6 +103,7 @@ import eu.siacs.conversations.entities.Bookmark;
 import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Conversational;
+import eu.siacs.conversations.entities.DownloadableFile;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.entities.MucOptions;
 import eu.siacs.conversations.entities.MucOptions.OnRenameListener;
@@ -549,7 +550,7 @@ public class XmppConnectionService extends Service {
         return this.fileBackend;
     }
 
-    public File getFileForCid(Cid cid) {
+    public DownloadableFile getFileForCid(Cid cid) {
         return this.databaseBackend.getFileForCid(cid);
     }
 
