@@ -196,10 +196,20 @@ public class Bookmark extends Element implements ListItem {
 			return true;
 		}
 		needle = needle.toLowerCase(Locale.US);
-		final Jid jid = getJid();
-		return (jid != null && jid.toString().contains(needle)) ||
-			getDisplayName().toLowerCase(Locale.US).contains(needle) ||
-			matchInTag(context, needle);
+		String[] parts = needle.split("[,\\s]+");
+		if (parts.length > 1) {
+			for (String part : parts) {
+				if (!match(context, part)) {
+					return false;
+				}
+			}
+			return true;
+		} else {
+			final Jid jid = getJid();
+			return (jid != null && jid.toString().contains(parts[0])) ||
+				getDisplayName().toLowerCase(Locale.US).contains(parts[0]) ||
+				matchInTag(context, parts[0]);
+		}
 	}
 
 	private boolean matchInTag(Context context, String needle) {

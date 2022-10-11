@@ -21,6 +21,7 @@ import android.util.Pair;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -49,6 +50,8 @@ import androidx.databinding.DataBindingUtil;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
@@ -57,10 +60,16 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.leinardi.android.speeddial.SpeedDialActionItem;
 import com.leinardi.android.speeddial.SpeedDialView;
 
+import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
@@ -83,6 +92,7 @@ import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
 import eu.siacs.conversations.ui.widget.SwipeRefreshListFragment;
 import eu.siacs.conversations.utils.AccountUtils;
+import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist;
@@ -101,6 +111,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
     private ListPagerAdapter mListPagerAdapter;
     private final List<ListItem> contacts = new ArrayList<>();
     private ListItemAdapter mContactsAdapter;
+    private TagsAdapter mTagsAdapter = new TagsAdapter();
     private final List<ListItem> conferences = new ArrayList<>();
     private ListItemAdapter mConferenceAdapter;
     private final List<String> mActivatedAccounts = new ArrayList<>();
@@ -668,6 +679,9 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
         mSearchEditText = mSearchView.findViewById(R.id.search_field);
         mSearchEditText.addTextChangedListener(mSearchTextWatcher);
         mSearchEditText.setOnEditorActionListener(mSearchDone);
+        RecyclerView tags = mSearchView.findViewById(R.id.tags);
+        tags.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
+        tags.setAdapter(mTagsAdapter);
         String initialSearchValue = mInitialSearchValue.pop();
         if (initialSearchValue != null) {
             mMenuSearchView.expandActionView();
@@ -959,6 +973,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 
     protected void filterContacts(String needle) {
         this.contacts.clear();
+        ArrayList<ListItem.Tag> tags = new ArrayList<>();
         final List<Account> accounts = xmppConnectionService.getAccounts();
         boolean foundSopranica = false;
         for (Account account : accounts) {
@@ -970,6 +985,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
                             || (needle != null && !needle.trim().isEmpty())
                             || s.compareTo(Presence.Status.OFFLINE) < 0)) {
                         this.contacts.add(contact);
+                        tags.addAll(contact.getTags(this));
                     }
                 }
 
@@ -979,11 +995,22 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
                             foundSopranica = true;
                         }
                         this.contacts.add(bookmark);
+                        tags.addAll(bookmark.getTags(this));
                     }
                 }
             }
         }
 
+        Comparator<Map.Entry<ListItem.Tag,Integer>> sortTagsBy = Map.Entry.comparingByValue(Comparator.reverseOrder());
+        sortTagsBy = sortTagsBy.thenComparing(entry -> entry.getKey().getName());
+
+        mTagsAdapter.setTags(
+            tags.stream()
+            .collect(Collectors.toMap((x) -> x, (t) -> 1, (c1, c2) -> c1 + c2))
+            .entrySet().stream()
+            .sorted(sortTagsBy)
+            .map(e -> e.getKey()).collect(Collectors.toList())
+        );
         Collections.sort(this.contacts);
 
         final boolean sopranicaDeleted = getPreferences().getBoolean("cheogram_sopranica_bookmark_deleted", false);
@@ -1383,6 +1410,66 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
                 return handleJid(this);
             }
             return false;
+        }
+    }
+
+    class TagsAdapter extends RecyclerView.Adapter<TagsAdapter.ViewHolder> {
+        class ViewHolder extends RecyclerView.ViewHolder {
+            protected TextView tv;
+
+            public ViewHolder(View v) {
+                super(v);
+                tv = (TextView) v;
+                tv.setOnClickListener(view -> {
+                    String needle = mSearchEditText.getText().toString();
+                    String tag = tv.getText().toString();
+                    String[] parts = needle.split("[,\\s]+");
+                    if(needle.isEmpty()) {
+                        needle = tag;
+                    } else if (tag.toLowerCase(Locale.US).contains(parts[parts.length-1])) {
+                        needle = needle.replace(parts[parts.length-1], tag);
+                    } else {
+                        needle += ", " + tag;
+                    }
+                    mSearchEditText.setText("");
+                    mSearchEditText.append(needle);
+                    filter(needle);
+                });
+            }
+
+            public void setTag(ListItem.Tag tag) {
+                tv.setText(tag.getName());
+                tv.setBackgroundColor(tag.getColor());
+            }
+        }
+
+        protected List<ListItem.Tag> tags = new ArrayList<>();
+
+        @Override
+        public ViewHolder onCreateViewHolder(ViewGroup viewGroup, int i) {
+            View view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.list_item_tag, null);
+            return new ViewHolder(view);
+        }
+
+        @Override
+        public void onBindViewHolder(ViewHolder viewHolder, int i) {
+            viewHolder.setTag(tags.get(i));
+        }
+
+        @Override
+        public int getItemCount() {
+            return tags.size();
+        }
+
+        public void setTags(final List<ListItem.Tag> tags) {
+            ListItem.Tag channelTag = new ListItem.Tag("Channel", UIHelper.getColorForName("Channel", true));
+            String needle = mSearchEditText == null ? "" : mSearchEditText.getText().toString().toLowerCase(Locale.US).trim();
+            HashSet<String> parts = new HashSet<>(Arrays.asList(needle.split("[,\\s]+")));
+            this.tags = tags.stream().filter(
+                tag -> !tag.equals(channelTag) && !parts.contains(tag.getName().toLowerCase(Locale.US))
+            ).collect(Collectors.toList());
+            if (!parts.contains("channel") && tags.contains(channelTag)) this.tags.add(0, channelTag);
+            notifyDataSetChanged();
         }
     }
 }
