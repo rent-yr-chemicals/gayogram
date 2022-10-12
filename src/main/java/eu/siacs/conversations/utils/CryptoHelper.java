@@ -9,6 +9,8 @@ import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateHolder;
 
+import java.io.InputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -24,6 +26,9 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.regex.Pattern;
+
+import io.ipfs.cid.Cid;
+import io.ipfs.multihash.Multihash;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
@@ -281,5 +286,42 @@ public final class CryptoHelper {
         }
         final String u = url.toLowerCase();
         return !u.contains(" ") && (u.startsWith("https://") || u.startsWith("http://") || u.startsWith("p1s3://")) && u.endsWith(".pgp");
+    }
+
+    public static Multihash.Type multihashType(String algo) throws NoSuchAlgorithmException {
+        if (algo.equals("SHA-1") || algo.equals("sha-1") || algo.equals("sha1")) {
+            return Multihash.Type.sha1;
+        } else if (algo.equals("SHA-256") || algo.equals("sha-256")) {
+            return Multihash.Type.sha2_256;
+        } else if (algo.equals("SHA-512") | algo.equals("sha-512")) {
+            return Multihash.Type.sha2_512;
+        } else {
+            throw new NoSuchAlgorithmException(algo);
+        }
+    }
+
+    public static Cid cid(byte[] digest, String algo) throws NoSuchAlgorithmException {
+        return Cid.buildCidV1(Cid.Codec.Raw, multihashType(algo), digest);
+    }
+
+    public static Cid[] cid(InputStream in, String[] algo) throws NoSuchAlgorithmException, IOException {
+        byte[] buf = new byte[4096];
+        int len;
+        MessageDigest[] md = new MessageDigest[algo.length];
+        for (int i = 0; i < md.length; i++) {
+            md[i] = MessageDigest.getInstance(algo[i]);
+        }
+        while ((len = in.read(buf)) != -1) {
+            for (int i = 0; i < md.length; i++) {
+                md[i].update(buf, 0, len);
+            }
+        }
+
+        Cid[] cid = new Cid[md.length];
+        for (int i = 0; i < cid.length; i++) {
+            cid[i] = cid(md[i].digest(), algo[i]);
+        }
+
+        return cid;
     }
 }

@@ -39,6 +39,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import io.ipfs.cid.Cid;
+
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.crypto.axolotl.AxolotlService;
 import eu.siacs.conversations.crypto.axolotl.FingerprintStatus;
@@ -250,6 +252,16 @@ public class DatabaseBackend extends SQLiteOpenHelper {
                     "ADD COLUMN payloads TEXT"
                 );
                 db.execSQL("PRAGMA cheogram.user_version = 3");
+            }
+
+            if(cheogramVersion < 4) {
+                db.execSQL(
+                    "CREATE TABLE cheogram.cids (" +
+                    "cid TEXT NOT NULL PRIMARY KEY," +
+                    "path TEXT NOT NULL" +
+                    ")"
+                );
+                db.execSQL("PRAGMA cheogram.user_version = 4");
             }
 
             db.setTransactionSuccessful();
@@ -719,6 +731,25 @@ public class DatabaseBackend extends SQLiteOpenHelper {
                     + " where " + Account.UUID + " = ?", updateArgs);
         }
         cursor.close();
+    }
+
+    public File getFileForCid(Cid cid) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("cheogram.cids", new String[]{"path"}, "cid=?", new String[]{cid.toString()}, null, null, null);
+        File f = null;
+        if (cursor.moveToNext()) {
+            f = new File(cursor.getString(0));
+        }
+        cursor.close();
+        return f;
+    }
+
+    public void saveCid(Cid cid, File file) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("cid", cid.toString());
+        cv.put("path", file.getAbsolutePath());
+        db.insertWithOnConflict("cheogram.cids", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
     }
 
     public void createConversation(Conversation conversation) {
