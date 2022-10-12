@@ -186,8 +186,6 @@ public class HttpDownloadConnection implements Transferable {
     }
 
     private void finish() {
-        message.setTransferable(null);
-        mHttpConnectionManager.finishConnection(this);
         boolean notify = acceptedAutomatically && !message.isRead();
         if (message.getEncryption() == Message.ENCRYPTION_PGP) {
             notify = message.getConversation().getAccount().getPgpDecryptionService().decrypt(message, notify);
@@ -202,7 +200,9 @@ public class HttpDownloadConnection implements Transferable {
         } catch (final IOException e) {
             file = tmp;
         }
+        message.setTransferable(null);
         mXmppConnectionService.updateMessage(message);
+        mHttpConnectionManager.finishConnection(this);
         final boolean notifyAfterScan = notify;
         mXmppConnectionService.getFileBackend().updateMediaScanner(file, () -> {
             if (notifyAfterScan) {
@@ -381,8 +381,8 @@ public class HttpDownloadConnection implements Transferable {
                 changeStatus(STATUS_DOWNLOADING);
                 download();
                 decryptIfNeeded();
-                updateImageBounds();
                 finish();
+                updateImageBounds();
             } catch (final SSLHandshakeException e) {
                 changeStatus(STATUS_OFFER);
             } catch (final Exception e) {
