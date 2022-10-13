@@ -23,6 +23,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -73,6 +74,8 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
     private final int REQUEST_SYNC_CONTACTS = 0x28cf;
     ActivityContactDetailsBinding binding;
     private MediaAdapter mMediaAdapter;
+    protected MenuItem edit = null;
+    protected MenuItem save = null;
 
     private Contact contact;
     private final DialogInterface.OnClickListener removeFromRoster = new DialogInterface.OnClickListener() {
@@ -262,6 +265,17 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
             }
     }
 
+    protected void saveEdits() {
+        if (edit != null) {
+            EditText text = edit.getActionView().findViewById(R.id.search_field);
+            contact.setServerName(text.getText().toString());
+            ContactDetailsActivity.this.xmppConnectionService.pushContactToServer(contact);
+            populateView();
+            edit.collapseActionView();
+        }
+        if (save != null) save.setVisible(false);
+    }
+
     @Override
     public boolean onOptionsItemSelected(final MenuItem menuItem) {
         if (MenuDoubleTabUtil.shouldIgnoreTap()) {
@@ -285,16 +299,24 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
                         .setPositiveButton(getString(R.string.delete),
                                 removeFromRoster).create().show();
                 break;
+            case R.id.action_save:
+                saveEdits();
+                break;
             case R.id.action_edit_contact:
                 Uri systemAccount = contact.getSystemAccount();
                 if (systemAccount == null) {
-                    quickEdit(contact.getServerName(), R.string.contact_name, value -> {
-                        contact.setServerName(value);
-                        ContactDetailsActivity.this.xmppConnectionService.pushContactToServer(contact);
-                        populateView();
-                        return null;
-                    }, true);
+                    menuItem.expandActionView();
+                    EditText text = menuItem.getActionView().findViewById(R.id.search_field);
+                    text.setOnEditorActionListener((v, actionId, event) -> {
+                        saveEdits();
+                        return true;
+                    });
+                    text.setText(contact.getServerName());
+                    text.requestFocus();
+                    if (save != null) save.setVisible(true);
                 } else {
+                    menuItem.collapseActionView();
+                    if (save != null) save.setVisible(false);
                     Intent intent = new Intent(Intent.ACTION_EDIT);
                     intent.setDataAndType(systemAccount, Contacts.CONTENT_ITEM_TYPE);
                     intent.putExtra("finishActivityOnSaveCompleted", true);
@@ -320,6 +342,8 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
     public boolean onCreateOptionsMenu(final Menu menu) {
         getMenuInflater().inflate(R.menu.contact_details, menu);
         AccountUtils.showHideMenuItems(menu);
+        edit = menu.findItem(R.id.action_edit_contact);
+        save = menu.findItem(R.id.action_save);
         MenuItem block = menu.findItem(R.id.action_block);
         MenuItem unblock = menu.findItem(R.id.action_unblock);
         MenuItem edit = menu.findItem(R.id.action_edit_contact);
