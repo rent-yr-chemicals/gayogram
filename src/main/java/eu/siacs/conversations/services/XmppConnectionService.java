@@ -1364,10 +1364,11 @@ public class XmppConnectionService extends Service {
     private void toggleForegroundService(boolean force) {
         final boolean status;
         final OngoingCall ongoing = ongoingCall.get();
-        if (force || mForceDuringOnCreate.get() || mForceForegroundService.get() || ongoing != null || (Compatibility.keepForegroundService(this) && hasEnabledAccounts())) {
+        final boolean showOngoing = ongoing != null && !diallerIntegrationActive.get();
+        if (force || mForceDuringOnCreate.get() || mForceForegroundService.get() || showOngoing || (Compatibility.keepForegroundService(this) && hasEnabledAccounts())) {
             final Notification notification;
             final int id;
-            if (ongoing != null) {
+            if (showOngoing) {
                 notification = this.mNotificationService.getOngoingCallNotification(ongoing);
                 id = NotificationService.ONGOING_CALL_NOTIFICATION_ID;
                 startForeground(id, notification);
@@ -1389,7 +1390,7 @@ public class XmppConnectionService extends Service {
         if (!mForceForegroundService.get()) {
             mNotificationService.cancel(NotificationService.FOREGROUND_NOTIFICATION_ID);
         }
-        if (ongoing == null) {
+        if (!showOngoing) {
             mNotificationService.cancel(NotificationService.ONGOING_CALL_NOTIFICATION_ID);
         }
         Log.d(Config.LOGTAG, "ForegroundService: " + (status ? "on" : "off"));
