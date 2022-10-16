@@ -1325,6 +1325,7 @@ public class ConversationFragment extends XmppFragment
             MenuItem quoteMessage = menu.findItem(R.id.quote_message);
             MenuItem retryDecryption = menu.findItem(R.id.retry_decryption);
             MenuItem correctMessage = menu.findItem(R.id.correct_message);
+            MenuItem retractMessage = menu.findItem(R.id.retract_message);
             MenuItem shareWith = menu.findItem(R.id.share_with);
             MenuItem sendAgain = menu.findItem(R.id.send_again);
             MenuItem copyUrl = menu.findItem(R.id.copy_url);
@@ -1362,6 +1363,7 @@ public class ConversationFragment extends XmppFragment
                     && relevantForCorrection.isLastCorrectableMessage()
                     && m.getConversation() instanceof Conversation) {
                 correctMessage.setVisible(true);
+                if (!relevantForCorrection.getBody().equals("") && !relevantForCorrection.getBody().equals(" ")) retractMessage.setVisible(true);
             }
             if ((m.isFileOrImage() && !deleted && !receiving)
                     || (m.getType() == Message.TYPE_TEXT && !m.treatAsDownloadable())
@@ -1427,6 +1429,16 @@ public class ConversationFragment extends XmppFragment
             case R.id.correct_message:
                 correctMessage(selectedMessage);
                 return true;
+            case R.id.retract_message:
+                Message message = selectedMessage;
+                while (message.mergeable(message.next())) {
+                    message = message.next();
+                }
+                message.setBody(" ");
+                message.putEdited(message.getUuid(), message.getServerMsgId());
+                message.setServerMsgId(null);
+                message.setUuid(UUID.randomUUID().toString());
+                sendMessage(message);
             case R.id.copy_message:
                 ShareUtil.copyToClipboard(activity, selectedMessage);
                 return true;
