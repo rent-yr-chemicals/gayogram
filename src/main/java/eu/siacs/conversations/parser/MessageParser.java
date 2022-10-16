@@ -405,13 +405,21 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
         if (timestamp == null) {
             timestamp = AbstractParser.parseTimestamp(original, AbstractParser.parseTimestamp(packet));
         }
-        final LocalizedContent body = packet.getBody();
         final Element mucUserElement = packet.findChild("x", Namespace.MUC_USER);
         final String pgpEncrypted = packet.findChildContent("x", "jabber:x:encrypted");
         final Element replaceElement = packet.findChild("replace", "urn:xmpp:message-correct:0");
         final Element oob = packet.findChild("x", Namespace.OOB);
         final String oobUrl = oob != null ? oob.findChildContent("url") : null;
-        final String replacementId = replaceElement == null ? null : replaceElement.getAttribute("id");
+        String replacementId = replaceElement == null ? null : replaceElement.getAttribute("id");
+        if (replacementId == null) {
+            Element fasten = packet.findChild("apply-to", "urn:xmpp:fasten:0");
+            if (fasten != null && fasten.findChild("retract", "urn:xmpp:message-retract:0") != null) {
+                replacementId = fasten.getAttribute("id");
+                packet.setBody("");
+            }
+        }
+        final LocalizedContent body = packet.getBody();
+
         final Element axolotlEncrypted = packet.findChildEnsureSingle(XmppAxolotlMessage.CONTAINERTAG, AxolotlService.PEP_PREFIX);
         int status;
         final Jid counterpart;
