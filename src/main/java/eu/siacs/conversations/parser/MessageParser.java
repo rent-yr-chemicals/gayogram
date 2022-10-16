@@ -413,7 +413,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
         String replacementId = replaceElement == null ? null : replaceElement.getAttribute("id");
         if (replacementId == null) {
             Element fasten = packet.findChild("apply-to", "urn:xmpp:fasten:0");
-            if (fasten != null && fasten.findChild("retract", "urn:xmpp:message-retract:0") != null) {
+            if (fasten != null && (fasten.findChild("retract", "urn:xmpp:message-retract:0") != null || fasten.findChild("urn:xmpp:message-moderate:0") != null)) {
                 replacementId = fasten.getAttribute("id");
                 packet.setBody("");
             }
