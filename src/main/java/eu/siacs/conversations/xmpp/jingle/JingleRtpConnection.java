@@ -1,6 +1,7 @@
 package eu.siacs.conversations.xmpp.jingle;
 
 import android.util.Log;
+import android.os.Environment;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,6 +27,8 @@ import org.webrtc.IceCandidate;
 import org.webrtc.PeerConnection;
 import org.webrtc.VideoTrack;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -166,6 +169,7 @@ public class JingleRtpConnection extends AbstractJingleConnection
     private final Stopwatch sessionDuration = Stopwatch.createUnstarted();
     private final Queue<PeerConnection.PeerConnectionState> stateHistory = new LinkedList<>();
     private ScheduledFuture<?> ringingTimeoutFuture;
+    private final long created = System.currentTimeMillis() / 1000L;
 
     JingleRtpConnection(JingleConnectionManager jingleConnectionManager, Id id, Jid initiator) {
         super(jingleConnectionManager, id, initiator);
@@ -2175,6 +2179,11 @@ public class JingleRtpConnection extends AbstractJingleConnection
             this.webRTCWrapper.verifyClosed();
             this.jingleConnectionManager.setTerminalSessionState(id, getEndUserState(), getMedia());
             this.jingleConnectionManager.finishConnectionOrThrow(this);
+            try {
+                File log = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "Cheogram/calls/" + id.getWith().asBareJid() + "." + id.getSessionId() + "." + created + ".log");
+                log.getParentFile().mkdirs();
+                Runtime.getRuntime().exec(new String[]{"logcat", "-dT", "" + created + ".0", "-f", log.getAbsolutePath()});
+            } catch (final IOException e) { }
         } else {
             throw new IllegalStateException(
                     String.format("Unable to call finish from %s", this.state));
