@@ -4,7 +4,7 @@
 
     <uses-permission android:name="android.permission.BIND_TELECOM_CONNECTION_SERVICE" />
 
-    <application tools:ignore="GoogleAppIndexingWarning">
+    <application tools:ignore="GoogleAppIndexingWarning" android:hasFragileUserData="true">
         <!-- INSERT -->
 
         <service android:name="com.cheogram.android.ConnectionService"
