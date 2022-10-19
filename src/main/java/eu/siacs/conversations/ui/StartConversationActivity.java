@@ -748,9 +748,28 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
                     final String name = intent.getStringExtra(ChooseContactActivity.EXTRA_GROUP_CHAT_NAME);
                     final List<Jid> jids = ChooseContactActivity.extractJabberIds(intent);
                     if (account != null && jids.size() > 0) {
-                        if (xmppConnectionService.createAdhocConference(account, name, jids, mAdhocConferenceCallback)) {
-                            mToast = Toast.makeText(this, R.string.creating_conference, Toast.LENGTH_LONG);
-                            mToast.show();
+                        // This hardcodes cheogram.com and is in general a terrible hack
+                        // Ideally this would be based around XEP-0033 but until we think of a good fallback behaviour we keep using this gross commas thing
+                        if (jids.stream().allMatch(jid -> jid.getDomain().toString().equals("cheogram.com"))) {
+                            new AlertDialog.Builder(this)
+                                .setMessage("You appear to be creating a group with only SMS contacts. Would you like to create a channel or an MMS group text?")
+                                .setNeutralButton("Channel", (d, w) -> {
+                                    if (xmppConnectionService.createAdhocConference(account, name, jids, mAdhocConferenceCallback)) {
+                                        mToast = Toast.makeText(this, R.string.creating_conference, Toast.LENGTH_LONG);
+                                        mToast.show();
+                                    }
+                                }).setPositiveButton("Group Text", (d, w) -> {
+                                    Jid groupJid = Jid.ofLocalAndDomain(jids.stream().map(jid -> jid.getLocal()).sorted().collect(Collectors.joining(",")), "cheogram.com");
+                                    Contact group = account.getRoster().getContact(groupJid);
+                                    if (name != null && !name.equals("")) group.setServerName(name);
+                                    xmppConnectionService.createContact(group, true);
+                                    switchToConversation(group);
+                                }).create().show();
+                        } else {
+                            if (xmppConnectionService.createAdhocConference(account, name, jids, mAdhocConferenceCallback)) {
+                                mToast = Toast.makeText(this, R.string.creating_conference, Toast.LENGTH_LONG);
+                                mToast.show();
+                            }
                         }
                     }
                 }
