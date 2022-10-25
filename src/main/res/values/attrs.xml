@@ -51,12 +51,14 @@
 
     <attr name="ic_cloud_download" format="reference" />
 
-    <attr name="message_bubble_received_monochrome" format="reference" />
     <attr name="message_bubble_sent" format="reference" />
-    <attr name="message_bubble_received_green" format="reference" />
+    <attr name="message_bubble_received" format="reference" />
 
     <attr name="message_bubble_received_bg"  format="color" />
     <attr name="message_bubble_sent_bg"  format="color" />
+    <attr name="message_bubble_shadow_light" format="color" />
+    <attr name="message_bubble_shadow_dark" format="color" />
+    <attr name="message_bubble_shadow_dark_top" format="color" />
 
     <attr name="unread_count" format="reference|color" />
 
