@@ -1325,6 +1325,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             if (sessions == null) return 1;
 
             int count = 2 + sessions.size();
+            if (mTabs == null) return count;
+
             if (count > 2) {
                 mTabs.setTabMode(TabLayout.MODE_SCROLLABLE);
             } else {
