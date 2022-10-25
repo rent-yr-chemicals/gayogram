@@ -96,7 +96,10 @@ public class ConnectionService extends android.telecom.ConnectionService {
 	) {
 		String[] gateway = phoneAccountHandle.getId().split("/", 2);
 
-		String rawTel = request.getAddress().getSchemeSpecificPart();
+		String rawTel = "";
+		if (request.getAddress() != null) {
+			rawTel = request.getAddress().getSchemeSpecificPart();
+		}
 		String postDial = PhoneNumberUtils.extractPostDialPortion(rawTel);
 
 		String tel = PhoneNumberUtils.extractNetworkPortion(rawTel);
