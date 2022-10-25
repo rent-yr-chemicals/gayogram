@@ -112,7 +112,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
 
     private static void resetClickListener(View... views) {
         for (View view : views) {
-            view.setOnClickListener(null);
+            if (view != null) view.setOnClickListener(null);
         }
     }
 
