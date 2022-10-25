@@ -26,11 +26,11 @@
             android:launchMode="singleTask" />
         <activity
             android:name=".ui.PickServerActivity"
-            android:label="@string/create_new_account"
+            android:label="@string/get_jabber_id"
             android:launchMode="singleTask" />
         <activity
             android:name=".ui.MagicCreateActivity"
-            android:label="@string/create_new_account"
+            android:label="@string/get_jabber_id"
             android:launchMode="singleTask" />
         <activity
             android:name=".ui.EasyOnboardingInviteActivity"

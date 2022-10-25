@@ -15,64 +15,17 @@
             android:layout_height="match_parent"
             android:fillViewport="true">
 
-            <RelativeLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:weightSum="2"
+                android:orientation="vertical"
                 android:background="?attr/color_background_primary">
-
-                <LinearLayout
-                    android:id="@+id/linearLayout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
-                    android:layout_alignParentLeft="true"
-                    android:layout_alignParentBottom="true"
-                    android:minHeight="256dp"
-                    android:orientation="vertical"
-                    android:paddingLeft="16dp"
-                    android:paddingRight="16dp"
-                    android:paddingBottom="10dp">
-
-                    <Space
-                        android:layout_width="match_parent"
-                        android:layout_height="0dp"
-                        android:layout_weight="1" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/welcome_header"
-                        android:textAppearance="@style/TextAppearance.Conversations.Title" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="@string/do_you_have_an_account"
-                        android:textAppearance="@style/TextAppearance.Conversations.Body1" />
-
-                    <Button
-                        android:id="@+id/register_new_account"
-                        style="@style/Widget.Conversations.Button.Borderless"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right"
-                        android:text="@string/create_new_account"
-                        android:textColor="?colorAccent" />
-
-                    <Button
-                        android:id="@+id/use_existing"
-                        style="@style/Widget.Conversations.Button.Borderless"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="right"
-                        android:text="@string/i_already_have_an_account"
-                        android:textColor="?android:textColorSecondary" />
-                </LinearLayout>
 
                 <RelativeLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:layout_above="@+id/linearLayout"
                     android:layout_alignParentStart="true"
                     android:layout_alignParentLeft="true">
@@ -85,7 +38,55 @@
                         android:padding="8dp"
                         android:src="@drawable/main_logo" />
                 </RelativeLayout>
-            </RelativeLayout>
+
+                <LinearLayout
+                    android:id="@+id/linearLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical"
+                    android:paddingLeft="16dp"
+                    android:paddingRight="16dp"
+                    android:paddingBottom="10dp">
+
+                    <Button
+                        android:id="@+id/register_new_account"
+                        style="@style/Widget.Conversations.Button.Borderless"
+                        android:textAllCaps="false"
+                        android:textSize="?TextSizeTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:drawableLeft="@drawable/getjid"
+                        android:text="@string/create_new_account"
+                        android:textColor="?colorAccent" />
+
+                    <Button
+                        android:id="@+id/use_existing"
+                        style="@style/Widget.Conversations.Button.Borderless"
+                        android:textAllCaps="false"
+                        android:textSize="?TextSizeTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:drawableLeft="@drawable/havejid"
+                        android:text="@string/i_already_have_an_account"
+                        android:textColor="?colorAccent" />
+
+
+                    <Button
+                        android:id="@+id/use_snikket"
+                        style="@style/Widget.Conversations.Button.Borderless"
+                        android:textAllCaps="false"
+                        android:textSize="?TextSizeTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:drawableLeft="@drawable/snikket"
+                        android:text="@string/i_am_snikket_user"
+                        android:textColor="?colorAccent" />
+                </LinearLayout>
+            </LinearLayout>
         </ScrollView>
     </LinearLayout>
 </layout>
