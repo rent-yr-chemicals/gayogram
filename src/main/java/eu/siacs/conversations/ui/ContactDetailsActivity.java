@@ -21,6 +21,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
@@ -33,9 +34,13 @@ import androidx.databinding.DataBindingUtil;
 
 import org.openintents.openpgp.util.OpenPgpUtils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
@@ -44,6 +49,7 @@ import eu.siacs.conversations.crypto.axolotl.FingerprintStatus;
 import eu.siacs.conversations.crypto.axolotl.XmppAxolotlSession;
 import eu.siacs.conversations.databinding.ActivityContactDetailsBinding;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.entities.Bookmark;
 import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.ListItem;
 import eu.siacs.conversations.services.AbstractQuickConversationsService;
@@ -266,9 +272,11 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
     }
 
     protected void saveEdits() {
+        binding.editTags.setVisibility(View.GONE);
         if (edit != null) {
             EditText text = edit.getActionView().findViewById(R.id.search_field);
             contact.setServerName(text.getText().toString());
+            contact.setGroups(binding.editTags.getObjects().stream().map(tag -> tag.getName()).collect(Collectors.toList()));
             ContactDetailsActivity.this.xmppConnectionService.pushContactToServer(contact);
             populateView();
             edit.collapseActionView();
@@ -313,6 +321,34 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
                     });
                     text.setText(contact.getServerName());
                     text.requestFocus();
+                    binding.tags.setVisibility(View.GONE);
+                    binding.editTags.clearSync();
+                    for (final ListItem.Tag group : contact.getGroupTags()) {
+                        binding.editTags.addObjectSync(group);
+                    }
+                    ArrayList<ListItem.Tag> tags = new ArrayList<>();
+                    for (final Account account : xmppConnectionService.getAccounts()) {
+                        for (Contact contact : account.getRoster().getContacts()) {
+                            tags.addAll(contact.getTags(this));
+                        }
+                        for (Bookmark bookmark : account.getBookmarks()) {
+                            tags.addAll(bookmark.getTags(this));
+                        }
+                    }
+                    Comparator<Map.Entry<ListItem.Tag,Integer>> sortTagsBy = Map.Entry.comparingByValue(Comparator.reverseOrder());
+                    sortTagsBy = sortTagsBy.thenComparing(entry -> entry.getKey().getName());
+
+                    ArrayAdapter<ListItem.Tag> adapter = new ArrayAdapter<>(
+                        this,
+                        android.R.layout.simple_list_item_1,
+                        tags.stream()
+                        .collect(Collectors.toMap((x) -> x, (t) -> 1, (c1, c2) -> c1 + c2))
+                        .entrySet().stream()
+                       .sorted(sortTagsBy)
+                       .map(e -> e.getKey()).collect(Collectors.toList())
+                    );
+                    binding.editTags.setAdapter(adapter);
+                    binding.editTags.setVisibility(View.VISIBLE);
                     if (save != null) save.setVisible(true);
                 } else {
                     menuItem.collapseActionView();

@@ -2,6 +2,7 @@ package eu.siacs.conversations.entities;
 
 import android.content.Context;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 
@@ -16,7 +17,7 @@ public interface ListItem extends Comparable<ListItem>, AvatarService.Avatarable
 
 	List<Tag> getTags(Context context);
 
-	final class Tag {
+	final class Tag implements Serializable {
 		private final String name;
 		private final int color;
 

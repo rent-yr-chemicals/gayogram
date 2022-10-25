@@ -109,6 +109,7 @@ dependencies {
     implementation 'io.github.nishkarsh:android-permissions:2.1.6'
     implementation 'androidx.recyclerview:recyclerview:1.1.0'
     implementation 'com.github.ipld:java-cid:v1.3.1'
+    implementation 'com.splitwise:tokenautocomplete:3.0.2'
     implementation urlFile('https://gateway.pinata.cloud/ipfs/QmeqMiLxHi8AAjXobxr3QTfa1bSSLyAu86YviAqQnjxCjM/libwebrtc.aar', 'libwebrtc.aar')
     // INSERT
 }

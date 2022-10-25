@@ -189,12 +189,18 @@ public class Contact implements ListItem, Blockable {
         return jid;
     }
 
-    @Override
-    public List<Tag> getTags(Context context) {
+    public List<Tag> getGroupTags() {
         final ArrayList<Tag> tags = new ArrayList<>();
         for (final String group : getGroups(true)) {
             tags.add(new Tag(group, UIHelper.getColorForName(group)));
         }
+        return tags;
+    }
+
+    @Override
+    public List<Tag> getTags(Context context) {
+        final ArrayList<Tag> tags = new ArrayList<>();
+        tags.addAll(getGroupTags());
         for (final String tag : getSystemTags(true)) {
             tags.add(new Tag(tag, UIHelper.getColorForName(tag)));
         }
@@ -342,6 +348,10 @@ public class Contact implements ListItem, Blockable {
 
     public void setSystemAccount(Uri lookupUri) {
         this.systemAccount = lookupUri;
+    }
+
+    public void setGroups(List<String> groups) {
+        this.groups = new JSONArray(groups);
     }
 
     private Collection<String> getGroups(final boolean unique) {
