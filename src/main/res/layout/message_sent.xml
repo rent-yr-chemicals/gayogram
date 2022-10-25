@@ -4,6 +4,7 @@
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
+    android:clipToPadding="false"
     android:paddingLeft="8dp"
     android:paddingTop="3dp"
     android:paddingRight="8dp"
@@ -38,9 +39,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:layout_marginLeft="-4dp"
+        android:layout_marginRight="0dp"
+        android:paddingRight="20dp"
         android:layout_toLeftOf="@+id/message_photo_box"
-        android:background="?attr/message_bubble_sent"
+        android:translationY="-2dp"
+        android:elevation="3dp"
+        android:background="@drawable/message_bubble_sent"
         android:longClickable="true"
         android:minHeight="53dp">
 
@@ -64,15 +68,15 @@
 
                 <TextView
                     android:id="@+id/message_subject"
-                    android:visibility="gone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center_vertical"
-                    android:gravity="center_vertical"
                     android:layout_marginRight="4sp"
                     android:accessibilityTraversalAfter="@id/message_photo"
                     android:accessibilityTraversalBefore="@id/message_time"
-                    android:textAppearance="@style/TextAppearance.Conversations.Caption.OnDark.Bold"/>
+                    android:gravity="center_vertical"
+                    android:textAppearance="@style/TextAppearance.Conversations.Caption.OnDark.Bold"
+                    android:visibility="gone" />
 
                 <TextView
                     android:id="@+id/message_time"
