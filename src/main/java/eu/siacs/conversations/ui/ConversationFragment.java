@@ -854,6 +854,7 @@ public class ConversationFragment extends XmppFragment
     }
 
     private void sendMessage() {
+        conversation.setUserSelectedThread(false);
         if (mediaPreviewAdapter.hasAttachments()) {
             commitAttachments();
             return;
@@ -1251,7 +1252,10 @@ public class ConversationFragment extends XmppFragment
                     new EditMessageActionModeCallback(this.binding.textinput));
         }
 
-        binding.threadIdenticon.setOnClickListener(v -> newThread());
+        binding.threadIdenticon.setOnClickListener(v -> {
+            newThread();
+            conversation.setUserSelectedThread(true);
+        });
 
         return binding.getRoot();
     }
@@ -1281,6 +1285,7 @@ public class ConversationFragment extends XmppFragment
 
     private void quoteMessage(Message message) {
         setThread(message.getThread());
+        conversation.setUserSelectedThread(true);
         quoteText(MessageUtils.prepareQuote(message));
     }
 
@@ -2142,7 +2147,7 @@ public class ConversationFragment extends XmppFragment
     }
 
     private void updateThreadFromLastMessage() {
-        if (activity != null && this.conversation != null && TextUtils.isEmpty(binding.textinput.getText())) {
+        if (this.conversation != null && !this.conversation.getUserSelectedThread() && TextUtils.isEmpty(binding.textinput.getText())) {
             Message message = getLastVisibleMessage();
             if (message == null) {
                 newThread();
@@ -3726,6 +3731,8 @@ public class ConversationFragment extends XmppFragment
     @Override
     public void onContactPictureClicked(Message message) {
         setThread(message.getThread());
+        conversation.setUserSelectedThread(true);
+
         final boolean received = message.getStatus() <= Message.STATUS_RECEIVED;
         if (received) {
             if (message.getConversation() instanceof Conversation
