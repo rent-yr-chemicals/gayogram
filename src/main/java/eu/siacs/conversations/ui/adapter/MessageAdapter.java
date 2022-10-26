@@ -719,6 +719,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                     viewHolder.subject = view.findViewById(R.id.message_subject);
                     viewHolder.indicatorReceived = view.findViewById(R.id.indicator_received);
                     viewHolder.audioPlayer = view.findViewById(R.id.audio_player);
+                    viewHolder.thread_identicon = view.findViewById(R.id.thread_identicon);
                     break;
                 case RECEIVED:
                     view = activity.getLayoutInflater().inflate(R.layout.message_received, parent, false);

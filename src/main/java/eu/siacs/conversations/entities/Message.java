@@ -430,6 +430,11 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         return null;
     }
 
+    public void setThread(Element thread) {
+        payloads.removeIf(el -> el.getName().equals("thread") && el.getNamespace().equals("jabber:client"));
+        addPayload(thread);
+    }
+
     public void setMucUser(MucOptions.User user) {
         this.user = new WeakReference<>(user);
     }
@@ -919,7 +924,13 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     }
 
     public void addPayload(Element el) {
+        if (el == null) return;
+
         this.payloads.add(el);
+    }
+
+    public List<Element> getPayloads() {
+       return new ArrayList<>(this.payloads);
     }
 
     public Element getHtml() {
@@ -932,7 +943,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         }
 
         return null;
-    }
+   }
 
     public List<Element> getCommands() {
         if (this.payloads == null) return null;

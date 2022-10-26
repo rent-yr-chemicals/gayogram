@@ -62,6 +62,9 @@ public class MessageGenerator extends AbstractGenerator {
         if (message.edited()) {
             packet.addChild("replace", "urn:xmpp:message-correct:0").setAttribute("id", message.getEditedIdWireFormat());
         }
+        for (Element el : message.getPayloads()) {
+            packet.addChild(el);
+        }
         return packet;
     }
 

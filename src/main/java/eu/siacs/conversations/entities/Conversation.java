@@ -148,6 +148,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
     private String mFirstMamReference = null;
     protected int mCurrentTab = -1;
     protected ConversationPagerAdapter pagerAdapter = new ConversationPagerAdapter();
+    protected Element thread = null;
 
     public Conversation(final String name, final Account account, final Jid contactJid,
                         final int mode) {
@@ -626,6 +627,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
     public void setDraftMessage(String draftMessage) {
         this.draftMessage = draftMessage;
+    }
+
+    public Element getThread() {
+        return this.thread;
+    }
+
+    public void setThread(Element thread) {
+        this.thread = thread;
     }
 
     public boolean isRead() {
