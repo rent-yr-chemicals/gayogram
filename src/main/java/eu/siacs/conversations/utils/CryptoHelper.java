@@ -288,6 +288,19 @@ public final class CryptoHelper {
         return !u.contains(" ") && (u.startsWith("https://") || u.startsWith("http://") || u.startsWith("p1s3://")) && u.endsWith(".pgp");
     }
 
+    public static String multihashAlgo(Multihash.Type type) throws NoSuchAlgorithmException {
+        switch(type) {
+        case sha1:
+            return "sha1";
+        case sha2_256:
+            return "sha-256";
+        case sha2_512:
+            return "sha-512";
+        default:
+            throw new NoSuchAlgorithmException("" + type);
+        }
+    }
+
     public static Multihash.Type multihashType(String algo) throws NoSuchAlgorithmException {
         if (algo.equals("SHA-1") || algo.equals("sha-1") || algo.equals("sha1")) {
             return Multihash.Type.sha1;

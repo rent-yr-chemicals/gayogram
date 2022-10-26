@@ -1946,7 +1946,7 @@ public class ConversationFragment extends XmppFragment
         }
         if (message.getOob() != null && message.getOob().getScheme().equalsIgnoreCase("cid")) {
             try {
-                BobTransfer transfer = new BobTransfer(message, activity.xmppConnectionService);
+                BobTransfer transfer = new BobTransfer.ForMessage(message, activity.xmppConnectionService);
                 message.setTransferable(transfer);
                 transfer.start();
             } catch (URISyntaxException e) {

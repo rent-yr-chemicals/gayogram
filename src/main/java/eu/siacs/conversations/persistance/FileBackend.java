@@ -13,6 +13,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.ImageDecoder;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.graphics.pdf.PdfRenderer;
 import android.media.MediaMetadataRetriever;
@@ -886,19 +887,24 @@ public class FileBackend {
     }
 
     public void setupRelativeFilePath(final Message message, final InputStream is, final String extension) throws IOException {
-        Cid[] cids = calculateCids(is);
-
-        setupRelativeFilePath(message, String.format("%s.%s", cids[0], extension));
-        File file = getFile(message);
-        for (int i = 0; i < cids.length; i++) {
-            mXmppConnectionService.saveCid(cids[i], file);
-        }
+        message.setRelativeFilePath(getStorageLocation(is, extension).getAbsolutePath());
     }
 
     public void setupRelativeFilePath(final Message message, final String filename) {
         final String extension = MimeUtils.extractRelevantExtension(filename);
         final String mime = MimeUtils.guessMimeTypeFromExtension(extension);
         setupRelativeFilePath(message, filename, mime);
+    }
+
+    public File getStorageLocation(final InputStream is, final String extension) throws IOException {
+        final String mime = MimeUtils.guessMimeTypeFromExtension(extension);
+        Cid[] cids = calculateCids(is);
+
+        File file = getStorageLocation(String.format("%s.%s", cids[0], extension), mime);
+        for (int i = 0; i < cids.length; i++) {
+            mXmppConnectionService.saveCid(cids[i], file);
+        }
+        return file;
     }
 
     public File getStorageLocation(final String filename, final String mime) {
@@ -995,16 +1001,18 @@ public class FileBackend {
     }
 
     public Drawable getThumbnail(Message message, Resources res, int size, boolean cacheOnly) throws IOException {
-        final String uuid = message.getUuid();
+        return getThumbnail(getFile(message), res, size, cacheOnly);
+    }
+
+    public Drawable getThumbnail(DownloadableFile file, Resources res, int size, boolean cacheOnly) throws IOException {
         final LruCache<String, Drawable> cache = mXmppConnectionService.getDrawableCache();
-        Drawable thumbnail = cache.get(uuid);
+        Drawable thumbnail = cache.get(file.getAbsolutePath());
         if ((thumbnail == null) && (!cacheOnly)) {
             synchronized (THUMBNAIL_LOCK) {
-                thumbnail = cache.get(uuid);
+                thumbnail = cache.get(file.getAbsolutePath());
                 if (thumbnail != null) {
                     return thumbnail;
                 }
-                DownloadableFile file = getFile(message);
                 final String mime = file.getMimeType();
                 if ("application/pdf".equals(mime)) {
                     thumbnail = new BitmapDrawable(res, getPdfDocumentPreview(file, size));
@@ -1016,7 +1024,7 @@ public class FileBackend {
                         throw new FileNotFoundException();
                     }
                 }
-                cache.put(uuid, thumbnail);
+                cache.put(file.getAbsolutePath(), thumbnail);
             }
         }
         return thumbnail;
@@ -1028,22 +1036,30 @@ public class FileBackend {
           return drawDrawable(drawable);
     }
 
+    public static Rect rectForSize(int w, int h, int size) {
+        int scalledW;
+        int scalledH;
+        if (w <= h) {
+            scalledW = Math.max((int) (w / ((double) h / size)), 1);
+            scalledH = size;
+        } else {
+            scalledW = size;
+            scalledH = Math.max((int) (h / ((double) w / size)), 1);
+        }
+
+        if (scalledW > w || scalledH > h) return new Rect(0, 0, w, h);
+
+        return new Rect(0, 0, scalledW, scalledH);
+    }
+
     private Drawable getImagePreview(File file, Resources res, int size, final String mime) throws IOException {
         if (android.os.Build.VERSION.SDK_INT >= 28) {
             ImageDecoder.Source source = ImageDecoder.createSource(file);
             return ImageDecoder.decodeDrawable(source, (decoder, info, src) -> {
                 int w = info.getSize().getWidth();
                 int h = info.getSize().getHeight();
-                int scalledW;
-                int scalledH;
-                if (w <= h) {
-                    scalledW = Math.max((int) (w / ((double) h / size)), 1);
-                    scalledH = size;
-                } else {
-                    scalledW = size;
-                    scalledH = Math.max((int) (h / ((double) w / size)), 1);
-                }
-                decoder.setTargetSize(scalledW, scalledH);
+                Rect r = rectForSize(w, h, size);
+                decoder.setTargetSize(r.width(), r.height());
             });
         } else {
             BitmapFactory.Options options = new BitmapFactory.Options();

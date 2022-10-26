@@ -414,6 +414,10 @@ public class Contact implements ListItem, Blockable {
         return ((this.subscription & (1 << option)) != 0);
     }
 
+    public boolean canInferPresence() {
+        return showInContactList() || isSelf();
+    }
+
     public boolean showInRoster() {
         return (this.getOption(Contact.Options.IN_ROSTER) && (!this
                 .getOption(Contact.Options.DIRTY_DELETE)))

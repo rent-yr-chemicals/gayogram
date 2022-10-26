@@ -1130,6 +1130,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         return count;
     }
 
+    public boolean canInferPresence() {
+        final Contact contact = getContact();
+        if (contact != null && contact.canInferPresence()) return true;
+        return sentMessagesCount() > 0;
+    }
+
     public boolean isWithStranger() {
         final Contact contact = getContact();
         return mode == MODE_SINGLE

@@ -6,8 +6,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.PorterDuff;
+import android.graphics.drawable.Drawable;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.preference.PreferenceManager;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -32,14 +34,22 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
+
+import com.cheogram.android.BobTransfer;
 
 import com.google.common.base.Strings;
 
+import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import io.ipfs.cid.Cid;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
@@ -439,7 +449,32 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         if (message.getBody() != null && !message.getBody().equals("")) {
             viewHolder.messageBody.setVisibility(View.VISIBLE);
             final String nick = UIHelper.getMessageDisplayName(message);
-            SpannableStringBuilder body = message.getMergedBody();
+            Drawable fallbackImg = ResourcesCompat.getDrawable(activity.getResources(), activity.getThemeResource(R.attr.ic_attach_photo, R.drawable.ic_attach_photo), null);
+            fallbackImg.setBounds(FileBackend.rectForSize(fallbackImg.getIntrinsicWidth(), fallbackImg.getIntrinsicHeight(), (int) (metrics.density * 32)));
+            SpannableStringBuilder body = message.getMergedBody((cid) -> {
+                try {
+                    DownloadableFile f = activity.xmppConnectionService.getFileForCid(cid);
+                    if (f == null || !f.canRead()) {
+                        if (!message.trusted() && !message.getConversation().canInferPresence()) return null;
+
+                        try {
+                            new BobTransfer(BobTransfer.uri(cid), message.getConversation().getAccount(), message.getCounterpart(), activity.xmppConnectionService).start();
+                        } catch (final NoSuchAlgorithmException | URISyntaxException e) { }
+                        return null;
+                    }
+
+                    Drawable d = activity.xmppConnectionService.getFileBackend().getThumbnail(f, activity.getResources(), (int) (metrics.density * 288), true);
+                    if (d == null) {
+                        new ThumbnailTask().execute(f);
+                    } else {
+                        d = d.getConstantState().newDrawable();
+                        d.setBounds(FileBackend.rectForSize(d.getIntrinsicWidth(), d.getIntrinsicHeight(), (int) (metrics.density * 32)));
+                    }
+                    return d;
+                } catch (final IOException e) {
+                    return fallbackImg;
+                }
+            }, fallbackImg);
             boolean hasMeCommand = message.hasMeCommand();
             if (hasMeCommand) {
                 body = body.replace(0, Message.ME_COMMAND.length(), nick + " ");
@@ -958,5 +993,29 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         protected TextView status_message;
         protected TextView encryption;
         protected ListView commands_list;
+    }
+
+    class ThumbnailTask extends AsyncTask<DownloadableFile, Void, Drawable[]> {
+        @Override
+        protected Drawable[] doInBackground(DownloadableFile... params) {
+            if (isCancelled()) return null;
+
+            Drawable[] d = new Drawable[params.length];
+            for (int i = 0; i < params.length; i++) {
+                try {
+                    d[i] = activity.xmppConnectionService.getFileBackend().getThumbnail(params[i], activity.getResources(), (int) (metrics.density * 288), false);
+                } catch (final IOException e) {
+                    d[i] = null;
+                }
+            }
+
+            return d;
+        }
+
+        @Override
+        protected void onPostExecute(final Drawable[] d) {
+            if (isCancelled()) return;
+            activity.xmppConnectionService.updateConversationUi();
+        }
     }
 }

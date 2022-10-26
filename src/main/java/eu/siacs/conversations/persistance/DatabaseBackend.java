@@ -48,6 +48,7 @@ import eu.siacs.conversations.crypto.axolotl.SQLiteAxolotlStore;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
+import eu.siacs.conversations.entities.DownloadableFile;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.entities.PresenceTemplate;
 import eu.siacs.conversations.entities.Roster;
@@ -733,12 +734,12 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         cursor.close();
     }
 
-    public File getFileForCid(Cid cid) {
+    public DownloadableFile getFileForCid(Cid cid) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.query("cheogram.cids", new String[]{"path"}, "cid=?", new String[]{cid.toString()}, null, null, null);
-        File f = null;
+        DownloadableFile f = null;
         if (cursor.moveToNext()) {
-            f = new File(cursor.getString(0));
+            f = new DownloadableFile(cursor.getString(0));
         }
         cursor.close();
         return f;

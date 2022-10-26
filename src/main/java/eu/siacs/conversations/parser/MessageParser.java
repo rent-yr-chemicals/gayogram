@@ -434,6 +434,11 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
         }
         boolean notify = false;
 
+        Element html = original.findChild("html", "http://jabber.org/protocol/xhtml-im");
+        if (html != null && html.findChild("body", "http://www.w3.org/1999/xhtml") == null) {
+            html = null;
+        }
+
         if (from == null || !InvalidJid.isValid(from) || !InvalidJid.isValid(to)) {
             Log.e(Config.LOGTAG, "encountered invalid message from='" + from + "' to='" + to + "'");
             return;
@@ -472,7 +477,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             }
         }
 
-        if ((body != null || pgpEncrypted != null || (axolotlEncrypted != null && axolotlEncrypted.hasChild("payload")) || oobUrl != null) && !isMucStatusMessage) {
+        if ((body != null || pgpEncrypted != null || (axolotlEncrypted != null && axolotlEncrypted.hasChild("payload")) || oobUrl != null || html != null) && !isMucStatusMessage) {
             final boolean conversationIsProbablyMuc = isTypeGroupChat || mucUserElement != null || account.getXmppConnection().getMucServersWithholdAccount().contains(counterpart.getDomain().toEscapedString());
             final Conversation conversation = mXmppConnectionService.findOrCreateConversation(account, counterpart.asBareJid(), conversationIsProbablyMuc, false, query, false);
             final boolean conversationMultiMode = conversation.getMode() == Conversation.MODE_MULTI;
@@ -577,12 +582,13 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                     message.setEncryption(Message.ENCRYPTION_DECRYPTED);
                 }
             } else {
-                message = new Message(conversation, body.content, Message.ENCRYPTION_NONE, status);
-                if (body.count > 1) {
+                message = new Message(conversation, body == null ? "HTML-only message" : body.content, Message.ENCRYPTION_NONE, status);
+                if (body != null && body.count > 1) {
                     message.setBodyLanguage(body.language);
                 }
             }
 
+            if (html != null) message.addPayload(html);
             message.setSubject(original.findChildContent("subject"));
             message.setCounterpart(counterpart);
             message.setRemoteMsgId(remoteMsgId);
@@ -759,7 +765,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             if (message.trusted() && message.treatAsDownloadable() && manager.getAutoAcceptFileSize() > 0) {
                 if (message.getOob() != null && message.getOob().getScheme().equalsIgnoreCase("cid")) {
                     try {
-                        BobTransfer transfer = new BobTransfer(message, mXmppConnectionService);
+                        BobTransfer transfer = new BobTransfer.ForMessage(message, mXmppConnectionService);
                         message.setTransferable(transfer);
                         transfer.start();
                     } catch (URISyntaxException e) {

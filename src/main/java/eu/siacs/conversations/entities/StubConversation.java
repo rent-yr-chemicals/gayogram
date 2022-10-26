@@ -70,4 +70,10 @@ public class StubConversation implements Conversational {
 	public String getUuid() {
 		return uuid;
 	}
+
+	@Override
+	public boolean canInferPresence() {
+		final Contact contact = getContact();
+		return contact != null && contact.canInferPresence();
+	}
 }
