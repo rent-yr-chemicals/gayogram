@@ -93,6 +93,15 @@
                     android:gravity="center_vertical"
                     android:src="@drawable/ic_mode_edit_white_18dp" />
 
+                <com.lelloman.identicon.view.GithubIdenticonView
+                    android:id="@+id/thread_identicon"
+                    android:visibility="gone"
+                    android:layout_width="9dp"
+                    android:layout_height="9dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginRight="4sp"
+                    android:layout_marginBottom="-1dp" />
+
                 <TextView
                     android:id="@+id/message_time"
                     android:layout_width="wrap_content"
