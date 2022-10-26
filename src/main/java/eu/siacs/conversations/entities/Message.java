@@ -418,6 +418,18 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         this.subject = subject;
     }
 
+    public Element getThread() {
+        if (this.payloads == null) return null;
+
+        for (Element el : this.payloads) {
+            if (el.getName().equals("thread") && el.getNamespace().equals("jabber:client")) {
+                return el;
+            }
+        }
+
+        return null;
+    }
+
     public void setMucUser(MucOptions.User user) {
         this.user = new WeakReference<>(user);
     }
