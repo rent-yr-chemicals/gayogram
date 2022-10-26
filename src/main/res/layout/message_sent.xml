@@ -41,6 +41,8 @@
         android:layout_alignParentBottom="true"
         android:layout_marginRight="0dp"
         android:paddingRight="20dp"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp"
         android:layout_toLeftOf="@+id/message_photo_box"
         android:translationY="-2dp"
         android:elevation="3dp"
