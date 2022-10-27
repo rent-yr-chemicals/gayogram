@@ -113,6 +113,7 @@ public abstract class AbstractGenerator {
         final XmppConnection connection = account.getXmppConnection();
         final ArrayList<String> features = new ArrayList<>(Arrays.asList(FEATURES));
         features.add("http://jabber.org/protocol/xhtml-im");
+        features.add("urn:xmpp:bob");
         if (mXmppConnectionService.confirmMessages()) {
             features.addAll(Arrays.asList(MESSAGE_CONFIRMATION_FEATURES));
         }
