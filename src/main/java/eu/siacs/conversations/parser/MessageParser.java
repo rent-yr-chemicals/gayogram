@@ -408,8 +408,14 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
         final Element mucUserElement = packet.findChild("x", Namespace.MUC_USER);
         final String pgpEncrypted = packet.findChildContent("x", "jabber:x:encrypted");
         final Element replaceElement = packet.findChild("replace", "urn:xmpp:message-correct:0");
-        final Element oob = packet.findChild("x", Namespace.OOB);
-        final String oobUrl = oob != null ? oob.findChildContent("url") : null;
+        Element oob = packet.findChild("x", Namespace.OOB);
+        if (oob != null && oob.findChildContent("url") == null) {
+            oob = null;
+        }
+        final Element reference = packet.findChild("reference", "urn:xmpp:reference:0");
+        if (reference != null && reference.findChild("media-sharing", "urn:xmpp:sims:1") != null) {
+            oob = reference;
+        }
         String replacementId = replaceElement == null ? null : replaceElement.getAttribute("id");
         if (replacementId == null) {
             Element fasten = packet.findChild("apply-to", "urn:xmpp:fasten:0");
@@ -477,7 +483,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             }
         }
 
-        if ((body != null || pgpEncrypted != null || (axolotlEncrypted != null && axolotlEncrypted.hasChild("payload")) || oobUrl != null || html != null) && !isMucStatusMessage) {
+        if ((body != null || pgpEncrypted != null || (axolotlEncrypted != null && axolotlEncrypted.hasChild("payload")) || oob != null || html != null) && !isMucStatusMessage) {
             final boolean conversationIsProbablyMuc = isTypeGroupChat || mucUserElement != null || account.getXmppConnection().getMucServersWithholdAccount().contains(counterpart.getDomain().toEscapedString());
             final Conversation conversation = mXmppConnectionService.findOrCreateConversation(account, counterpart.asBareJid(), conversationIsProbablyMuc, false, query, false);
             final boolean conversationMultiMode = conversation.getMode() == Conversation.MODE_MULTI;
@@ -575,12 +581,8 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                 if (conversationMultiMode) {
                     message.setTrueCounterpart(origin);
                 }
-            } else if (body == null && oobUrl != null) {
-                message = new Message(conversation, oobUrl, Message.ENCRYPTION_NONE, status);
-                message.setOob(oobUrl);
-                if (CryptoHelper.isPgpEncryptedUrl(oobUrl)) {
-                    message.setEncryption(Message.ENCRYPTION_DECRYPTED);
-                }
+            } else if (body == null && oob != null) {
+                message = new Message(conversation, "", Message.ENCRYPTION_NONE, status);
             } else {
                 message = new Message(conversation, body == null ? "HTML-only message" : body.content, Message.ENCRYPTION_NONE, status);
                 if (body != null && body.count > 1) {
@@ -595,9 +597,9 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             message.setServerMsgId(serverMsgId);
             message.setCarbon(isCarbon);
             message.setTime(timestamp);
-            if (oobUrl != null) {
-                message.setOob(oobUrl);
-                if (CryptoHelper.isPgpEncryptedUrl(oobUrl)) {
+            if (oob != null) {
+                message.setFileParams(new Message.FileParams(oob));
+                if (CryptoHelper.isPgpEncryptedUrl(message.getFileParams().url)) {
                     message.setEncryption(Message.ENCRYPTION_DECRYPTED);
                 }
             }

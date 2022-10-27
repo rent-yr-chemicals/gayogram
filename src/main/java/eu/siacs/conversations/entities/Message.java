@@ -46,6 +46,7 @@ import eu.siacs.conversations.utils.MimeUtils;
 import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xml.Element;
+import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xml.Tag;
 import eu.siacs.conversations.xml.XmlReader;
 
@@ -119,7 +120,6 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     protected boolean deleted = false;
     protected boolean carbon = false;
     private boolean oob = false;
-    protected URI oobUri = null;
     protected List<Element> payloads = new ArrayList<>();
     protected List<Edit> edits = new ArrayList<>();
     protected String relativeFilePath;
@@ -175,7 +175,6 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 null,
                 null,
                 null,
-                null,
                 null);
     }
 
@@ -204,7 +203,6 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 null,
                 null,
                 null,
-                null,
                 null);
     }
 
@@ -214,7 +212,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                       final String remoteMsgId, final String relativeFilePath,
                       final String serverMsgId, final String fingerprint, final boolean read,
                       final String edited, final boolean oob, final String errorMessage, final Set<ReadByMarker> readByMarkers,
-                      final boolean markable, final boolean deleted, final String bodyLanguage, final String subject, final String oobUri, final String fileParams, final List<Element> payloads) {
+                      final boolean markable, final boolean deleted, final String bodyLanguage, final String subject, final String fileParams, final List<Element> payloads) {
         this.conversation = conversation;
         this.uuid = uuid;
         this.conversationUuid = conversationUUid;
@@ -232,7 +230,6 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         this.axolotlFingerprint = fingerprint;
         this.read = read;
         this.edits = Edit.fromJson(edited);
-        setOob(oobUri);
         this.oob = oob;
         this.errorMessage = errorMessage;
         this.readByMarkers = readByMarkers == null ? new CopyOnWriteArraySet<>() : readByMarkers;
@@ -280,7 +277,6 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 cursor.getInt(cursor.getColumnIndex(DELETED)) > 0,
                 cursor.getString(cursor.getColumnIndex(BODY_LANGUAGE)),
                 cursor.getString(cursor.getColumnIndex("subject")),
-                cursor.getString(cursor.getColumnIndex("oobUri")),
                 cursor.getString(cursor.getColumnIndex("fileParams")),
                 payloads
         );
@@ -316,7 +312,6 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         ContentValues values = new ContentValues();
         values.put(UUID, uuid);
         values.put("subject", subject);
-        values.put("oobUri", oobUri == null ? null : oobUri.toString());
         values.put("fileParams", fileParams == null ? null : fileParams.toString());
         values.put("payloads", payloads.size() < 1 ? null : payloads.stream().map(Object::toString).collect(Collectors.joining()));
         return values;
@@ -392,8 +387,8 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     }
 
     public String getBody() {
-        if (oobUri != null) {
-            return body.replace(oobUri.toString(), "");
+        if (getOob() != null) {
+            return body.replace(getOob().toString(), "");
         } else {
             return body;
         }
@@ -763,7 +758,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     }
 
     public boolean isOOb() {
-        return oob || oobUri != null;
+        return oob || getFileParams().url != null;
     }
 
     public static class MergeSeparator {
@@ -893,16 +888,12 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     }
 
     public URI getOob() {
-        return oobUri;
-    }
-
-    public void setOob(String oobUri) {
+        final String url = getFileParams().url;
         try {
-            this.oobUri = oobUri == null ? null : new URI(oobUri);
+            return url == null ? null : new URI(url);
         } catch (final URISyntaxException e) {
-            this.oobUri = null;
+            return null;
         }
-        this.oob = this.oobUri != null;
     }
 
     public void addPayload(Element el) {
@@ -938,7 +929,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         if (relativeFilePath != null) {
             extension = MimeUtils.extractRelevantExtension(relativeFilePath);
         } else {
-            final String url = URL.tryParse(oobUri == null ? body.split("\n")[0] : oobUri.toString());
+            final String url = URL.tryParse(getOob() == null ? body.split("\n")[0] : getOob().toString());
             if (url == null) {
                 return null;
             }
@@ -981,10 +972,6 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             fileParams = new FileParams(this.body);
             if (this.transferable != null) {
                 fileParams.size = this.transferable.getFileSize();
-            }
-
-            if (oobUri != null && ("http".equalsIgnoreCase(oobUri.getScheme()) || "https".equalsIgnoreCase(oobUri.getScheme()) || "cid".equalsIgnoreCase(oobUri.getScheme()))) {
-                fileParams.url = oobUri.toString();
             }
         }
         return fileParams;
@@ -1032,6 +1019,34 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         public int runtime = 0;
 
         public FileParams() { }
+
+        public FileParams(Element el) {
+            if (el.getName().equals("x") && el.getNamespace().equals(Namespace.OOB)) {
+                this.url = el.findChildContent("url", Namespace.OOB);
+            }
+            if (el.getName().equals("reference") && el.getNamespace().equals("urn:xmpp:reference:0")) {
+                final String refUri = el.getAttribute("uri");
+                if (refUri != null) url = refUri;
+                final Element mediaSharing = el.findChild("media-sharing", "urn:xmpp:sims:1");
+                if (mediaSharing != null) {
+                    Element file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:5");
+                    if (file == null) file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:4");
+                    if (file == null) file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:3");
+                    if (file != null) {
+                        String sizeS = file.findChildContent("size", "urn:xmpp:jingle:apps:file-transfer:5");
+                        if (sizeS == null) sizeS = file.findChildContent("size", "urn:xmpp:jingle:apps:file-transfer:4");
+                        if (sizeS == null) sizeS = file.findChildContent("size", "urn:xmpp:jingle:apps:file-transfer:3");
+                        if (sizeS != null) size = new Long(sizeS);
+                    }
+
+                    final Element sources = mediaSharing.findChild("sources", "urn:xmpp:sims:1");
+                    if (sources != null) {
+                        final Element ref = sources.findChild("reference", "urn:xmpp:reference:0");
+                        if (ref != null) url = ref.getAttribute("uri");
+                    }
+                }
+            }
+        }
 
         public FileParams(String ser) {
             final String[] parts = ser == null ? new String[0] : ser.split("\\|");
