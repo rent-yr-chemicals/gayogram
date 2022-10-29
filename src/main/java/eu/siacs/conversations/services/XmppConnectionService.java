@@ -2041,8 +2041,11 @@ public class XmppConnectionService extends Service {
 
 
     public void syncRoster(final Account account) {
-        unregisterPhoneAccounts(account);
-        mRosterSyncTaskManager.execute(account, () -> databaseBackend.writeRoster(account.getRoster()));
+        mRosterSyncTaskManager.execute(account, () -> {
+            unregisterPhoneAccounts(account);
+            databaseBackend.writeRoster(account.getRoster());
+            try { Thread.sleep(500); } catch (InterruptedException e) { }
+        });
     }
 
     public List<Conversation> getConversations() {
