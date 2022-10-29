@@ -1967,7 +1967,7 @@ public class XmppConnection implements Runnable {
         }
 
         public boolean bookmarks2() {
-            return Config.USE_BOOKMARKS2 /* || hasDiscoFeature(account.getJid().asBareJid(), Namespace.BOOKMARKS2_COMPAT)*/;
+            return Config.USE_BOOKMARKS2 || hasDiscoFeature(account.getJid().asBareJid(), Namespace.BOOKMARKS2_COMPAT);
         }
 
         public boolean externalServiceDiscovery() {
