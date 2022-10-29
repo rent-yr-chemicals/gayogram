@@ -1257,6 +1257,12 @@ public class ConversationFragment extends XmppFragment
             conversation.setUserSelectedThread(true);
         });
 
+        binding.threadIdenticon.setOnLongClickListener(v -> {
+            setThread(null);
+            conversation.setUserSelectedThread(true);
+            return true;
+        });
+
         return binding.getRoot();
     }
 
