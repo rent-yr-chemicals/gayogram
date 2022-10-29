@@ -2350,7 +2350,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             if (childView instanceof ViewGroup) {
                                 childView = findViewAt((ViewGroup) childView, location[0] + e.getX(), location[1] + e.getY());
                             }
-                            if (childView instanceof ListView || childView instanceof WebView) {
+                            if ((childView instanceof ListView && ((ListView) childView).canScrollList(1)) || childView instanceof WebView) {
                                 int action = e.getAction();
                                 switch (action) {
                                     case MotionEvent.ACTION_DOWN:
