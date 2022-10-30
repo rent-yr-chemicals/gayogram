@@ -363,12 +363,22 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     private void applyQuoteSpan(SpannableStringBuilder body, int start, int end, boolean darkBackground) {
         if (start > 1 && !"\n\n".equals(body.subSequence(start - 2, start).toString())) {
             body.insert(start++, "\n");
-            body.setSpan(new DividerSpan(false), start - 2, start, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            body.setSpan(
+                new DividerSpan(false),
+                start - ("\n".equals(body.subSequence(start - 2, start - 1).toString()) ? 2 : 1),
+                start,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
             end++;
         }
         if (end < body.length() - 1 && !"\n\n".equals(body.subSequence(end, end + 2).toString())) {
             body.insert(end, "\n");
-            body.setSpan(new DividerSpan(false), end, end + 2, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            body.setSpan(
+                new DividerSpan(false),
+                end,
+                end + ("\n".equals(body.subSequence(end + 1, end + 2).toString()) ? 2 : 1),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            );
         }
         int color = darkBackground ? this.getMessageTextColor(darkBackground, false)
                 : ContextCompat.getColor(activity, R.color.green700_desaturated);
@@ -488,6 +498,12 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 int start = body.getSpanStart(mergeSeparator);
                 int end = body.getSpanEnd(mergeSeparator);
                 body.setSpan(new DividerSpan(true), start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            for (final android.text.style.QuoteSpan quote : body.getSpans(0, body.length(), android.text.style.QuoteSpan.class)) {
+                int start = body.getSpanStart(quote);
+                int end = body.getSpanEnd(quote);
+                body.removeSpan(quote);
+                applyQuoteSpan(body, start, end, darkBackground);
             }
             boolean startsWithQuote = handleTextQuotes(body, darkBackground);
             if (!message.isPrivateMessage()) {
