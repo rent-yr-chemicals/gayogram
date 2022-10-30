@@ -89,6 +89,7 @@ public class Account extends AbstractEntity implements AvatarService.Avatarable 
     private XmppConnection xmppConnection = null;
     private long mEndGracePeriod = 0L;
     private final Map<Jid, Bookmark> bookmarks = new HashMap<>();
+    private boolean bookmarksLoaded = false;
     private Presence.Status presenceStatus = Presence.Status.ONLINE;
     private String presenceStatusMessage = null;
 
@@ -493,10 +494,13 @@ public class Account extends AbstractEntity implements AvatarService.Avatarable 
         }
     }
 
+    public boolean areBookmarksLoaded() { return bookmarksLoaded; }
+
     public void setBookmarks(Map<Jid, Bookmark> bookmarks) {
         synchronized (this.bookmarks) {
             this.bookmarks.clear();
             this.bookmarks.putAll(bookmarks);
+            this.bookmarksLoaded = true;
         }
     }
 
