@@ -1321,7 +1321,6 @@ public class ConversationFragment extends XmppFragment
             menu.setHeaderTitle(R.string.message_options);
             MenuItem openWith = menu.findItem(R.id.open_with);
             MenuItem copyMessage = menu.findItem(R.id.copy_message);
-            MenuItem copyLink = menu.findItem(R.id.copy_link);
             MenuItem quoteMessage = menu.findItem(R.id.quote_message);
             MenuItem retryDecryption = menu.findItem(R.id.retry_decryption);
             MenuItem correctMessage = menu.findItem(R.id.correct_message);
@@ -1346,13 +1345,6 @@ public class ConversationFragment extends XmppFragment
                     && t == null) {
                 copyMessage.setVisible(true);
                 quoteMessage.setVisible(!showError && MessageUtils.prepareQuote(m).length() > 0);
-                String body = m.getMergedBody().toString();
-                if (ShareUtil.containsXmppUri(body)) {
-                    copyLink.setTitle(R.string.copy_jabber_id);
-                    copyLink.setVisible(true);
-                } else if (Patterns.AUTOLINK_WEB_URL.matcher(body).find()) {
-                    copyLink.setVisible(true);
-                }
             }
             if (m.getEncryption() == Message.ENCRYPTION_DECRYPTION_FAILED && !deleted) {
                 retryDecryption.setVisible(true);
@@ -1441,9 +1433,6 @@ public class ConversationFragment extends XmppFragment
                 sendMessage(message);
             case R.id.copy_message:
                 ShareUtil.copyToClipboard(activity, selectedMessage);
-                return true;
-            case R.id.copy_link:
-                ShareUtil.copyLinkToClipboard(activity, selectedMessage);
                 return true;
             case R.id.quote_message:
                 quoteMessage(selectedMessage);
