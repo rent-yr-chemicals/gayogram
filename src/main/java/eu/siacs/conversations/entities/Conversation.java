@@ -1318,8 +1318,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
         @Override
         public int getItemPosition(Object o) {
-            if (o == mPager.getChildAt(0)) return PagerAdapter.POSITION_UNCHANGED;
-            if (o == mPager.getChildAt(1)) return PagerAdapter.POSITION_UNCHANGED;
+            if (mPager != null) {
+                if (o == mPager.getChildAt(0)) return PagerAdapter.POSITION_UNCHANGED;
+                if (o == mPager.getChildAt(1)) return PagerAdapter.POSITION_UNCHANGED;
+            }
 
             int pos = sessions == null ? -1 : sessions.indexOf(o);
             if (pos < 0) return PagerAdapter.POSITION_NONE;
