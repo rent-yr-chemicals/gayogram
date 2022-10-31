@@ -1570,9 +1570,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     if (field.error != null) {
                         binding.desc.setVisibility(View.VISIBLE);
                         binding.desc.setText(field.error);
-                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Design_Error);
+                        binding.desc.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Design_Error);
                     } else {
-                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Status);
+                        binding.desc.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Status);
                     }
 
                     mValue = field.getValue();
@@ -1644,9 +1644,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     if (field.error != null) {
                         binding.desc.setVisibility(View.VISIBLE);
                         binding.desc.setText(field.error);
-                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Design_Error);
+                        binding.desc.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Design_Error);
                     } else {
-                        binding.desc.setTextAppearance(R.style.TextAppearance_Conversations_Status);
+                        binding.desc.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Status);
                     }
 
                     mValue = field.getValue();
