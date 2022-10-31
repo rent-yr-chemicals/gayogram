@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.graphics.Color;
+import android.os.Build;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
 import android.util.Log;
@@ -771,7 +772,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 
     public SpannableStringBuilder getSpannableBody(GetThumbnailForCid thumbnailer, Drawable fallbackImg) {
         final Element html = getHtml();
-        if (html == null) {
+        if (html == null || Build.VERSION.SDK_INT < 24) {
             return new SpannableStringBuilder(MessageUtils.filterLtrRtl(getBody()).trim());
         } else {
             SpannableStringBuilder spannable = new SpannableStringBuilder(Html.fromHtml(
