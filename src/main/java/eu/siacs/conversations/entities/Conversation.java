@@ -1287,7 +1287,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             sessions.add(session);
             notifyDataSetChanged();
-            mPager.setCurrentItem(getCount() - 1);
+            if (mPager != null) mPager.setCurrentItem(getCount() - 1);
         }
 
         public void removeSession(CommandSession session) {
