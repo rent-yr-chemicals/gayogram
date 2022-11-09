@@ -9,25 +9,34 @@ import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.text.method.LinkMovementMethod;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.ArrayAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.ActivityMucDetailsBinding;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Bookmark;
+import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
+import eu.siacs.conversations.entities.ListItem;
 import eu.siacs.conversations.entities.MucOptions;
 import eu.siacs.conversations.entities.MucOptions.User;
 import eu.siacs.conversations.services.XmppConnectionService;
@@ -200,6 +209,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         this.binding.mucEditTitle.addTextChangedListener(this);
         this.binding.mucEditSubject.addTextChangedListener(this);
         this.binding.mucEditSubject.addTextChangedListener(new StylingHelper.MessageEditorStyler(this.binding.mucEditSubject));
+        this.binding.editTags.addTextChangedListener(this);
         this.mMediaAdapter = new MediaAdapter(this, R.dimen.media_size);
         this.mUserPreviewAdapter = new UserPreviewAdapter();
         this.binding.media.setAdapter(mMediaAdapter);
@@ -301,12 +311,52 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
             if (!owner) {
                 this.binding.mucEditSubject.requestFocus();
             }
+
+            final Bookmark bookmark = mConversation.getBookmark();
+            if (bookmark != null && mConversation.getAccount().getXmppConnection().getFeatures().bookmarks2()) {
+                for (final ListItem.Tag group : bookmark.getGroupTags()) {
+                    binding.editTags.addObjectSync(group);
+                }
+                ArrayList<ListItem.Tag> tags = new ArrayList<>();
+                for (final Account account : xmppConnectionService.getAccounts()) {
+                    for (Contact contact : account.getRoster().getContacts()) {
+                        tags.addAll(contact.getTags(this));
+                    }
+                    for (Bookmark bmark : account.getBookmarks()) {
+                        tags.addAll(bmark.getTags(this));
+                    }
+                }
+                Comparator<Map.Entry<ListItem.Tag,Integer>> sortTagsBy = Map.Entry.comparingByValue(Comparator.reverseOrder());
+                sortTagsBy = sortTagsBy.thenComparing(entry -> entry.getKey().getName());
+
+                ArrayAdapter<ListItem.Tag> adapter = new ArrayAdapter<>(
+                    this,
+                    android.R.layout.simple_list_item_1,
+                    tags.stream()
+                    .collect(Collectors.toMap((x) -> x, (t) -> 1, (c1, c2) -> c1 + c2))
+                    .entrySet().stream()
+                    .sorted(sortTagsBy)
+                    .map(e -> e.getKey()).collect(Collectors.toList())
+                );
+                binding.editTags.setAdapter(adapter);
+                this.binding.editTags.setVisibility(View.VISIBLE);
+            } else {
+                this.binding.editTags.setVisibility(View.GONE);
+            }
         } else {
             String subject = this.binding.mucEditSubject.isEnabled() ? this.binding.mucEditSubject.getEditableText().toString().trim() : null;
             String name = this.binding.mucEditTitle.isEnabled() ? this.binding.mucEditTitle.getEditableText().toString().trim() : null;
             onMucInfoUpdated(subject, name);
+
+            final Bookmark bookmark = mConversation.getBookmark();
+            if (bookmark != null && mConversation.getAccount().getXmppConnection().getFeatures().bookmarks2()) {
+                bookmark.setGroups(binding.editTags.getObjects().stream().map(tag -> tag.getName()).collect(Collectors.toList()));
+                xmppConnectionService.createBookmark(bookmark.getAccount(), bookmark);
+            }
+
             SoftKeyboardUtils.hideSoftKeyboard(this);
             hideEditor();
+            updateView();
         }
     }
 
@@ -458,7 +508,8 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
             account = mConversation.getAccount().getJid().asBareJid().toEscapedString();
         }
         setTitle(mucOptions.isPrivateAndNonAnonymous() ? R.string.action_muc_details : R.string.channel_details);
-        this.binding.editMucNameButton.setVisibility((self.getAffiliation().ranks(MucOptions.Affiliation.OWNER) || mucOptions.canChangeSubject()) ? View.VISIBLE : View.GONE);
+        final Bookmark bookmark = mConversation.getBookmark();
+        this.binding.editMucNameButton.setVisibility((self.getAffiliation().ranks(MucOptions.Affiliation.OWNER) || mucOptions.canChangeSubject() || (bookmark != null && mConversation.getAccount().getXmppConnection().getFeatures().bookmarks2())) ? View.VISIBLE : View.GONE);
         this.binding.detailsAccount.setText(getString(R.string.using_account, account));
         this.binding.truejid.setVisibility(View.GONE);
         if (mConversation.isPrivateAndNonAnonymous()) {
@@ -574,6 +625,25 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
             this.binding.noUsersHints.setVisibility(View.GONE);
         }
 
+        if (bookmark == null) {
+            binding.tags.setVisibility(View.GONE);
+            return;
+        }
+
+        List<ListItem.Tag> tagList = bookmark.getTags(this);
+        if (tagList.size() == 0) {
+            binding.tags.setVisibility(View.GONE);
+        } else {
+            final LayoutInflater inflater = getLayoutInflater();
+            binding.tags.setVisibility(View.VISIBLE);
+            binding.tags.removeAllViewsInLayout();
+            for (final ListItem.Tag tag : tagList) {
+                final TextView tv = (TextView) inflater.inflate(R.layout.list_item_tag, binding.tags, false);
+                tv.setText(tag.getName());
+                tv.setBackgroundColor(tag.getColor());
+                binding.tags.addView(tv);
+            }
+        }
     }
 
     public static String getStatus(Context context, User user, final boolean advanced) {
@@ -648,7 +718,8 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         if (this.binding.mucEditor.getVisibility() == View.VISIBLE) {
             boolean subjectChanged = changed(binding.mucEditSubject.getEditableText().toString(), mucOptions.getSubject());
             boolean nameChanged = changed(binding.mucEditTitle.getEditableText().toString(), mucOptions.getName());
-            if (subjectChanged || nameChanged) {
+            final Bookmark bookmark = mConversation.getBookmark();
+            if (subjectChanged || nameChanged || (bookmark != null && mConversation.getAccount().getXmppConnection().getFeatures().bookmarks2())) {
                 this.binding.editMucNameButton.setImageResource(getThemeResource(R.attr.icon_save, R.drawable.ic_save_black_24dp));
             } else {
                 this.binding.editMucNameButton.setImageResource(getThemeResource(R.attr.icon_cancel, R.drawable.ic_cancel_black_24dp));
