@@ -1,5 +1,7 @@
 package eu.siacs.conversations.ui;
 
+import android.telephony.TelephonyManager;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
