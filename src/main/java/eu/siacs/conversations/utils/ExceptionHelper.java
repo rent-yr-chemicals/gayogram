@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.ClassNotFoundException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -40,6 +41,11 @@ public class ExceptionHelper {
     }
 
     public static boolean checkForCrash(XmppActivity activity) {
+        try {
+            Class.forName("io.sentry.Sentry");
+            return false;
+        } catch (final ClassNotFoundException e) { }
+
         try {
             final XmppConnectionService service = activity == null ? null : activity.xmppConnectionService;
             if (service == null) {
