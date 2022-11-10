@@ -453,7 +453,7 @@ public class IqParser extends AbstractParser implements OnIqPacketReceived {
                 response = mXmppConnectionService.getIqGenerator().entityTimeResponse(packet);
             }
             mXmppConnectionService.sendIqPacket(account, response, null);
-        } else {
+        } else if (packet.getFrom() != null) {
             final Contact contact = account.getRoster().getContact(packet.getFrom());
             final Conversation conversation = mXmppConnectionService.find(account, packet.getFrom());
             if (packet.hasChild("data", "urn:xmpp:bob") && isGet && (conversation == null ? contact != null && contact.canInferPresence() : conversation.canInferPresence())) {
