@@ -31,6 +31,7 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.crypto.axolotl.AxolotlService;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Contact;
+import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Room;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.xml.Element;
@@ -453,7 +454,11 @@ public class IqParser extends AbstractParser implements OnIqPacketReceived {
             }
             mXmppConnectionService.sendIqPacket(account, response, null);
         } else {
-            if (packet.getType() == IqPacket.TYPE.GET || packet.getType() == IqPacket.TYPE.SET) {
+            final Contact contact = account.getRoster().getContact(packet.getFrom());
+            final Conversation conversation = mXmppConnectionService.find(account, packet.getFrom());
+            if (packet.hasChild("data", "urn:xmpp:bob") && isGet && (conversation == null ? contact != null && contact.canInferPresence() : conversation.canInferPresence())) {
+                mXmppConnectionService.sendIqPacket(account, mXmppConnectionService.getIqGenerator().bobResponse(packet), null);
+            } else if (packet.getType() == IqPacket.TYPE.GET || packet.getType() == IqPacket.TYPE.SET) {
                 final IqPacket response = packet.generateResponse(IqPacket.TYPE.ERROR);
                 final Element error = response.addChild("error");
                 error.setAttribute("type", "cancel");
