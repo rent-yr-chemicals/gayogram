@@ -58,12 +58,15 @@ public class ThemeHelper {
 		switch (fontSize) {
 			case "medium":
 				if ("obsidian".equals(setting)) return R.style.ConversationsTheme_Obsidian_Medium;
+				else if ("oledblack".equals(setting)) return R.style.ConversationsTheme_OLEDBlack_Medium;
 				return dark ? R.style.ConversationsTheme_Dark_Medium : R.style.ConversationsTheme_Medium;
 			case "large":
 				if ("obsidian".equals(setting)) return R.style.ConversationsTheme_Obsidian_Large;
+				else if ("oledblack".equals(setting)) return R.style.ConversationsTheme_OLEDBlack_Large;
 				return dark ? R.style.ConversationsTheme_Dark_Large : R.style.ConversationsTheme_Large;
 			default:
 				if ("obsidian".equals(setting)) return R.style.ConversationsTheme_Obsidian;
+				else if ("oledblack".equals(setting)) return R.style.ConversationsTheme_OLEDBlack;
 				return dark ? R.style.ConversationsTheme_Dark : R.style.ConversationsTheme;
 		}
 	}
@@ -88,7 +91,7 @@ public class ThemeHelper {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && "automatic".equals(setting)) {
 			return (resources.getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES;
 		} else {
-			return "dark".equals(setting) || "obsidian".equals(setting);
+			return "dark".equals(setting) || "obsidian".equals(setting) || "oledblack".equals(setting);
 		}
 	}
 
@@ -100,6 +103,9 @@ public class ThemeHelper {
 			case R.style.ConversationsTheme_Obsidian:
 			case R.style.ConversationsTheme_Obsidian_Large:
 			case R.style.ConversationsTheme_Obsidian_Medium:
+			case R.style.ConversationsTheme_OLEDBlack:
+			case R.style.ConversationsTheme_OLEDBlack_Large:
+			case R.style.ConversationsTheme_OLEDBlack_Medium:
 				return true;
 			default:
 				return false;

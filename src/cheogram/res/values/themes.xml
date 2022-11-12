@@ -324,6 +324,25 @@
         <item name="unread_count">#1E0036</item>
     </style>
 
+    <style name="ConversationsTheme.OLEDBlack" parent="ConversationsTheme.Dark">
+        <item name="colorPrimary">@color/black</item>
+        <item name="colorPrimaryDark">@color/black</item>
+        <item name="colorAccent">@color/yeller</item>
+
+        <item name="message_bubble_received_bg">?colorPrimary</item>
+        <item name="message_bubble_sent_bg">?color_background_primary</item>
+        <item name="message_bubble_shadow_light">#00000000</item>
+        <item name="message_bubble_shadow_dark">#FF000000</item>
+        <item name="message_bubble_shadow_dark_top">#DD000000</item>
+
+        <item name="color_background_primary">@color/black</item>
+        <item name="color_background_secondary">@color/black</item>
+        <item name="color_background_tertiary">@color/black</item>
+        <item name="color_background_overlay">@color/black26</item>
+
+        <item name="unread_count">#1E0036</item>
+    </style>
+
     <style name="ConversationsTheme.Medium" parent="ConversationsTheme">
         <item name="TextSizeCaption">14sp</item>
         <item name="TextSizeBody1">16sp</item>
@@ -360,6 +379,18 @@
         <item name="IconSize">20sp</item>
     </style>
 
+    <style name="ConversationsTheme.OLEDBlack.Medium" parent="ConversationsTheme.OLEDBlack">
+        <item name="TextSizeCaption">14sp</item>
+        <item name="TextSizeBody1">16sp</item>
+        <item name="TextSizeBody2">16sp</item>
+        <item name="TextSizeSubhead">18sp</item>
+        <item name="TextSizeTitle">22sp</item>
+        <item name="TextSizeDisplay2">47sp</item>
+        <item name="TextSizeInput">18sp</item>
+        <item name="TextSeparation">6sp</item>
+        <item name="IconSize">20sp</item>
+    </style>
+
     <style name="ConversationsTheme.Dark.Large" parent="ConversationsTheme.Dark">
         <item name="TextSizeCaption">16sp</item>
         <item name="TextSizeBody1">18sp</item>
@@ -373,6 +404,18 @@
     </style>
 
     <style name="ConversationsTheme.Obsidian.Large" parent="ConversationsTheme.Obsidian">
+        <item name="TextSizeCaption">16sp</item>
+        <item name="TextSizeBody1">18sp</item>
+        <item name="TextSizeBody2">18sp</item>
+        <item name="TextSizeSubhead">20sp</item>
+        <item name="TextSizeTitle">24sp</item>
+        <item name="TextSizeDisplay2">48sp</item>
+        <item name="TextSizeInput">20sp</item>
+        <item name="TextSeparation">7sp</item>
+        <item name="IconSize">22sp</item>
+    </style>
+
+    <style name="ConversationsTheme.OLEDBlack.Large" parent="ConversationsTheme.OLEDBlack">
         <item name="TextSizeCaption">16sp</item>
         <item name="TextSizeBody1">18sp</item>
         <item name="TextSizeBody2">18sp</item>
