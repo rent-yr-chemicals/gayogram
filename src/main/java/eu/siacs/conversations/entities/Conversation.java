@@ -27,6 +27,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.Spinner;
 import android.webkit.JavascriptInterface;
+import android.webkit.WebMessage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
@@ -1782,6 +1783,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             class WebViewHolder extends ViewHolder<CommandWebviewBinding> {
                 public WebViewHolder(CommandWebviewBinding binding) { super(binding); }
+                protected String boundUrl = "";
 
                 @Override
                 public void bind(Item oob) {
@@ -1805,19 +1807,31 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             ConversationPagerAdapter.this.notifyDataSetChanged();
                         }
                     });
-                    binding.webview.addJavascriptInterface(new JsObject(), "xmpp_xep0050");
-                    binding.webview.loadUrl(oob.el.findChildContent("url", "jabber:x:oob"));
+                    final String url = oob.el.findChildContent("url", "jabber:x:oob");
+                    if (!boundUrl.equals(url)) {
+                        binding.webview.addJavascriptInterface(new JsObject(), "xmpp_xep0050");
+                        binding.webview.loadUrl(url);
+                        boundUrl = url;
+                    }
                 }
 
                 class JsObject {
                     @JavascriptInterface
                     public void execute() { execute("execute"); }
+
+                    @JavascriptInterface
                     public void execute(String action) {
                         getView().post(() -> {
+                            actionToWebview = null;
                             if(CommandSession.this.execute(action)) {
                                 removeSession(CommandSession.this);
                             }
                         });
+                    }
+
+                    @JavascriptInterface
+                    public void preventDefault() {
+                        actionToWebview = binding.webview;
                     }
                 }
             }
@@ -1976,6 +1990,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected XmppConnectionService xmppConnectionService;
             protected ArrayAdapter<String> actionsAdapter;
             protected GridLayoutManager layoutManager;
+            protected WebView actionToWebview = null;
 
             CommandSession(String title, XmppConnectionService xmppConnectionService) {
                 loading();
@@ -2274,11 +2289,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             public boolean execute(String action) {
                 if (!action.equals("cancel") && !action.equals("prev") && !validate()) return false;
+
                 if (response == null) return true;
                 Element command = response.findChild("command", "http://jabber.org/protocol/commands");
                 if (command == null) return true;
                 String status = command.getAttribute("status");
                 if (status == null || (!status.equals("executing") && !action.equals("prev"))) return true;
+
+                if (actionToWebview != null) {
+                    actionToWebview.postWebMessage(new WebMessage("xmpp_xep0050/" + action), Uri.parse("*"));
+                    return false;
+                }
 
                 final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
                 packet.setTo(response.getFrom());
