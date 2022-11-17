@@ -28,6 +28,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -909,6 +910,14 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 viewHolder.commands_list.setOnItemClickListener((p, v, pos, id) -> {
                     ((Conversation) conversation).startCommand(adapter.getItem(pos), activity.xmppConnectionService);
                 });
+            } else {
+                // It's unclear if we can set this to null...
+                ListAdapter adapter = viewHolder.commands_list.getAdapter();
+                if (adapter instanceof ArrayAdapter) {
+                    ((ArrayAdapter<?>) adapter).clear();
+                }
+                viewHolder.commands_list.setVisibility(View.GONE);
+                viewHolder.commands_list.setOnItemClickListener(null);
             }
 
             if (isInValidSession) {
