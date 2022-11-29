@@ -23,21 +23,20 @@ public class Field extends Element {
 	}
 
 	public void setValue(String value) {
-		setChildren(List.of(new Element("value").setContent(value)));
+		replaceChildren(List.of(new Element("value").setContent(value)));
 	}
 
 	public void setValues(Collection<String> values) {
-		setChildren(values.stream().map(val -> new Element("value").setContent(val)).collect(Collectors.toList()));
+		replaceChildren(values.stream().map(val -> new Element("value").setContent(val)).collect(Collectors.toList()));
 	}
 
 	public void removeNonValueChildren() {
-		setChildren(getChildren().stream().filter(element -> element.getName().equals("value")).collect(Collectors.toList()));
+		replaceChildren(getChildren().stream().filter(element -> element.getName().equals("value")).collect(Collectors.toList()));
 	}
 
 	public static Field parse(Element element) {
 		Field field = new Field();
-		field.setAttributes(element.getAttributes());
-		field.setChildren(element.getChildren());
+		field.bindTo(element);
 		return field;
 	}
 

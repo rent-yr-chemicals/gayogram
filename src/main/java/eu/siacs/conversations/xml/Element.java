@@ -134,10 +134,24 @@ public class Element implements Node {
 		return this.children;
 	}
 
+	// Deprecated: you probably want bindTo or replaceChildren
 	public Element setChildren(List<Element> children) {
 		this.childNodes = new ArrayList(children);
 		this.children = children;
 		return this;
+	}
+
+	public void replaceChildren(List<Element> children) {
+		this.childNodes.clear();
+		this.childNodes.addAll(children);
+		this.children.clear();
+		this.children.addAll(children);
+	}
+
+	public void bindTo(Element original) {
+		this.attributes = original.attributes;
+		this.childNodes = original.childNodes;
+		this.children = original.children;
 	}
 
 	public final String getContent() {

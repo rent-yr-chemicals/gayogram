@@ -77,13 +77,12 @@ public class Data extends Element {
 	}
 
 	private void removeUnnecessaryChildren() {
-		setChildren(getChildren().stream().filter(element -> element.getName().equals("field") || element.getName().equals("title")).collect(Collectors.toList()));
+		replaceChildren(getChildren().stream().filter(element -> element.getName().equals("field") || element.getName().equals("title")).collect(Collectors.toList()));
 	}
 
 	public static Data parse(Element element) {
 		Data data = new Data();
-		data.setAttributes(element.getAttributes());
-		data.setChildren(element.getChildren());
+		data.bindTo(element);
 		return data;
 	}
 
