@@ -421,6 +421,7 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
         if (contact == null) {
             return;
         }
+        if (binding.editTags.getVisibility() != View.GONE) return;
         invalidateOptionsMenu();
         setTitle(contact.getDisplayName());
         if (contact.showInRoster()) {
