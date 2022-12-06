@@ -118,6 +118,6 @@ public class MessageUtils {
 
     public static boolean unInitiatedButKnownSize(Message message) {
         return message.getType() == Message.TYPE_TEXT && message.getTransferable() == null && message.isOOb() && message.getFileParams().url != null &&
-               (message.getFileParams().size != null || (message.getOob() != null && message.getOob().getScheme().equalsIgnoreCase("cid")));
+               (message.getFileParams().size != null || (message.getOob() != null && message.getOob().getScheme() != null && message.getOob().getScheme().equalsIgnoreCase("cid")));
     }
 }
