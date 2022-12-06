@@ -402,6 +402,18 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
             edit.setVisible(false);
             delete.setVisible(false);
         }
+        edit.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
+            @Override
+            public boolean onMenuItemActionCollapse(MenuItem item) {
+                binding.editTags.setVisibility(View.GONE);
+                if (save != null) save.setVisible(false);
+                populateView();
+                return true;
+            }
+
+            @Override
+            public boolean onMenuItemActionExpand(MenuItem item) { return true; }
+        });
         return super.onCreateOptionsMenu(menu);
     }
 
