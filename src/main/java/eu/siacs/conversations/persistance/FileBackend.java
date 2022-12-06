@@ -1071,6 +1071,8 @@ public class FileBackend {
                 options.inSampleSize *= 2;
                 bitmap = BitmapFactory.decodeFile(file.getAbsolutePath(), options);
             }
+            if (bitmap == null) return null;
+
             bitmap = resize(bitmap, size);
             bitmap = rotate(bitmap, getRotation(file));
             if (mime.equals("image/gif")) {
