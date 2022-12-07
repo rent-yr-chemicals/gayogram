@@ -160,7 +160,9 @@ public class RtpSessionActivity extends XmppActivity
         setSupportActionBar(binding.toolbar);
 
         binding.dialpad.setClickConsumer(tag -> {
-            requireRtpConnection().applyDtmfTone(tag);
+            final JingleRtpConnection connection =
+                this.rtpConnectionReference != null ? this.rtpConnectionReference.get() : null;
+            if (connection != null) connection.applyDtmfTone(tag);
         });
 
         if (savedInstanceState != null) {
