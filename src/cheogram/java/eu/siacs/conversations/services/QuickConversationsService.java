@@ -136,7 +136,7 @@ public class QuickConversationsService extends AbstractQuickConversationsService
                 final Jid jid = Jid.ofLocalAndDomain(phoneContact.getPhoneNumber(), gateway);
                 final Contact contact = account.getRoster().getContact(jid);
                 boolean needsCacheClean = contact.setPhoneContact(phoneContact);
-                needsCacheClean |= contact.setSystemTags(Collections.singleton(phoneContact.getTypeLabel()));
+                needsCacheClean |= contact.setSystemTags(phoneContact.getTags());
                 if (needsCacheClean) {
                     service.getAvatarService().clear(contact);
                 }
