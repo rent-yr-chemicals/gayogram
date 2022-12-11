@@ -7,6 +7,8 @@ import android.graphics.Rect;
 import android.net.Uri;
 import android.text.Editable;
 import android.text.InputType;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.StaticLayout;
 import android.text.TextPaint;
 import android.text.TextUtils;
@@ -59,6 +61,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import me.saket.bettermovementmethod.BetterLinkMovementMethod;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
@@ -1499,6 +1503,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     }
                     binding.values.setAdapter(values);
 
+                    if (field.getType().equals(Optional.of("jid-single")) || field.getType().equals(Optional.of("jid-multi"))) {
+                        binding.values.setOnItemClickListener((arg0, arg1, pos, id) -> {
+                            new FixedURLSpan("xmpp:" + Jid.ofEscaped(values.getItem(pos)).toEscapedString()).onClick(binding.values);
+                        });
+                    }
+
                     binding.values.setOnItemLongClickListener((arg0, arg1, pos, id) -> {
                         if (ShareUtil.copyTextToClipboard(binding.getRoot().getContext(), values.getItem(pos), R.string.message)) {
                             Toast.makeText(binding.getRoot().getContext(), R.string.message_copied_to_clipboard, Toast.LENGTH_SHORT).show();
@@ -1519,8 +1529,21 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Subhead);
                         setTextOrHide(binding.text, cell.reported.getLabel());
                     } else {
+                        SpannableStringBuilder text = new SpannableStringBuilder(cell.el.findChildContent("value", "jabber:x:data"));
+                        if (cell.reported.getType().equals(Optional.of("jid-single"))) {
+                            text.setSpan(new FixedURLSpan("xmpp:" + Jid.ofEscaped(text.toString()).toEscapedString()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        }
+
                         binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Body1);
-                        binding.text.setText(cell.el.findChildContent("value", "jabber:x:data"));
+                        binding.text.setText(text);
+
+                        BetterLinkMovementMethod method = BetterLinkMovementMethod.newInstance();
+                        method.setOnLinkLongClickListener((tv, url) -> {
+                            tv.dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_CANCEL, 0f, 0f, 0));
+                            ShareUtil.copyLinkToClipboard(binding.getRoot().getContext(), url);
+                            return true;
+                        });
+                        binding.text.setMovementMethod(method);
                     }
                 }
             }
@@ -1872,6 +1895,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                 public String getVar() {
                     return el.getAttribute("var");
+                }
+
+                public Optional<String> getType() {
+                    return Optional.fromNullable(el.getAttribute("type"));
                 }
 
                 public Optional<String> getLabel() {
