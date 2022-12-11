@@ -167,6 +167,7 @@
     <string name="account_status_tls_error_domain">域名不可验证</string>
     <string name="account_status_policy_violation">违反政策</string>
     <string name="account_status_incompatible_server">服务器不兼容</string>
+    <string name="account_status_incompatible_client">不兼容的客户端</string>
     <string name="account_status_stream_error">流错误</string>
     <string name="account_status_stream_opening_error">流打开错误</string>
     <string name="encryption_choice_unencrypted">TLS</string>
@@ -291,8 +292,8 @@
     <string name="title_pref_enable_quiet_hours">启用静默时间段</string>
     <string name="pref_quiet_hours_summary">在静默时间段内通知将保持静音</string>
     <string name="pref_expert_options_other">其他</string>
-    <string name="pref_autojoin">与书签同步</string>
-    <string name="pref_autojoin_summary">根据书签标记自动加入群聊。</string>
+    <string name="pref_autojoin">同步书签</string>
+    <string name="pref_autojoin_summary">加入或离开多用户聊天时设置 “autojoin\" 标志，并回应其他客户端所做更改。</string>
     <string name="toast_message_omemo_fingerprint">OMEMO指纹已拷贝到剪贴板</string>
     <string name="conference_banned">您被封禁了</string>
     <string name="conference_members_only">这个群聊只允许成员聊天</string>
@@ -300,6 +301,7 @@
     <string name="conference_kicked">您被从此群聊踢出</string>
     <string name="conference_shutdown">这个群聊已被关闭</string>
     <string name="conference_unknown_error">您已不在该群组</string>
+    <string name="conference_technical_problems">你出于技术原因离开了群聊</string>
     <string name="using_account">使用帐户%s</string>
     <string name="hosted_on">托管于%s</string>
     <string name="checking_x">正在HTTP服务器中检查%s</string>
@@ -753,6 +755,7 @@
     <string name="messages_channel_name">消息</string>
     <string name="incoming_calls_channel_name">来电</string>
     <string name="ongoing_calls_channel_name">正在进行的通话</string>
+    <string name="missed_calls_channel_name">未接来电</string>
     <string name="silent_messages_channel_name">无声消息</string>
     <string name="silent_messages_channel_description">此通知组用于显示不应触发任何声音的通知。 例如，当在另一个设备上激活时（宽限期）。</string>
     <string name="delivery_failed_channel_name">发送失败</string>
@@ -893,6 +896,8 @@
     <string name="make_call">进行通话</string>
     <string name="rtp_state_incoming_call">来电</string>
     <string name="rtp_state_incoming_video_call">视频来电</string>
+    <string name="rtp_state_content_add_video">切换到视频通话？</string>
+    <string name="rtp_state_content_add">添加额外轨道？</string>
     <string name="rtp_state_connecting">正在连接</string>
     <string name="rtp_state_connected">已连接</string>
     <string name="rtp_state_reconnecting">重新连接</string>
@@ -920,6 +925,15 @@
     <string name="outgoing_call">去电</string>
     <string name="outgoing_call_duration">去电 · %s</string>
     <string name="missed_call">未接电话</string>
+    <plurals name="n_missed_calls_from_x">
+        <item quantity="other">%1$d 错过了来自 %2$s 的电话</item>
+    </plurals>
+    <plurals name="n_missed_calls">
+        <item quantity="other">%d 个未接电话</item>
+    </plurals>
+    <plurals name="n_missed_calls_from_m_contacts">
+        <item quantity="other">%1$d 个未接电话，来自 %2$d 位联系人</item>
+    </plurals>
     <string name="audio_call">语音通话</string>
     <string name="video_call">视频通话</string>
     <string name="help">帮助</string>
@@ -963,5 +977,9 @@
     <string name="account_registrations_are_not_supported">不支持注册账户</string>
     <string name="no_xmpp_adddress_found">未找到 XMPP 地址</string>
     <string name="account_status_temporary_auth_failure">临时认证失败</string>
+    <string name="delete_avatar">删除群聊</string>
+    <string name="audio_video_disabled_tor">使用 Tor 时通话被禁用</string>
+    <string name="switch_to_video">切换到视频</string>
+    <string name="reject_switch_to_video">拒绝切换到视频的请求</string>
 
 </resources>

@@ -17,5 +17,8 @@
         android:id="@+id/action_goto_chat"
         android:icon="?attr/icon_goto_chat"
         android:title="@string/switch_to_conversation"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="always" />
+    <item android:id="@+id/action_switch_to_video"
+        android:title="@string/switch_to_video"
+        app:showAsAction="never"/>
 </menu>

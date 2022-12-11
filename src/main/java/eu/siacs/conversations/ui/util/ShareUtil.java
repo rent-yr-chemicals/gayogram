@@ -158,4 +158,17 @@ public class ShareUtil {
 		}
 		return false;
 	}
+
+    public static String getLinkScheme(final SpannableStringBuilder body) {
+        MyLinkify.addLinks(body, false);
+        for (final String url : MyLinkify.extractLinks(body)) {
+            final Uri uri = Uri.parse(url);
+            if ("xmpp".equals(uri.getScheme())) {
+                return uri.getScheme();
+            } else {
+                return "http";
+            }
+        }
+        return null;
+    }
 }

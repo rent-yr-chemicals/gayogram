@@ -211,11 +211,11 @@ public class Element implements Node {
 		final StringBuilder elementOutput = new StringBuilder();
 		if (childNodes.size() == 0) {
 			Tag emptyTag = Tag.empty(name);
-			emptyTag.setAtttributes(this.attributes);
+			emptyTag.setAttributes(this.attributes);
 			elementOutput.append(emptyTag.toString());
 		} else {
 			Tag startTag = Tag.start(name);
-			startTag.setAtttributes(this.attributes);
+			startTag.setAttributes(this.attributes);
 			elementOutput.append(startTag);
 			for (Node child : childNodes) {
 				elementOutput.append(child.toString());

@@ -1,6 +1,7 @@
 package eu.siacs.conversations.services;
 
 import static eu.siacs.conversations.utils.Compatibility.s;
+import static eu.siacs.conversations.utils.Random.SECURE_RANDOM;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -40,7 +41,6 @@ import android.preference.PreferenceManager;
 import android.provider.ContactsContract;
 import android.security.KeyChain;
 import android.telephony.PhoneStateListener;
-import android.telephony.TelephonyCallback;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
@@ -50,6 +50,7 @@ import android.util.Pair;
 
 import androidx.annotation.BoolRes;
 import androidx.annotation.IntegerRes;
+import androidx.annotation.NonNull;
 import androidx.core.app.RemoteInput;
 import androidx.core.content.ContextCompat;
 
@@ -392,7 +393,6 @@ public class XmppConnectionService extends Service {
         }
     };
     private final AtomicLong mLastExpiryRun = new AtomicLong(0);
-    private SecureRandom mRandom;
     private final LruCache<Pair<String, String>, ServiceDiscoveryResult> discoCache = new LruCache<>(20);
     private final OnStatusChanged statusListener = new OnStatusChanged() {
 
@@ -464,7 +464,7 @@ public class XmppConnectionService extends Service {
                     Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": went into offline state during low ping mode. reconnecting now");
                     reconnectAccount(account, true, false);
                 } else {
-                    int timeToReconnect = mRandom.nextInt(10) + 2;
+                    final int timeToReconnect = SECURE_RANDOM.nextInt(10) + 2;
                     scheduleWakeUpCall(timeToReconnect, account.getUuid().hashCode());
                 }
             } else if (account.getStatus() == Account.State.REGISTRATION_SUCCESSFUL) {
@@ -967,9 +967,11 @@ public class XmppConnectionService extends Service {
 
     public boolean isDataSaverDisabled() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            ConnectivityManager connectivityManager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+            final ConnectivityManager connectivityManager =
+                    (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
             return !connectivityManager.isActiveNetworkMetered()
-                    || connectivityManager.getRestrictBackgroundStatus() == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_DISABLED;
+                    || Compatibility.getRestrictBackgroundStatus(connectivityManager)
+                            == ConnectivityManager.RESTRICT_BACKGROUND_STATUS_DISABLED;
         } else {
             return true;
         }
@@ -1164,7 +1166,6 @@ public class XmppConnectionService extends Service {
             Log.e(Config.LOGTAG, "unable to initialize security provider", throwable);
         }
         Resolver.init(this);
-        this.mRandom = new SecureRandom();
         updateMemorizingTrustmanager();
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 9;
@@ -1900,7 +1901,7 @@ public class XmppConnectionService extends Service {
         IqPacket iqPacket = new IqPacket(IqPacket.TYPE.SET);
         Element query = iqPacket.query("jabber:iq:private");
         Element storage = query.addChild("storage", "storage:bookmarks");
-        for (Bookmark bookmark : account.getBookmarks()) {
+        for (final Bookmark bookmark : account.getBookmarks()) {
             storage.addChild(bookmark);
         }
         sendIqPacket(account, iqPacket, mDefaultIqHandler);
@@ -1910,8 +1911,8 @@ public class XmppConnectionService extends Service {
         if (!account.areBookmarksLoaded()) return;
 
         Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": pushing bookmarks via pep");
-        Element storage = new Element("storage", "storage:bookmarks");
-        for (Bookmark bookmark : account.getBookmarks()) {
+        final Element storage = new Element("storage", "storage:bookmarks");
+        for (final Bookmark bookmark : account.getBookmarks()) {
             storage.addChild(bookmark);
         }
         pushNodeAndEnforcePublishOptions(account, Namespace.BOOKMARKS, storage, "current", PublishOptions.persistentWhitelistAccess());
@@ -1979,7 +1980,7 @@ public class XmppConnectionService extends Service {
                     databaseBackend.expireOldMessages(deletionDate);
                 }
                 Log.d(Config.LOGTAG, "restoring roster...");
-                for (Account account : accounts) {
+                for (final Account account : accounts) {
                     databaseBackend.readRoster(account.getRoster());
                     account.initAccountServices(XmppConnectionService.this); //roster needs to be loaded at this stage
                 }
@@ -1999,7 +2000,7 @@ public class XmppConnectionService extends Service {
                         restoreMessages(conversation);
                     }
                 }
-                mNotificationService.finishBacklog(false);
+                mNotificationService.finishBacklog();
                 restoredFromDatabaseLatch.countDown();
                 final long diffMessageRestore = SystemClock.elapsedRealtime() - startMessageRestore;
                 Log.d(Config.LOGTAG, "finished restoring messages in " + diffMessageRestore + "ms");
@@ -2017,11 +2018,11 @@ public class XmppConnectionService extends Service {
 
     public void loadPhoneContacts() {
         mContactMergerExecutor.execute(() -> {
-            Map<Jid, JabberIdContact> contacts = JabberIdContact.load(this);
+            final Map<Jid, JabberIdContact> contacts = JabberIdContact.load(this);
             Log.d(Config.LOGTAG, "start merging phone contacts with roster");
-            for (Account account : accounts) {
-                List<Contact> withSystemAccounts = account.getRoster().getWithSystemAccounts(JabberIdContact.class);
-                for (JabberIdContact jidContact : contacts.values()) {
+            for (final Account account : accounts) {
+                final List<Contact> withSystemAccounts = account.getRoster().getWithSystemAccounts(JabberIdContact.class);
+                for (final JabberIdContact jidContact : contacts.values()) {
                     final Contact contact = account.getRoster().getContact(jidContact.getJid());
                     boolean needsCacheClean = contact.setPhoneContact(jidContact);
                     if (needsCacheClean) {
@@ -2029,7 +2030,7 @@ public class XmppConnectionService extends Service {
                     }
                     withSystemAccounts.remove(contact);
                 }
-                for (Contact contact : withSystemAccounts) {
+                for (final Contact contact : withSystemAccounts) {
                     boolean needsCacheClean = contact.unsetPhoneContact(JabberIdContact.class);
                     if (needsCacheClean) {
                         getAvatarService().clear(contact);
@@ -2859,7 +2860,6 @@ public class XmppConnectionService extends Service {
             }
         });
     }
-
     public void joinMuc(Conversation conversation) {
         joinMuc(conversation, null, false);
     }
@@ -3077,6 +3077,71 @@ public class XmppConnectionService extends Service {
         }
     }
 
+    public void deleteAvatar(final Account account) {
+        final AtomicBoolean executed = new AtomicBoolean(false);
+        final Runnable onDeleted =
+                () -> {
+                    if (executed.compareAndSet(false, true)) {
+                        account.setAvatar(null);
+                        databaseBackend.updateAccount(account);
+                        getAvatarService().clear(account);
+                        updateAccountUi();
+                    }
+                };
+        deleteVcardAvatar(account, onDeleted);
+        deletePepNode(account, Namespace.AVATAR_DATA);
+        deletePepNode(account, Namespace.AVATAR_METADATA, onDeleted);
+    }
+
+    public void deletePepNode(final Account account, final String node) {
+        deletePepNode(account, node, null);
+    }
+
+    private void deletePepNode(final Account account, final String node, final Runnable runnable) {
+        final IqPacket request = mIqGenerator.deleteNode(node);
+        sendIqPacket(account, request, (a, packet) -> {
+            if (packet.getType() == IqPacket.TYPE.RESULT) {
+                Log.d(Config.LOGTAG,a.getJid().asBareJid()+": successfully deleted pep node "+node);
+                if (runnable != null) {
+                    runnable.run();
+                }
+            } else {
+                Log.d(Config.LOGTAG,a.getJid().asBareJid()+": failed to delete "+ packet);
+            }
+        });
+    }
+
+    private void deleteVcardAvatar(final Account account, @NonNull final Runnable runnable) {
+        final IqPacket retrieveVcard = mIqGenerator.retrieveVcardAvatar(account.getJid().asBareJid());
+        sendIqPacket(account, retrieveVcard, (a, response) -> {
+            if (response.getType() != IqPacket.TYPE.RESULT) {
+                Log.d(Config.LOGTAG,a.getJid().asBareJid()+": no vCard set. nothing to do");
+                return;
+            }
+            final Element vcard = response.findChild("vCard", "vcard-temp");
+            if (vcard == null) {
+                Log.d(Config.LOGTAG,a.getJid().asBareJid()+": no vCard set. nothing to do");
+                return;
+            }
+            Element photo = vcard.findChild("PHOTO");
+            if (photo == null) {
+                photo = vcard.addChild("PHOTO");
+            }
+            photo.clearChildren();
+            IqPacket publication = new IqPacket(IqPacket.TYPE.SET);
+            publication.setTo(a.getJid().asBareJid());
+            publication.addChild(vcard);
+            sendIqPacket(account, publication, (a1, publicationResponse) -> {
+                if (publicationResponse.getType() == IqPacket.TYPE.RESULT) {
+                    Log.d(Config.LOGTAG,a1.getJid().asBareJid()+": successfully deleted vcard avatar");
+                    runnable.run();
+                } else {
+                    Log.d(Config.LOGTAG, "failed to publish vcard " + publicationResponse.getErrorCondition());
+                }
+            });
+        });
+    }
+
     private boolean hasEnabledAccounts() {
         if (this.accounts == null) {
             return false;
@@ -3253,7 +3318,7 @@ public class XmppConnectionService extends Service {
                     }
                     return false;
                 }
-                final Jid jid = Jid.of(CryptoHelper.pronounceable(getRNG()), server, null);
+                final Jid jid = Jid.of(CryptoHelper.pronounceable(), server, null);
                 final Conversation conversation = findOrCreateConversation(account, jid, true, false, true);
                 joinMuc(conversation, new OnConferenceJoined() {
                     @Override
@@ -3673,7 +3738,7 @@ public class XmppConnectionService extends Service {
                 if (result.getType() == IqPacket.TYPE.RESULT) {
                     publishAvatarMetadata(account, avatar, options, true, callback);
                 } else if (retry && PublishOptions.preconditionNotMet(result)) {
-                    pushNodeConfiguration(account, "urn:xmpp:avatar:data", options, new OnConfigurationPushed() {
+                    pushNodeConfiguration(account, Namespace.AVATAR_DATA, options, new OnConfigurationPushed() {
                         @Override
                         public void onPushSucceeded() {
                             Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": changed node configuration for avatar node");
@@ -3713,7 +3778,7 @@ public class XmppConnectionService extends Service {
                         callback.onAvatarPublicationSucceeded();
                     }
                 } else if (retry && PublishOptions.preconditionNotMet(result)) {
-                    pushNodeConfiguration(account, "urn:xmpp:avatar:metadata", options, new OnConfigurationPushed() {
+                    pushNodeConfiguration(account, Namespace.AVATAR_METADATA, options, new OnConfigurationPushed() {
                         @Override
                         public void onPushSucceeded() {
                             Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": changed node configuration for avatar meta data node");
@@ -4358,10 +4423,6 @@ public class XmppConnectionService extends Service {
         }
     }
 
-    public SecureRandom getRNG() {
-        return this.mRandom;
-    }
-
     public MemorizingTrustManager getMemorizingTrustManager() {
         return this.mMemorizingTrustManager;
     }
@@ -4419,7 +4480,7 @@ public class XmppConnectionService extends Service {
         for (final Account account : accounts) {
             if (account.getXmppConnection() != null) {
                 mucServers.addAll(account.getXmppConnection().getMucServers());
-                for (Bookmark bookmark : account.getBookmarks()) {
+                for (final Bookmark bookmark : account.getBookmarks()) {
                     final Jid jid = bookmark.getJid();
                     final String s = jid == null ? null : jid.getDomain().toEscapedString();
                     if (s != null) {
@@ -4500,7 +4561,6 @@ public class XmppConnectionService extends Service {
         for (Account account : getAccounts()) {
             if (account.isOnlineAndConnected() && mPushManagementService.available(account)) {
                 mPushManagementService.registerPushTokenOnServer(account);
-                //TODO renew mucs
             }
         }
     }

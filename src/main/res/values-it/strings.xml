@@ -173,6 +173,7 @@
     <string name="account_status_tls_error_domain">Dominio non verificabile</string>
     <string name="account_status_policy_violation">Violazione della policy</string>
     <string name="account_status_incompatible_server">Server non compatibile</string>
+    <string name="account_status_incompatible_client">Client non compatibile</string>
     <string name="account_status_stream_error">Errore di stream</string>
     <string name="account_status_stream_opening_error">Errore apertura flusso</string>
     <string name="encryption_choice_unencrypted">TLS</string>
@@ -297,8 +298,8 @@
     <string name="title_pref_enable_quiet_hours">Attiva ore di quiete</string>
     <string name="pref_quiet_hours_summary">Le notifiche verranno silenziate durante le ore di quiete</string>
     <string name="pref_expert_options_other">Altro</string>
-    <string name="pref_autojoin">Sincronizza con i segnalibri</string>
-    <string name="pref_autojoin_summary">Entra nelle chat di gruppo automaticamente se il segnalibro dice così</string>
+    <string name="pref_autojoin">Sincronizza i segnalibri</string>
+    <string name="pref_autojoin_summary">Imposta il flag \"auto-entrata\" quando entri o esci da un MUC e reagisci alle modifiche fatte dagli altri client.</string>
     <string name="toast_message_omemo_fingerprint">Impronta OMEMO copiata negli appunti</string>
     <string name="conference_banned">Sei stato bandito da questa chat di gruppo</string>
     <string name="conference_members_only">Questa chat di gruppo è solo per membri</string>
@@ -306,6 +307,7 @@
     <string name="conference_kicked">Sei stato buttato fuori da questa chat di gruppo</string>
     <string name="conference_shutdown">La chat di gruppo è stata chiusa</string>
     <string name="conference_unknown_error">Non sei più in questa chat di gruppo</string>
+    <string name="conference_technical_problems">Hai lasciato questa chat di gruppo per motivi tecnici</string>
     <string name="using_account">usando il profilo %s</string>
     <string name="hosted_on">ospitato su %s</string>
     <string name="checking_x">Controllo %s su host HTTP</string>
@@ -420,6 +422,7 @@
     <string name="video">video</string>
     <string name="image">immagine</string>
     <string name="vector_graphic">grafica vettoriale</string>
+    <string name="multimedia_file">file multimediale</string>
     <string name="pdf_document">Documento PDF</string>
     <string name="apk">Applicazione Android</string>
     <string name="vcard">Contatto</string>
@@ -774,6 +777,7 @@
     <string name="messages_channel_name">Messaggi</string>
     <string name="incoming_calls_channel_name">Chiamate in arrivo</string>
     <string name="ongoing_calls_channel_name">Chiamate in uscita</string>
+    <string name="missed_calls_channel_name">Chiamate perse</string>
     <string name="silent_messages_channel_name">Messaggi silenziosi</string>
     <string name="silent_messages_channel_description">Questo gruppo di notifiche è usato per mostrare notifiche che non devono riprodurre alcun suono. Ad esempio mentre si è attivi su un altro dispositivo (Periodo di grazia).</string>
     <string name="delivery_failed_channel_name">Recapiti falliti</string>
@@ -914,6 +918,8 @@
     <string name="make_call">Chiama</string>
     <string name="rtp_state_incoming_call">Chiamata in arrivo</string>
     <string name="rtp_state_incoming_video_call">Chiamata video in arrivo</string>
+    <string name="rtp_state_content_add_video">Passare a una videochiamata?</string>
+    <string name="rtp_state_content_add">Aggiungere altre tracce?</string>
     <string name="rtp_state_connecting">Connessione</string>
     <string name="rtp_state_connected">Connesso</string>
     <string name="rtp_state_reconnecting">Riconnessione</string>
@@ -941,6 +947,21 @@
     <string name="outgoing_call">Chiamata in uscita</string>
     <string name="outgoing_call_duration">Chiamata in uscita · %s</string>
     <string name="missed_call">Chiamata persa</string>
+    <plurals name="n_missed_calls_from_x">
+        <item quantity="one">%1$d chiamata persa da %2$s</item>
+        <item quantity="many">%1$d chiamate perse da %2$s</item>
+        <item quantity="other">%1$d chiamate perse da %2$s</item>
+    </plurals>
+    <plurals name="n_missed_calls">
+        <item quantity="one">%d chiamata persa</item>
+        <item quantity="many">%d chiamate perse</item>
+        <item quantity="other">%d chiamate perse</item>
+    </plurals>
+    <plurals name="n_missed_calls_from_m_contacts">
+        <item quantity="one">%1$d chiamate perse da %2$d contatto</item>
+        <item quantity="many">%1$d chiamate perse da %2$d contatti</item>
+        <item quantity="other">%1$d chiamate perse da %2$d contatti</item>
+    </plurals>
     <string name="audio_call">Chiamata vocale</string>
     <string name="video_call">Chiamata video</string>
     <string name="help">Aiuto</string>
@@ -988,5 +1009,9 @@
     <string name="account_registrations_are_not_supported">Le registrazioni di profili non sono supportate</string>
     <string name="no_xmpp_adddress_found">Nessun indirizzo XMPP trovato</string>
     <string name="account_status_temporary_auth_failure">Errore di autenticazione temporaneo</string>
+    <string name="delete_avatar">Elimina avatar</string>
+    <string name="audio_video_disabled_tor">Le chiamate sono disattivate quando si usa Tor</string>
+    <string name="switch_to_video">Passa al video</string>
+    <string name="reject_switch_to_video">Rifiuta richiesta di passare al video</string>
 
 </resources>

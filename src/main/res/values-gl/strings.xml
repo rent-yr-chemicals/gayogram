@@ -170,6 +170,7 @@
     <string name="account_status_tls_error_domain">Dominio non verificable</string>
     <string name="account_status_policy_violation">Violación da política</string>
     <string name="account_status_incompatible_server">Servidor incompatible</string>
+    <string name="account_status_incompatible_client">Cliente non compatible</string>
     <string name="account_status_stream_error">Erro de fluxo</string>
     <string name="account_status_stream_opening_error">Fallo ao abrir o fluxo</string>
     <string name="encryption_choice_unencrypted">TLS</string>
@@ -294,8 +295,8 @@
     <string name="title_pref_enable_quiet_hours">Establecer horario sen notificacións</string>
     <string name="pref_quiet_hours_summary">As notificacións serán silenciadas durante estas horas</string>
     <string name="pref_expert_options_other">Outro</string>
-    <string name="pref_autojoin">Sincronizar cos marcadores</string>
-    <string name="pref_autojoin_summary">Unirte as conversas en grupo automáticamente se o marcador así o indica</string>
+    <string name="pref_autojoin">Sincronizar marcadores</string>
+    <string name="pref_autojoin_summary">Poñer marca de \"autojoin\" ao entrar ou deixar unha MUC e reaccionar ás modificacións feitas desde outros clientes.</string>
     <string name="toast_message_omemo_fingerprint">Copiouse a impresión dixital OMEMO ao portapapeis</string>
     <string name="conference_banned">Non podes acceder a esta conversa en grupo</string>
     <string name="conference_members_only">Esta conversa en grupo é so para membros</string>
@@ -303,6 +304,7 @@
     <string name="conference_kicked">Xa foi expulsado de esta conversa en grupo</string>
     <string name="conference_shutdown">A conversa en grupo foi apagada</string>
     <string name="conference_unknown_error">Xa non estás nesta conversa en grupo</string>
+    <string name="conference_technical_problems">Deixaches esta conversa en grupo por razóns técnicas</string>
     <string name="using_account">utilizando a conta %s</string>
     <string name="hosted_on">hospedado en %s</string>
     <string name="checking_x">Comprobando %s no servidor HTTP</string>
@@ -764,6 +766,7 @@
     <string name="messages_channel_name">Mensaxes</string>
     <string name="incoming_calls_channel_name">Chamadas recibidas</string>
     <string name="ongoing_calls_channel_name">Chamadas realizadas</string>
+    <string name="missed_calls_channel_name">Chamadas perdidas</string>
     <string name="silent_messages_channel_name">Mensaxes acalados</string>
     <string name="silent_messages_channel_description">Este grupo de notificacións é utilizado para mostrar notificacións que non debería activar ningún son. Por exemplo, cando está activo en outro dispositivo (Período de Graza).</string>
     <string name="delivery_failed_channel_name">Entregas fallidas</string>
@@ -904,6 +907,8 @@
     <string name="make_call">Facer unha chamada</string>
     <string name="rtp_state_incoming_call">Chamada entrante</string>
     <string name="rtp_state_incoming_video_call">Videochamada entrante</string>
+    <string name="rtp_state_content_add_video">Cambiar a unha chamada de vídeo?</string>
+    <string name="rtp_state_content_add">Engadir pistas adicionais?</string>
     <string name="rtp_state_connecting">Conectando</string>
     <string name="rtp_state_connected">Conectado</string>
     <string name="rtp_state_reconnecting">Reconectando</string>
@@ -931,6 +936,18 @@
     <string name="outgoing_call">Chamada realizada</string>
     <string name="outgoing_call_duration">Conversa de · %s</string>
     <string name="missed_call">Chamada perdida</string>
+    <plurals name="n_missed_calls_from_x">
+        <item quantity="one">%1$d chamada perdida de %2$s</item>
+        <item quantity="other">%1$d chamadas perdidas de %2$s</item>
+    </plurals>
+    <plurals name="n_missed_calls">
+        <item quantity="one">%d chamada perdida</item>
+        <item quantity="other">%d chamadas perdidas</item>
+    </plurals>
+    <plurals name="n_missed_calls_from_m_contacts">
+        <item quantity="one">%1$d chamadas perdidas de %2$d contacto</item>
+        <item quantity="other">%1$d chamadas perdidas de %2$d contactos</item>
+    </plurals>
     <string name="audio_call">Chamada de audio</string>
     <string name="video_call">Chamada de vídeo</string>
     <string name="help">Axuda</string>
@@ -976,5 +993,9 @@
     <string name="account_registrations_are_not_supported">Non está permitido o rexistro de novas contas</string>
     <string name="no_xmpp_adddress_found">Non se atopa un enderezo XMPP</string>
     <string name="account_status_temporary_auth_failure">Fallo temporal da autenticación</string>
+    <string name="delete_avatar">Eliminar avatar</string>
+    <string name="audio_video_disabled_tor">As chamadas están desactivadas cando usas Tor</string>
+    <string name="switch_to_video">Cambiar a vídeo</string>
+    <string name="reject_switch_to_video">Rexeitar a solicitude para cambiar a vídeo</string>
 
 </resources>

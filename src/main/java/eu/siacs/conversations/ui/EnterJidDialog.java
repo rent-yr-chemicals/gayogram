@@ -284,14 +284,14 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         }
 
         if (p == null) {
-            finish.onGatewayResult(binding.jid.getText().toString(), null);
+            finish.onGatewayResult(binding.jid.getText().toString().trim(), null);
         } else if (p.first != null) { // Gateway already responsed to jabber:iq:gateway once
             final Account acct = ((XmppActivity) getActivity()).xmppConnectionService.findAccountByJid(accountJid);
-            ((XmppActivity) getActivity()).xmppConnectionService.fetchFromGateway(acct, p.second.first, binding.jid.getText().toString(), finish);
+            ((XmppActivity) getActivity()).xmppConnectionService.fetchFromGateway(acct, p.second.first, binding.jid.getText().toString().trim(), finish);
         } else if (p.second.first.isDomainJid() && p.second.second.getServiceDiscoveryResult().getFeatures().contains("jid\\20escaping")) {
-            finish.onGatewayResult(Jid.ofLocalAndDomain(binding.jid.getText().toString(), p.second.first.getDomain().toString()).toString(), null);
+            finish.onGatewayResult(Jid.ofLocalAndDomain(binding.jid.getText().toString().trim(), p.second.first.getDomain().toString()).toString(), null);
         } else if (p.second.first.isDomainJid()) {
-            finish.onGatewayResult(Jid.ofLocalAndDomain(binding.jid.getText().toString().replace("@", "%"), p.second.first.getDomain().toString()).toString(), null);
+            finish.onGatewayResult(Jid.ofLocalAndDomain(binding.jid.getText().toString().trim().replace("@", "%"), p.second.first.getDomain().toString()).toString(), null);
         } else {
             finish.onGatewayResult(null, null);
         }

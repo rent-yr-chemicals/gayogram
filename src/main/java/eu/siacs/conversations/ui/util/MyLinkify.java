@@ -35,7 +35,15 @@ import android.text.Editable;
 import android.text.style.URLSpan;
 import android.text.util.Linkify;
 
+import com.google.common.collect.Collections2;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.ListItem;
@@ -142,6 +150,35 @@ public class MyLinkify {
                     );
                 } catch (final IllegalArgumentException e) { /* bad JID */ }
             }
+        }
+    }
+
+    public static List<String> extractLinks(final Editable body) {
+        MyLinkify.addLinks(body, false);
+        final Collection<URLSpan> spans =
+                Arrays.asList(body.getSpans(0, body.length() - 1, URLSpan.class));
+        final Collection<UrlWrapper> urlWrappers =
+                Collections2.filter(
+                        Collections2.transform(
+                                spans,
+                                s ->
+                                        s == null
+                                                ? null
+                                                : new UrlWrapper(body.getSpanStart(s), s.getURL())),
+                        uw -> uw != null);
+        List<UrlWrapper> sorted = ImmutableList.sortedCopyOf(
+                (a, b) -> Integer.compare(a.position, b.position), urlWrappers);
+        return Lists.transform(sorted, uw -> uw.url);
+
+    }
+
+    private static class UrlWrapper {
+        private final int position;
+        private final String url;
+
+        private UrlWrapper(int position, String url) {
+            this.position = position;
+            this.url = url;
         }
     }
 }
