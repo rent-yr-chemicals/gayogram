@@ -50,7 +50,7 @@ import eu.siacs.conversations.ui.ConversationsActivity;
 @SuppressLint("ParcelCreator")
 public class FixedURLSpan extends URLSpan {
 
-	private FixedURLSpan(String url) {
+	public FixedURLSpan(String url) {
 		super(url);
 	}
 

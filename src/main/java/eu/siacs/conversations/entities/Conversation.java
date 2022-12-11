@@ -1,9 +1,6 @@
 package eu.siacs.conversations.entities;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.ContentValues;
-import android.content.Context;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.graphics.Rect;
@@ -82,6 +79,8 @@ import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.services.XmppConnectionService;
+import eu.siacs.conversations.ui.text.FixedURLSpan;
+import eu.siacs.conversations.ui.util.ShareUtil;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.utils.MessageUtils;
 import eu.siacs.conversations.utils.UIHelper;
@@ -1500,11 +1499,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     }
                     binding.values.setAdapter(values);
 
-                    ClipboardManager clipboard = (ClipboardManager) binding.getRoot().getContext().getSystemService(Context.CLIPBOARD_SERVICE);
                     binding.values.setOnItemLongClickListener((arg0, arg1, pos, id) -> {
-                        ClipData myClip = ClipData.newPlainText("text", values.getItem(pos));
-                        clipboard.setPrimaryClip(myClip);
-                        Toast.makeText(binding.getRoot().getContext(), R.string.message_copied_to_clipboard, Toast.LENGTH_SHORT).show();
+                        if (ShareUtil.copyTextToClipboard(binding.getRoot().getContext(), values.getItem(pos), R.string.message)) {
+                            Toast.makeText(binding.getRoot().getContext(), R.string.message_copied_to_clipboard, Toast.LENGTH_SHORT).show();
+                        }
                         return true;
                     });
                 }
