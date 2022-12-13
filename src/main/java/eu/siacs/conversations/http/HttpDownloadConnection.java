@@ -195,9 +195,12 @@ public class HttpDownloadConnection implements Transferable {
         try {
             mXmppConnectionService.getFileBackend().setupRelativeFilePath(message, new FileInputStream(tmp), extension);
             file = mXmppConnectionService.getFileBackend().getFile(message);
-            tmp.renameTo(file);
+            boolean didRename = tmp.renameTo(file);
+            if (!didRename) throw new IOException("rename failed");
         } catch (final IOException e) {
+            Log.w(Config.LOGTAG, "Failed to rename downloaded file: " + e);
             file = tmp;
+            message.setRelativeFilePath(file.getAbsolutePath());
         }
         message.setTransferable(null);
         mXmppConnectionService.updateMessage(message);

@@ -133,9 +133,11 @@ public class JingleFileTransferConnection extends AbstractJingleConnection imple
                 try {
                     xmppConnectionService.getFileBackend().setupRelativeFilePath(message, new FileInputStream(file), extension);
                     finalFile = xmppConnectionService.getFileBackend().getFile(message);
-                    file.renameTo(finalFile);
+                    boolean didRename = file.renameTo(finalFile);
+                    if (!didRename) throw new IOException("rename failed");
                 } catch (final IOException e) {
                     finalFile = file;
+                    message.setRelativeFilePath(finalFile.getAbsolutePath());
                 }
 
                 xmppConnectionService.getFileBackend().updateFileParams(message, null, false);
