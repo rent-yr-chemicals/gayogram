@@ -1,6 +1,7 @@
 package eu.siacs.conversations.xml;
 
 import com.google.common.base.Optional;
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Ints;
 
 import org.jetbrains.annotations.NotNull;
@@ -134,13 +135,13 @@ public class Element implements Node {
 	}
 
 	public final List<Element> getChildren() {
-		return this.children;
+		return ImmutableList.copyOf(this.children);
 	}
 
 	// Deprecated: you probably want bindTo or replaceChildren
 	public Element setChildren(List<Element> children) {
 		this.childNodes = new ArrayList(children);
-		this.children = children;
+		this.children = new ArrayList(children);
 		return this;
 	}
 
