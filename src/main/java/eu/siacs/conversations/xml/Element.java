@@ -71,6 +71,8 @@ public class Element implements Node {
 	}
 
 	public void removeChild(Node child) {
+		if (child == null) return;
+
 		this.childNodes.remove(child);
 		if (child instanceof Element) this.children.remove(child);
 	}
