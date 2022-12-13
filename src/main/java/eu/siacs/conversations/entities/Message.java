@@ -1125,6 +1125,16 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             if (runtime > 0) builder.append('|').append(runtime);
             return builder.toString();
         }
+
+        public boolean equals(Object o) {
+            if (!(o instanceof FileParams)) return false;
+
+            return url.equals(((FileParams) o).url);
+        }
+
+        public int hashCode() {
+            return url.hashCode();
+        }
     }
 
     public void setFingerprint(String fingerprint) {
