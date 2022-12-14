@@ -1179,6 +1179,26 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             return sims;
         }
 
+        public List<Element> getThumbnails() {
+            List<Element> thumbs = new ArrayList<>();
+            if (sims == null) return thumbs;
+
+            Element mediaSharing = sims.findChild("media-sharing", "urn:xmpp:sims:1");
+            if (mediaSharing == null) return thumbs;
+            Element file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:5");
+            if (file == null) file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:4");
+            if (file == null) file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:3");
+            if (file == null) return thumbs;
+
+            for (Element child : file.getChildren()) {
+                if (child.getName().equals("thumbnail") && child.getNamespace().equals("urn:xmpp:thumbs:1")) {
+                    thumbs.add(child);
+                }
+            }
+
+            return thumbs;
+        }
+
         public String toString() {
             final StringBuilder builder = new StringBuilder();
             if (url != null) builder.append(url);
