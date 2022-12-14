@@ -37,6 +37,8 @@ import androidx.annotation.StringRes;
 import androidx.core.content.FileProvider;
 import androidx.exifinterface.media.ExifInterface;
 
+import com.cheogram.android.BobTransfer;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
@@ -1073,6 +1075,13 @@ public class FileBackend {
                             if (thumbnail != null) {
                                 cache.put(file.getAbsolutePath(), thumbnail);
                                 return thumbnail;
+                            }
+                        } else if (uri.getScheme().equals("cid")) {
+                            Cid cid = BobTransfer.cid(uri);
+                            if (cid == null) continue;
+                            DownloadableFile f = mXmppConnectionService.getFileForCid(cid);
+                            if (f != null && f.canRead()) {
+                                return getThumbnail(f, res, size, cacheOnly);
                             }
                         }
                     }
