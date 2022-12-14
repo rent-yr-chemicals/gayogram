@@ -1,5 +1,6 @@
 package com.cheogram.android;
 
+import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
 
@@ -34,6 +35,11 @@ public class BobTransfer implements Transferable {
 	protected Account account;
 	protected Jid to;
 	protected XmppConnectionService xmppConnectionService;
+
+	public static Cid cid(Uri uri) {
+		if (!uri.getScheme().equals("cid")) return null;
+		return cid(uri.getSchemeSpecificPart());
+	}
 
 	public static Cid cid(URI uri) {
 		if (!uri.getScheme().equals("cid")) return null;
