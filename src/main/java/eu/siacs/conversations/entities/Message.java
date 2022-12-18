@@ -7,6 +7,7 @@ import android.graphics.Color;
 import android.os.Build;
 import android.text.Html;
 import android.text.SpannableStringBuilder;
+import android.util.Base64;
 import android.util.Log;
 
 import com.cheogram.android.BobTransfer;
@@ -24,6 +25,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -1189,6 +1191,24 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             if (file == null) file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:4");
             if (file == null) file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:3");
             return file;
+        }
+
+        public List<Cid> getCids() {
+            List<Cid> cids = new ArrayList<>();
+            Element file = getFileElement();
+            if (file == null) return cids;
+
+            for (Element child : file.getChildren()) {
+                if (child.getName().equals("hash") && child.getNamespace().equals("urn:xmpp:hashes:2")) {
+                    try {
+                        cids.add(CryptoHelper.cid(Base64.decode(child.getContent(), Base64.DEFAULT), child.getAttribute("algo")));
+                    } catch (final NoSuchAlgorithmException | IllegalStateException e) { }
+                }
+            }
+
+            cids.sort((x, y) -> y.getType().compareTo(x.getType()));
+
+            return cids;
         }
 
         public List<Element> getThumbnails() {
