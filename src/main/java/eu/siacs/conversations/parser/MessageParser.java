@@ -5,6 +5,7 @@ import android.util.Pair;
 
 import com.cheogram.android.BobTransfer;
 
+import java.io.File;
 import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -17,6 +18,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import io.ipfs.cid.Cid;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
@@ -775,9 +778,21 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                 processMessageReceipts(account, packet, remoteMsgId, query);
             }
 
+            if (message.getFileParams() != null) {
+                for (Cid cid : message.getFileParams().getCids()) {
+                    File f = mXmppConnectionService.getFileForCid(cid);
+                    if (f != null && f.canRead()) {
+                        message.setRelativeFilePath(f.getAbsolutePath());
+                        mXmppConnectionService.getFileBackend().updateFileParams(message, null, false);
+                        break;
+                    }
+                }
+            }
+
             mXmppConnectionService.databaseBackend.createMessage(message);
+
             final HttpConnectionManager manager = this.mXmppConnectionService.getHttpConnectionManager();
-            if (message.trusted() && message.treatAsDownloadable() && manager.getAutoAcceptFileSize() > 0) {
+            if (message.getRelativeFilePath() == null && message.trusted() && message.treatAsDownloadable() && manager.getAutoAcceptFileSize() > 0) {
                 if (message.getOob() != null && message.getOob().getScheme().equalsIgnoreCase("cid")) {
                     try {
                         BobTransfer transfer = new BobTransfer.ForMessage(message, mXmppConnectionService);
