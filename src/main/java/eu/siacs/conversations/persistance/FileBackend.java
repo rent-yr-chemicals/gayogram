@@ -1693,7 +1693,8 @@ public class FileBackend {
         final boolean image =
                 message.getType() == Message.TYPE_IMAGE
                         || (mime != null && mime.startsWith("image/"));
-        Message.FileParams fileParams = new Message.FileParams();
+        Message.FileParams fileParams = message.getFileParams();
+        if (fileParams == null) fileParams = new Message.FileParams();
         if (url != null) {
             fileParams.url = url;
         }
