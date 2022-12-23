@@ -61,7 +61,7 @@
                 android:id="@+id/message_content"
                 layout="@layout/message_content" />
 
-            <LinearLayout
+            <com.wefika.flowlayout.FlowLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="right"
@@ -119,7 +119,7 @@
                     android:alpha="0.54"
                     android:gravity="center_vertical"
                     android:src="@drawable/ic_done_black_18dp" />
-            </LinearLayout>
+            </com.wefika.flowlayout.FlowLayout>
         </LinearLayout>
     </LinearLayout>
 
