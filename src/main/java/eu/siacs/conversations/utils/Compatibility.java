@@ -141,6 +141,18 @@ public class Compatibility {
                 }
             }
         }
+
+        try {
+            Class.forName("io.sentry.Sentry");
+            Preference preference = settingsFragment.findPreference("never_send");
+            if (preference != null) {
+                for (PreferenceCategory category : categories) {
+                    if (category != null) {
+                        category.removePreference(preference);
+                    }
+                }
+            }
+        } catch (final ClassNotFoundException e) { }
     }
 
     public static void startService(Context context, Intent intent) {
