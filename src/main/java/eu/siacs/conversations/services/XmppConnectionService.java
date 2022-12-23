@@ -4195,7 +4195,7 @@ public class XmppConnectionService extends Service {
         }
     }
 
-    private SharedPreferences getPreferences() {
+    public SharedPreferences getPreferences() {
         return PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
     }
 

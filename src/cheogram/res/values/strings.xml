@@ -25,4 +25,6 @@
     <string name="action_execute">Go</string>
     <string name="pref_theme_oledblack">OLED Black</string>
     <string name="invite_to_app">Invite to Chat</string>
+    <string name="pref_dialler_integration_incoming">Use Phone Accounts for Incoming Calls</string>
+    <string name="pref_dialler_integration_incoming_summary">Incoming calls from phone numbers may ring with your system dialler instead of this app\'s notification settings</string>
 </resources>

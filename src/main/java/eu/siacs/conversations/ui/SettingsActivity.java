@@ -36,6 +36,7 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.crypto.OmemoSetting;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.services.ExportBackupService;
 import eu.siacs.conversations.services.MemorizingTrustManager;
@@ -88,7 +89,26 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
     }
 
     @Override
-    void onBackendConnected() {}
+    void onBackendConnected() {
+        boolean diallerIntegrationPossible = false;
+
+        if (Build.VERSION.SDK_INT >= 23) {
+            outer:
+            for (Account account : xmppConnectionService.getAccounts()) {
+                for (Contact contact : account.getRoster().getContacts()) {
+                    if (contact.getPresences().anyIdentity("gateway", "pstn")) {
+                        diallerIntegrationPossible = true;
+                        break outer;
+                    }
+                }
+            }
+        }
+        if (!diallerIntegrationPossible) {
+            PreferenceCategory cat = (PreferenceCategory) mSettingsFragment.findPreference("notification_category");
+            Preference pref = mSettingsFragment.findPreference("dialler_integration_incoming");
+            if (cat != null && pref != null) cat.removePreference(pref);
+        }
+    }
 
     @Override
     public void onStart() {
