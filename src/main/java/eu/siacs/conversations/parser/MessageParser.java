@@ -602,6 +602,22 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                 }
             }
 
+            Element addresses = packet.findChild("addresses", "http://jabber.org/protocol/address");
+            if (status == Message.STATUS_RECEIVED && addresses != null) {
+                for (Element address : addresses.getChildren()) {
+                    if (!address.getName().equals("address") || !address.getNamespace().equals("http://jabber.org/protocol/address")) continue;
+
+                    if (address.getAttribute("type").equals("ofrom") && address.getAttribute("jid") != null) {
+                        Jid ofrom = address.getAttributeAsJid("jid");
+                        if (InvalidJid.isValid(ofrom) && ofrom.getDomain().equals(counterpart.getDomain()) &&
+                            conversation.getAccount().getRoster().getContact(counterpart.getDomain()).getPresences().anySupport("http://jabber.org/protocol/address")) {
+
+                            message.setTrueCounterpart(ofrom);
+                        }
+                    }
+                }
+            }
+
             if (html != null) message.addPayload(html);
             message.setSubject(original.findChildContent("subject"));
             message.setCounterpart(counterpart);

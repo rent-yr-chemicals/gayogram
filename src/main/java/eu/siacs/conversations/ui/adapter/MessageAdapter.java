@@ -267,7 +267,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 error = true;
                 break;
             default:
-                if (mForceNames || multiReceived) {
+                if (mForceNames || multiReceived || (message.getTrueCounterpart() != null && message.getContact() != null)) {
                     info = UIHelper.getMessageDisplayName(message);
                 }
                 break;
