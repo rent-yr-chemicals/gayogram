@@ -633,7 +633,8 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             }
             message.markable = packet.hasChild("markable", "urn:xmpp:chat-markers:0");
             for (Element el : packet.getChildren()) {
-                if (el.getName().equals("query") && el.getNamespace().equals("http://jabber.org/protocol/disco#items") && el.getAttribute("node").equals("http://jabber.org/protocol/commands")) {
+                if ((el.getName().equals("query") && el.getNamespace().equals("http://jabber.org/protocol/disco#items") && el.getAttribute("node").equals("http://jabber.org/protocol/commands")) ||
+                    (el.getName().equals("fallback") && el.getNamespace().equals("urn:xmpp:fallback:0"))) {
                     message.addPayload(el);
                 }
                 if (el.getName().equals("thread") && (el.getNamespace() == null || el.getNamespace().equals("jabber:client"))) {
