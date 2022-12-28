@@ -3,6 +3,7 @@ package eu.siacs.conversations.entities;
 import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.drawable.Icon;
 import android.net.Uri;
@@ -632,6 +633,7 @@ public class Contact implements ListItem, Blockable {
     // This Contact is a gateway to use for voice calls, register it with OS
     public void registerAsPhoneAccount(XmppConnectionService ctx) {
         if (Build.VERSION.SDK_INT < 23) return;
+        if (!ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONNECTION_SERVICE)) return;
 
         TelecomManager telecomManager = ctx.getSystemService(TelecomManager.class);
 
@@ -656,6 +658,7 @@ public class Contact implements ListItem, Blockable {
     // Unregister any associated PSTN gateway integration
     public void unregisterAsPhoneAccount(Context ctx) {
         if (Build.VERSION.SDK_INT < 23) return;
+        if (!ctx.getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONNECTION_SERVICE)) return;
 
         TelecomManager telecomManager = ctx.getSystemService(TelecomManager.class);
         telecomManager.unregisterPhoneAccount(phoneAccountHandle());
