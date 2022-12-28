@@ -51,7 +51,7 @@ import eu.siacs.conversations.xmpp.OnGatewayResult;
 public class EnterJidDialog extends DialogFragment implements OnBackendConnected, TextWatcher {
 
     private static final List<String> SUSPICIOUS_DOMAINS =
-            Arrays.asList("conference", "muc", "room", "rooms", "chat");
+            Arrays.asList("conference", "muc", "room", "rooms");
 
     private OnEnterJidDialogPositiveListener mListener = null;
 
