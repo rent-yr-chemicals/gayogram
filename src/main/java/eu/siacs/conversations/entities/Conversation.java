@@ -149,6 +149,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
     protected int mCurrentTab = -1;
     protected ConversationPagerAdapter pagerAdapter = new ConversationPagerAdapter();
     protected Element thread = null;
+    protected boolean lockThread = false;
     protected boolean userSelectedThread = false;
 
     public Conversation(final String name, final Account account, final Jid contactJid,
@@ -531,7 +532,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             messages.addAll(this.messages);
         }
         for (Iterator<Message> iterator = messages.iterator(); iterator.hasNext(); ) {
-            if (iterator.next().wasMergedIntoPrevious()) {
+            Message m = iterator.next();
+            if (m.wasMergedIntoPrevious() || (getLockThread() && (m.getThread() == null || !m.getThread().getContent().equals(getThread().getContent())))) {
                 iterator.remove();
             }
         }
@@ -636,6 +638,15 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
     public void setThread(Element thread) {
         this.thread = thread;
+    }
+
+    public void setLockThread(boolean flag) {
+        this.lockThread = flag;
+        if (flag) setUserSelectedThread(true);
+    }
+
+    public boolean getLockThread() {
+        return this.lockThread;
     }
 
     public void setUserSelectedThread(boolean flag) {

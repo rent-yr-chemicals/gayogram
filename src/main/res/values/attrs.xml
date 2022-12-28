@@ -106,6 +106,7 @@
     <attr name="icon_help" format="reference" />
     <attr name="icon_goto_chat" format="reference" />
     <attr name="icon_secure" format="reference" />
+    <attr name="icon_small_lock" format="reference" />
     <attr name="icon_settings" format="reference" />
     <attr name="icon_share" format="reference" />
     <attr name="icon_import_export" format="reference" />

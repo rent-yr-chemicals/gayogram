@@ -1257,14 +1257,20 @@ public class ConversationFragment extends XmppFragment
             conversation.setUserSelectedThread(true);
         });
 
-        binding.threadIdenticon.setOnClickListener(v -> {
+        binding.threadIdenticonLayout.setOnClickListener(v -> {
+            boolean wasLocked = conversation.getLockThread();
+            conversation.setLockThread(false);
             newThread();
             conversation.setUserSelectedThread(true);
+            if (wasLocked) refresh();
         });
 
-        binding.threadIdenticon.setOnLongClickListener(v -> {
+        binding.threadIdenticonLayout.setOnLongClickListener(v -> {
+            boolean wasLocked = conversation.getLockThread();
+            conversation.setLockThread(false);
             setThread(null);
             conversation.setUserSelectedThread(true);
+            if (wasLocked) refresh();
             return true;
         });
 
@@ -1303,6 +1309,7 @@ public class ConversationFragment extends XmppFragment
     private void setThread(Element thread) {
         this.conversation.setThread(thread);
         binding.threadIdenticon.setAlpha(0f);
+        binding.threadIdenticonLock.setVisibility(this.conversation.getLockThread() ? View.VISIBLE : View.GONE);
         if (thread != null) {
             final String threadId = thread.getContent();
             if (threadId != null) {
@@ -1362,6 +1369,7 @@ public class ConversationFragment extends XmppFragment
             MenuItem retryDecryption = menu.findItem(R.id.retry_decryption);
             MenuItem correctMessage = menu.findItem(R.id.correct_message);
             MenuItem retractMessage = menu.findItem(R.id.retract_message);
+            MenuItem onlyThisThread = menu.findItem(R.id.only_this_thread);
             MenuItem shareWith = menu.findItem(R.id.share_with);
             MenuItem sendAgain = menu.findItem(R.id.send_again);
             MenuItem copyUrl = menu.findItem(R.id.copy_url);
@@ -1369,6 +1377,7 @@ public class ConversationFragment extends XmppFragment
             MenuItem cancelTransmission = menu.findItem(R.id.cancel_transmission);
             MenuItem deleteFile = menu.findItem(R.id.delete_file);
             MenuItem showErrorMessage = menu.findItem(R.id.show_error_message);
+            onlyThisThread.setVisible(!conversation.getLockThread() && m.getThread() != null);
             final boolean unInitiatedButKnownSize = MessageUtils.unInitiatedButKnownSize(m);
             final boolean showError =
                     m.getStatus() == Message.STATUS_SEND_FAILED
@@ -1504,6 +1513,12 @@ public class ConversationFragment extends XmppFragment
                 return true;
             case R.id.open_with:
                 openWith(selectedMessage);
+                return true;
+            case R.id.only_this_thread:
+                conversation.setLockThread(true);
+                setThread(selectedMessage.getThread());
+                refresh();
+                setThread(selectedMessage.getThread());
                 return true;
             default:
                 return super.onContextItemSelected(item);
