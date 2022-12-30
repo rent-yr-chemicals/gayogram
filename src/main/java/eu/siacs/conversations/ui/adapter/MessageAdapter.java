@@ -908,7 +908,8 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 viewHolder.commands_list.setAdapter(adapter);
                 viewHolder.commands_list.setVisibility(View.VISIBLE);
                 viewHolder.commands_list.setOnItemClickListener((p, v, pos, id) -> {
-                    ((Conversation) conversation).startCommand(adapter.getItem(pos), activity.xmppConnectionService);
+                    final Element command = adapter.getItem(pos);
+                    activity.startCommand(conversation.getAccount(), command.getAttributeAsJid("jid"), command.getAttribute("node"));
                 });
             } else {
                 // It's unclear if we can set this to null...

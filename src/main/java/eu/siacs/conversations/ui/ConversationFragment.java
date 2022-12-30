@@ -2548,7 +2548,8 @@ public class ConversationFragment extends XmppFragment
             commandAdapter = new CommandAdapter((XmppActivity) getActivity());
             binding.commandsView.setAdapter(commandAdapter);
             binding.commandsView.setOnItemClickListener((parent, view, position, id) -> {
-                conversation.startCommand(commandAdapter.getItem(position), activity.xmppConnectionService);
+                final Element command = commandAdapter.getItem(position);
+                activity.startCommand(conversation.getAccount(), command.getAttributeAsJid("jid"), command.getAttribute("node"));
             });
             refreshCommands();
         }
@@ -2612,6 +2613,7 @@ public class ConversationFragment extends XmppFragment
         final String downloadUuid = extras.getString(ConversationsActivity.EXTRA_DOWNLOAD_UUID);
         final String text = extras.getString(Intent.EXTRA_TEXT);
         final String nick = extras.getString(ConversationsActivity.EXTRA_NICK);
+        final String node = extras.getString(ConversationsActivity.EXTRA_NODE);
         final String postInitAction =
                 extras.getString(ConversationsActivity.EXTRA_POST_INIT_ACTION);
         final boolean asQuote = extras.getBoolean(ConversationsActivity.EXTRA_AS_QUOTE);
@@ -2663,11 +2665,46 @@ public class ConversationFragment extends XmppFragment
             attachFile(ATTACHMENT_CHOICE_RECORD_VOICE, false);
             return;
         }
+        if ("message".equals(postInitAction)) {
+            binding.conversationViewPager.post(() -> {
+                binding.conversationViewPager.setCurrentItem(0);
+            });
+        }
+        if ("command".equals(postInitAction)) {
+            binding.conversationViewPager.post(() -> {
+                PagerAdapter adapter = binding.conversationViewPager.getAdapter();
+                if (adapter != null && adapter.getCount() > 1) {
+                    binding.conversationViewPager.setCurrentItem(1);
+                }
+                final Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
+                if (node != null && commandJid != null) {
+                    conversation.startCommand(commandFor(commandJid, node), activity.xmppConnectionService);
+                }
+            });
+            return;
+        }
         final Message message =
                 downloadUuid == null ? null : conversation.findMessageWithFileAndUuid(downloadUuid);
         if (message != null) {
             startDownloadable(message);
         }
+    }
+
+    private Element commandFor(final Jid jid, final String node) {
+        if (commandAdapter != null) {
+            for (int i = 0; i < commandAdapter.getCount(); i++) {
+                Element command = commandAdapter.getItem(i);
+                final String commandNode = command.getAttribute("node");
+                if (commandNode == null || !commandNode.equals(node)) continue;
+
+                final Jid commandJid = command.getAttributeAsJid("jid");
+                if (commandJid != null && !commandJid.asBareJid().equals(jid.asBareJid())) continue;
+
+                return command;
+            }
+        }
+
+        return new Element("command", Namespace.COMMANDS).setAttribute("name", node).setAttribute("node", node).setAttribute("jid", jid);
     }
 
     private List<Uri> extractUris(final Bundle extras) {

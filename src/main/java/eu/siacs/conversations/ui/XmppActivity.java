@@ -474,6 +474,16 @@ public abstract class XmppActivity extends ActionBarActivity {
         return getPreferences().getBoolean(name, getResources().getBoolean(res));
     }
 
+    public void startCommand(final Account account, final Jid jid, final String node) {
+        Intent intent = new Intent(this, ConversationsActivity.class);
+        intent.setAction(ConversationsActivity.ACTION_VIEW_CONVERSATION);
+        intent.putExtra(ConversationsActivity.EXTRA_CONVERSATION, xmppConnectionService.findOrCreateConversation(account, jid, false, false).getUuid());
+        intent.putExtra(ConversationsActivity.EXTRA_POST_INIT_ACTION, "command");
+        intent.putExtra(ConversationsActivity.EXTRA_NODE, node);
+        intent.setFlags(intent.getFlags() | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+    }
+
     public void switchToConversation(Conversation conversation) {
         switchToConversation(conversation, null);
     }
