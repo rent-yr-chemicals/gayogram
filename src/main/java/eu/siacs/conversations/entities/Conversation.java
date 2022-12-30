@@ -1235,6 +1235,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         protected ViewPager mPager = null;
         protected TabLayout mTabs = null;
         ArrayList<CommandSession> sessions = null;
+        protected View page1 = null;
+        protected View page2 = null;
 
         public void setupViewPager(ViewPager pager, TabLayout tabs) {
             mPager = pager;
@@ -1243,6 +1245,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             if (mPager == null) return;
             if (sessions != null) show();
 
+            page1 = pager.getChildAt(0) == null ? page1 : pager.getChildAt(0);
+            page2 = pager.getChildAt(1) == null ? page2 : pager.getChildAt(1);
             pager.setAdapter(this);
             tabs.setupWithViewPager(mPager);
             pager.setCurrentItem(getCurrentTab());
@@ -1302,8 +1306,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         @NonNull
         @Override
         public Object instantiateItem(@NonNull ViewGroup container, int position) {
-            if (position < 2) {
-              return mPager.getChildAt(position);
+            if (position == 0) {
+                if (page1.getParent() == null) container.addView(page1);
+                return page1;
+            }
+            if (position == 1) {
+                if (page2.getParent() == null) container.addView(page2);
+                return page2;
             }
 
             CommandSession session = sessions.get(position-2);
@@ -1323,8 +1332,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         @Override
         public int getItemPosition(Object o) {
             if (mPager != null) {
-                if (o == mPager.getChildAt(0)) return PagerAdapter.POSITION_UNCHANGED;
-                if (o == mPager.getChildAt(1)) return PagerAdapter.POSITION_UNCHANGED;
+                if (o == page1) return PagerAdapter.POSITION_UNCHANGED;
+                if (o == page2) return PagerAdapter.POSITION_UNCHANGED;
             }
 
             int pos = sessions == null ? -1 : sessions.indexOf(o);
