@@ -232,6 +232,19 @@ public class XmppUri {
         return this.parameters.get(key);
     }
 
+    public String parameterString() {
+        final StringBuilder s = new StringBuilder();
+        for (Map.Entry<String, String> param : parameters.entrySet()) {
+            if (param.getValue() == null || param.getValue().isEmpty()) continue;
+
+            s.append(";");
+            s.append(param.getKey());
+            s.append("=");
+            s.append(param.getValue());
+        }
+        return s.toString();
+    }
+
     public List<Fingerprint> getFingerprints() {
         return this.fingerprints;
     }

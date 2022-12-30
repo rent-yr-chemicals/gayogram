@@ -140,13 +140,14 @@ public class MyLinkify {
             Uri uri = Uri.parse(urlspan.getURL());
             if ("xmpp".equals(uri.getScheme())) {
                 try {
-                    Jid jid = new XmppUri(uri).getJid();
+                    XmppUri xmppUri = new XmppUri(uri);
+                    Jid jid = xmppUri.getJid();
                     ListItem item = account.getBookmark(jid);
                     if (item == null) item = roster.getContact(jid);
                     body.replace(
                         body.getSpanStart(urlspan),
                         body.getSpanEnd(urlspan),
-                        item.getDisplayName()
+                        item.getDisplayName() + xmppUri.parameterString()
                     );
                 } catch (final IllegalArgumentException e) { /* bad JID */ }
             }
