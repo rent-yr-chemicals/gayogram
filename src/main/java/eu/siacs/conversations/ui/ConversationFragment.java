@@ -936,6 +936,7 @@ public class ConversationFragment extends XmppFragment
         if (conversation.getCorrectingMessage() != null) {
             this.binding.textInputHint.setVisibility(View.GONE);
             this.binding.textinput.setHint(R.string.send_corrected_message);
+            binding.conversationViewPager.setCurrentItem(0);
         } else if (multi && conversation.getNextCounterpart() != null) {
             this.binding.textinput.setHint(R.string.send_message);
             this.binding.textInputHint.setVisibility(View.VISIBLE);
@@ -943,6 +944,7 @@ public class ConversationFragment extends XmppFragment
                     getString(
                             R.string.send_private_message_to,
                             conversation.getNextCounterpart().getResource()));
+            binding.conversationViewPager.setCurrentItem(0);
         } else if (multi && !conversation.getMucOptions().participating()) {
             this.binding.textInputHint.setVisibility(View.GONE);
             this.binding.textinput.setHint(R.string.you_are_not_participating);
@@ -2466,6 +2468,7 @@ public class ConversationFragment extends XmppFragment
         if (conversation == null) {
             return false;
         }
+        final Conversation originalConversation = this.conversation;
         this.conversation = conversation;
         // once we set the conversation all is good and it will automatically do the right thing in
         // onStart()
@@ -2535,6 +2538,11 @@ public class ConversationFragment extends XmppFragment
                 .getNotificationService()
                 .setOpenConversation(this.conversation);
 
+        if (commandAdapter != null && conversation != originalConversation) {
+            originalConversation.setupViewPager(null, null);
+            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout);
+            refreshCommands();
+        }
         if (commandAdapter == null && conversation != null) {
             conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout);
             commandAdapter = new CommandAdapter((XmppActivity) getActivity());
@@ -2976,6 +2984,10 @@ public class ConversationFragment extends XmppFragment
         if (activity != null) {
             this.binding.textSendButton.setImageResource(
                     SendButtonTool.getSendButtonImageResource(activity, action, status));
+        }
+
+        if (hasAttachments || binding.textinput.getText().length() > 0) {
+            binding.conversationViewPager.setCurrentItem(0);
         }
     }
 
