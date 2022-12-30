@@ -1249,7 +1249,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             page2 = pager.getChildAt(1) == null ? page2 : pager.getChildAt(1);
             pager.setAdapter(this);
             tabs.setupWithViewPager(mPager);
-            pager.setCurrentItem(getCurrentTab());
+            pager.post(() -> pager.setCurrentItem(getCurrentTab()));
 
             mPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
                 public void onPageScrollStateChanged(int state) { }
