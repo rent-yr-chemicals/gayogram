@@ -508,7 +508,13 @@ public abstract class XmppActivity extends ActionBarActivity {
         switchToConversation(conversation, null, false, nick, true, false);
     }
 
-    private void switchToConversation(Conversation conversation, String text, boolean asQuote, String nick, boolean pm, boolean doNotAppend) {
+    public void switchToConversation(Conversation conversation, String text, boolean asQuote, String nick, boolean pm, boolean doNotAppend) {
+        switchToConversation(conversation, null, false, nick, true, false, null);
+    }
+
+    public void switchToConversation(Conversation conversation, String text, boolean asQuote, String nick, boolean pm, boolean doNotAppend, String postInit) {
+        if (conversation == null) return;
+
         Intent intent = new Intent(this, ConversationsActivity.class);
         intent.setAction(ConversationsActivity.ACTION_VIEW_CONVERSATION);
         intent.putExtra(ConversationsActivity.EXTRA_CONVERSATION, conversation.getUuid());
@@ -525,6 +531,7 @@ public abstract class XmppActivity extends ActionBarActivity {
         if (doNotAppend) {
             intent.putExtra(ConversationsActivity.EXTRA_DO_NOT_APPEND, true);
         }
+        intent.putExtra(ConversationsActivity.EXTRA_POST_INIT_ACTION, postInit);
         intent.setFlags(intent.getFlags() | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
         finish();

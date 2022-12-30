@@ -10,6 +10,7 @@ import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.ui.adapter.AccountAdapter;
+import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xmpp.Jid;
 
 public class ShareViaAccountActivity extends XmppActivity {
@@ -41,17 +42,12 @@ public class ShareViaAccountActivity extends XmppActivity {
         accountListView.setAdapter(this.mAccountAdapter);
         accountListView.setOnItemClickListener((arg0, view, position, arg3) -> {
             final Account account = accountList.get(position);
-            final String body = getIntent().getStringExtra(EXTRA_BODY);
-
-            try {
-                final Jid contact = Jid.of(getIntent().getStringExtra(EXTRA_CONTACT));
-                final Conversation conversation = xmppConnectionService.findOrCreateConversation(
-                        account, contact, false, false);
-                switchToConversation(conversation, body);
-            } catch (IllegalArgumentException e) {
-                // ignore error
+            final String action = getAction();
+            if (action != null && action.equals("command")) {
+                startCommand(account, getJid(), new XmppUri(getIntent().getData()).getParameter("node"));
+            } else {
+                switchToConversation(getConversation(account), getBody(), false, null, false, false, action);
             }
-
             finish();
         });
     }
@@ -70,21 +66,47 @@ public class ShareViaAccountActivity extends XmppActivity {
         final int numAccounts = xmppConnectionService.getAccounts().size();
 
         if (numAccounts == 1) {
-            final String body = getIntent().getStringExtra(EXTRA_BODY);
             final Account account = xmppConnectionService.getAccounts().get(0);
-
-            try {
-                final Jid contact = Jid.of(getIntent().getStringExtra(EXTRA_CONTACT));
-                final Conversation conversation = xmppConnectionService.findOrCreateConversation(
-                        account, contact, false, false);
-                switchToConversation(conversation, body);
-            } catch (IllegalArgumentException e) {
-                // ignore error
+            final String action = getAction();
+            if (action != null && action.equals("command")) {
+                startCommand(account, getJid(), new XmppUri(getIntent().getData()).getParameter("node"));
+            } else {
+                switchToConversation(getConversation(account), getBody(), false, null, false, false, action);
             }
-
             finish();
         } else {
             refreshUiReal();
+        }
+    }
+
+    protected Conversation getConversation(Account account) {
+        try {
+            return xmppConnectionService.findOrCreateConversation(account, getJid(), false, false);
+        } catch (IllegalArgumentException e) { }
+        return null;
+    }
+
+    protected String getAction() {
+        if (getIntent().getData() == null) return null;
+        XmppUri xmppUri = new XmppUri(getIntent().getData());
+        if (xmppUri.isAction("message")) return "message";
+        if (xmppUri.isAction("command")) return "command";
+        return null;
+    }
+
+    protected Jid getJid() {
+        if (getIntent().getData() == null) {
+            return Jid.of(getIntent().getStringExtra(EXTRA_CONTACT));
+        } else {
+            return new XmppUri(getIntent().getData()).getJid();
+        }
+    }
+
+    protected String getBody() {
+        if (getIntent().getData() == null) {
+            return getIntent().getStringExtra(EXTRA_BODY);
+        } else {
+            return new XmppUri(getIntent().getData()).getBody();
         }
     }
 }

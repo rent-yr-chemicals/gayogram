@@ -153,7 +153,7 @@ public class UriHandlerActivity extends AppCompatActivity {
             }
         }
 
-        if (xmppUri.isAction(XmppUri.ACTION_MESSAGE)) {
+        if (xmppUri.isAction(XmppUri.ACTION_MESSAGE) || xmppUri.isAction("command")) {
             final Jid jid = xmppUri.getJid();
             final String body = xmppUri.getBody();
 
@@ -161,8 +161,7 @@ public class UriHandlerActivity extends AppCompatActivity {
                 final Class<?> clazz = findShareViaAccountClass();
                 if (clazz != null) {
                     intent = new Intent(this, clazz);
-                    intent.putExtra("contact", jid.toEscapedString());
-                    intent.putExtra("body", body);
+                    intent.setData(uri);
                 } else {
                     intent = new Intent(this, StartConversationActivity.class);
                     intent.setAction(Intent.ACTION_VIEW);

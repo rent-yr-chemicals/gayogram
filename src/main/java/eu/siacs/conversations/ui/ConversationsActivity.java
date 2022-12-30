@@ -466,7 +466,14 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
         if (xmppUri.isValidJid() && !xmppUri.hasFingerprints()) {
             final Conversation conversation = xmppConnectionService.findUniqueConversationByJid(xmppUri);
             if (conversation != null) {
-                openConversation(conversation, null);
+                if (xmppUri.isAction("command")) {
+                    startCommand(conversation.getAccount(), conversation.getJid(), xmppUri.getParameter("node"));
+                } else {
+                    Bundle extras = new Bundle();
+                    extras.putString(Intent.EXTRA_TEXT, xmppUri.getBody());
+                    if (xmppUri.isAction("message")) extras.putString(EXTRA_POST_INIT_ACTION, "message");
+                    openConversation(conversation, extras);
+                }
                 return true;
             }
         }
