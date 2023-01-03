@@ -264,6 +264,7 @@ public class ConversationFragment extends XmppFragment
                 @Override
                 public void onScrollStateChanged(AbsListView view, int scrollState) {
                     if (AbsListView.OnScrollListener.SCROLL_STATE_IDLE == scrollState) {
+                        updateThreadFromLastMessage();
                         fireReadEvent();
                     }
                 }
