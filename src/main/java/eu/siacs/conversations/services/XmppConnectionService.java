@@ -4271,8 +4271,12 @@ public class XmppConnectionService extends Service {
     }
 
     public void updateConversationUi() {
+        updateConversationUi(false);
+    }
+
+    public void updateConversationUi(boolean newCaps) {
         for (OnConversationUpdate listener : threadSafeList(this.mOnConversationUpdates)) {
-            listener.onConversationUpdate();
+            listener.onConversationUpdate(newCaps);
         }
     }
 
@@ -4801,6 +4805,7 @@ public class XmppConnectionService extends Service {
                 contact.registerAsPhoneAccount(this);
                 mQuickConversationsService.considerSyncBackground(false);
             }
+            updateConversationUi(true);
         } else {
             final IqPacket request = new IqPacket(IqPacket.TYPE.GET);
             request.setTo(jid);
@@ -4822,6 +4827,7 @@ public class XmppConnectionService extends Service {
                             contact.registerAsPhoneAccount(this);
                             mQuickConversationsService.considerSyncBackground(false);
                         }
+                        updateConversationUi(true);
                         if (cb != null) cb.run();
                     } else {
                         Log.d(Config.LOGTAG, a.getJid().asBareJid() + ": mismatch in caps for contact " + jid + " " + presence.getVer() + " vs " + discoveryResult.getVer());
@@ -5017,7 +5023,8 @@ public class XmppConnectionService extends Service {
     }
 
     public interface OnConversationUpdate {
-        void onConversationUpdate();
+        default void onConversationUpdate() { onConversationUpdate(false); }
+        default void onConversationUpdate(boolean newCaps) { onConversationUpdate(); }
     }
 
     public interface OnJingleRtpConnectionUpdate {

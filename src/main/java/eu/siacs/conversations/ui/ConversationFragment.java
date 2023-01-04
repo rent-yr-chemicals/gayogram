@@ -2641,6 +2641,10 @@ public class ConversationFragment extends XmppFragment
         return true;
     }
 
+    public void refreshForNewCaps() {
+        refreshCommands();
+    }
+
     protected void refreshCommands() {
         if (commandAdapter == null) return;
 

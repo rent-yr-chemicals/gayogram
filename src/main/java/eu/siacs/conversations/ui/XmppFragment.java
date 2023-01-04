@@ -37,6 +37,7 @@ import eu.siacs.conversations.ui.interfaces.OnBackendConnected;
 public abstract class XmppFragment extends Fragment implements OnBackendConnected {
 
 	abstract void refresh();
+	public void refreshForNewCaps() { }
 
 	protected void runOnUiThread(Runnable runnable) {
 		final Activity activity = getActivity();
