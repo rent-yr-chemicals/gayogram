@@ -49,7 +49,7 @@ dependencies {
 
     implementation 'androidx.viewpager:viewpager:1.0.0'
 
-    playstoreImplementation('com.google.firebase:firebase-messaging:23.1.0') {
+    playstoreImplementation('com.google.firebase:firebase-messaging:23.1.1') {
         exclude group: 'com.google.firebase', module: 'firebase-core'
         exclude group: 'com.google.firebase', module: 'firebase-analytics'
         exclude group: 'com.google.firebase', module: 'firebase-measurement-connector'
@@ -103,7 +103,6 @@ dependencies {
 }
 
 ext {
-    travisBuild = System.getenv("TRAVIS") == "true"
     preDexEnabled = System.getProperty("pre-dex", "true")
     abiCodes = ['armeabi-v7a': 1, 'x86': 2, 'x86_64': 3, 'arm64-v8a': 4]
 }
@@ -124,7 +123,6 @@ android {
         buildConfigField "String", "APP_NAME", "\"$appName\"";
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-
 
     configurations {
         implementation.exclude group: 'org.jetbrains' , module:'annotations'
@@ -151,7 +149,7 @@ android {
 
             def appName = "Quicksy"
             resValue "string", "app_name", appName
-            buildConfigField "String", "APP_NAME", "\"$appName\"";
+            buildConfigField "String", "APP_NAME", "\"$appName\""
         }
 
         conversations {
