@@ -136,6 +136,15 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
         final SharedPreferences preferences = getPreferences();
         this.startSearching = intent.getBooleanExtra("direct_search", false) && preferences.getBoolean("start_searching", getResources().getBoolean(R.bool.start_searching));
 
+        getListItemAdapter().refreshSettings();
+        getListItemAdapter().setOnTagClickedListener((tag) -> {
+            if (mMenuSearchView != null) {
+                mMenuSearchView.expandActionView();
+                mSearchEditText.setText("");
+                mSearchEditText.append(tag);
+                filterContacts(tag);
+            }
+        });
     }
 
     private void onFabClicked(View v) {
