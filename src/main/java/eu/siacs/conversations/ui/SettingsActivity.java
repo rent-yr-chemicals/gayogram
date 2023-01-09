@@ -523,7 +523,21 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
     }
 
     private void createBackup() {
-        ContextCompat.startForegroundService(this, new Intent(this, ExportBackupService.class));
+        new AlertDialog.Builder(this)
+            .setTitle("Create Backup")
+            .setMessage("Export extra Cheogram-only data (backup will not import into other apps then)?")
+            .setPositiveButton(R.string.yes, (dialog, whichButton) -> {
+                createBackup(true);
+            })
+            .setNegativeButton(R.string.no, (dialog, whichButton) -> {
+                createBackup(false);
+            }).show();
+    }
+
+    private void createBackup(boolean withCheogramDb) {
+        Intent intent = new Intent(this, ExportBackupService.class);
+        intent.putExtra("cheogram_db", withCheogramDb);
+        ContextCompat.startForegroundService(this, intent);
         final AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.backup_started_message);
         builder.setPositiveButton(R.string.ok, null);

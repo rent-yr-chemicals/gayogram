@@ -227,7 +227,7 @@ public class ExportBackupService extends Service {
                 boolean success;
                 List<File> files;
                 try {
-                    files = export();
+                    files = export(intent.getBooleanExtra("cheogram_db", true));
                     success = true;
                 } catch (final Exception e) {
                     Log.d(Config.LOGTAG, "unable to create backup", e);
@@ -296,7 +296,7 @@ public class ExportBackupService extends Service {
         }
     }
 
-    private List<File> export() throws Exception {
+    private List<File> export(boolean withCheogramDb) throws Exception {
         NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getBaseContext(), "backup");
         mBuilder.setContentTitle(getString(R.string.notification_create_backup_title))
                 .setSmallIcon(R.drawable.ic_archive_white_24dp)
@@ -345,7 +345,7 @@ public class ExportBackupService extends Service {
             accountExport(db, uuid, writer);
             simpleExport(db, Conversation.TABLENAME, Conversation.ACCOUNT, uuid, writer);
             messageExport(db, uuid, writer, progress);
-            messageExportCheogram(db, uuid, writer, progress);
+            if (withCheogramDb) messageExportCheogram(db, uuid, writer, progress);
             for (String table : Arrays.asList(SQLiteAxolotlStore.PREKEY_TABLENAME, SQLiteAxolotlStore.SIGNED_PREKEY_TABLENAME, SQLiteAxolotlStore.SESSION_TABLENAME, SQLiteAxolotlStore.IDENTITIES_TABLENAME)) {
                 simpleExport(db, table, SQLiteAxolotlStore.ACCOUNT, uuid, writer);
             }
