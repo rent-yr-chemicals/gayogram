@@ -115,6 +115,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     protected String subject;
     protected String encryptedBody;
     protected long timeSent;
+    protected long timeReceived;
     protected int encryption;
     protected int status;
     protected int type;
@@ -174,6 +175,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 false,
                 false,
                 null,
+                System.currentTimeMillis(),
                 null,
                 null,
                 null);
@@ -202,6 +204,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 false,
                 false,
                 null,
+                System.currentTimeMillis(),
                 null,
                 null,
                 null);
@@ -213,7 +216,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                       final String remoteMsgId, final String relativeFilePath,
                       final String serverMsgId, final String fingerprint, final boolean read,
                       final String edited, final boolean oob, final String errorMessage, final Set<ReadByMarker> readByMarkers,
-                      final boolean markable, final boolean deleted, final String bodyLanguage, final String subject, final String fileParams, final List<Element> payloads) {
+                      final boolean markable, final boolean deleted, final String bodyLanguage, final long timeReceived, final String subject, final String fileParams, final List<Element> payloads) {
         this.conversation = conversation;
         this.uuid = uuid;
         this.conversationUuid = conversationUUid;
@@ -237,6 +240,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         this.markable = markable;
         this.deleted = deleted;
         this.bodyLanguage = bodyLanguage;
+        this.timeReceived = timeReceived;
         this.subject = subject;
         if (fileParams != null) this.fileParams = new FileParams(fileParams);
         if (payloads != null) this.payloads = payloads;
@@ -277,6 +281,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 cursor.getInt(cursor.getColumnIndex(MARKABLE)) > 0,
                 cursor.getInt(cursor.getColumnIndex(DELETED)) > 0,
                 cursor.getString(cursor.getColumnIndex(BODY_LANGUAGE)),
+                cursor.getLong(cursor.getColumnIndex(cursor.isNull(cursor.getColumnIndex("timeReceived")) ? TIME_SENT : "timeReceived")),
                 cursor.getString(cursor.getColumnIndex("subject")),
                 cursor.getString(cursor.getColumnIndex("fileParams")),
                 payloads
@@ -432,6 +437,10 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 || (message == null && errorMessage != null);
         this.errorMessage = message;
         return changed;
+    }
+
+    public long getTimeReceived() {
+        return timeReceived;
     }
 
     public long getTimeSent() {

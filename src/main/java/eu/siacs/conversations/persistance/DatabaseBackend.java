@@ -265,6 +265,15 @@ public class DatabaseBackend extends SQLiteOpenHelper {
                 db.execSQL("PRAGMA cheogram.user_version = 4");
             }
 
+            if(cheogramVersion < 5) {
+                db.execSQL(
+                    "ALTER TABLE cheogram." + Message.TABLENAME + " " +
+                    "ADD COLUMN timeReceived NUMBER"
+                );
+                db.execSQL("CREATE INDEX cheogram.message_time_received_index ON " + Message.TABLENAME + " (timeReceived)");
+                db.execSQL("PRAGMA cheogram.user_version = 5");
+            }
+
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
