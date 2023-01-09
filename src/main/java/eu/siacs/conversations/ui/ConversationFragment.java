@@ -1424,15 +1424,22 @@ public class ConversationFragment extends XmppFragment
                 correctMessage(selectedMessage);
                 return true;
             case R.id.retract_message:
-                Message message = selectedMessage;
-                while (message.mergeable(message.next())) {
-                    message = message.next();
-                }
-                message.setBody(" ");
-                message.putEdited(message.getUuid(), message.getServerMsgId());
-                message.setServerMsgId(null);
-                message.setUuid(UUID.randomUUID().toString());
-                sendMessage(message);
+                new AlertDialog.Builder(activity)
+                    .setTitle(R.string.retract_message)
+                    .setMessage("Do you really want to retract this message?")
+                    .setPositiveButton(R.string.yes, (dialog, whichButton) -> {
+                        Message message = selectedMessage;
+                        while (message.mergeable(message.next())) {
+                            message = message.next();
+                        }
+                        message.setBody(" ");
+                        message.putEdited(message.getUuid(), message.getServerMsgId());
+                        message.setServerMsgId(null);
+                        message.setUuid(UUID.randomUUID().toString());
+                        sendMessage(message);
+                    })
+                    .setNegativeButton(R.string.no, null).show();
+                return true;
             case R.id.copy_message:
                 ShareUtil.copyToClipboard(activity, selectedMessage);
                 return true;
