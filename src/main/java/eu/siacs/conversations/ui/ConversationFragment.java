@@ -264,6 +264,7 @@ public class ConversationFragment extends XmppFragment
                 @Override
                 public void onScrollStateChanged(AbsListView view, int scrollState) {
                     if (AbsListView.OnScrollListener.SCROLL_STATE_IDLE == scrollState) {
+                        updateThreadFromLastMessage();
                         fireReadEvent();
                     }
                 }
@@ -854,6 +855,7 @@ public class ConversationFragment extends XmppFragment
     }
 
     private void sendMessage() {
+        conversation.setUserSelectedThread(false);
         if (mediaPreviewAdapter.hasAttachments()) {
             commitAttachments();
             return;
@@ -870,6 +872,7 @@ public class ConversationFragment extends XmppFragment
         final Message message;
         if (conversation.getCorrectingMessage() == null) {
             message = new Message(conversation, body, conversation.getNextEncryption());
+            message.setThread(conversation.getThread());
             Message.configurePrivateMessage(message);
         } else {
             message = conversation.getCorrectingMessage();
@@ -953,6 +956,8 @@ public class ConversationFragment extends XmppFragment
             this.binding.textinput.setHint(UIHelper.getMessageHint(getActivity(), conversation));
             getActivity().invalidateOptionsMenu();
         }
+
+        binding.messagesView.post(this::updateThreadFromLastMessage);
     }
 
     public void setupIme() {
@@ -1248,6 +1253,33 @@ public class ConversationFragment extends XmppFragment
                     new EditMessageActionModeCallback(this.binding.textinput));
         }
 
+        messageListAdapter.setOnMessageBoxClicked(message -> {
+            setThread(message.getThread());
+            conversation.setUserSelectedThread(true);
+        });
+
+        binding.threadIdenticonLayout.setOnClickListener(v -> {
+            boolean wasLocked = conversation.getLockThread();
+            conversation.setLockThread(false);
+            if (wasLocked) {
+                conversation.setUserSelectedThread(false);
+                refresh();
+                updateThreadFromLastMessage();
+            } else {
+                newThread();
+                conversation.setUserSelectedThread(true);
+            }
+        });
+
+        binding.threadIdenticonLayout.setOnLongClickListener(v -> {
+            boolean wasLocked = conversation.getLockThread();
+            conversation.setLockThread(false);
+            setThread(null);
+            conversation.setUserSelectedThread(true);
+            if (wasLocked) refresh();
+            return true;
+        });
+
         return binding.getRoot();
     }
 
@@ -1275,7 +1307,23 @@ public class ConversationFragment extends XmppFragment
     }
 
     private void quoteMessage(Message message) {
+        setThread(message.getThread());
+        conversation.setUserSelectedThread(true);
         quoteText(MessageUtils.prepareQuote(message));
+    }
+
+    private void setThread(Element thread) {
+        this.conversation.setThread(thread);
+        binding.threadIdenticon.setAlpha(0f);
+        binding.threadIdenticonLock.setVisibility(this.conversation.getLockThread() ? View.VISIBLE : View.GONE);
+        if (thread != null) {
+            final String threadId = thread.getContent();
+            if (threadId != null) {
+                binding.threadIdenticon.setAlpha(1f);
+                binding.threadIdenticon.setColor(UIHelper.getColorForName(threadId));
+                binding.threadIdenticon.setHash(UIHelper.identiconHash(threadId));
+            }
+        }
     }
 
     @Override
@@ -1327,6 +1375,7 @@ public class ConversationFragment extends XmppFragment
             MenuItem retryDecryption = menu.findItem(R.id.retry_decryption);
             MenuItem correctMessage = menu.findItem(R.id.correct_message);
             MenuItem retractMessage = menu.findItem(R.id.retract_message);
+            MenuItem onlyThisThread = menu.findItem(R.id.only_this_thread);
             MenuItem shareWith = menu.findItem(R.id.share_with);
             MenuItem sendAgain = menu.findItem(R.id.send_again);
             MenuItem copyUrl = menu.findItem(R.id.copy_url);
@@ -1334,6 +1383,7 @@ public class ConversationFragment extends XmppFragment
             MenuItem cancelTransmission = menu.findItem(R.id.cancel_transmission);
             MenuItem deleteFile = menu.findItem(R.id.delete_file);
             MenuItem showErrorMessage = menu.findItem(R.id.show_error_message);
+            onlyThisThread.setVisible(!conversation.getLockThread() && m.getThread() != null);
             final boolean unInitiatedButKnownSize = MessageUtils.unInitiatedButKnownSize(m);
             final boolean showError =
                     m.getStatus() == Message.STATUS_SEND_FAILED
@@ -1469,6 +1519,11 @@ public class ConversationFragment extends XmppFragment
                 return true;
             case R.id.open_with:
                 openWith(selectedMessage);
+                return true;
+            case R.id.only_this_thread:
+                conversation.setLockThread(true);
+                setThread(selectedMessage.getThread());
+                refresh();
                 return true;
             default:
                 return super.onContextItemSelected(item);
@@ -2116,7 +2171,29 @@ public class ConversationFragment extends XmppFragment
         }
     }
 
+    private void newThread() {
+        Element thread = new Element("thread", "jabber:client");
+        thread.setContent(UUID.randomUUID().toString());
+        setThread(thread);
+    }
+
+    private void updateThreadFromLastMessage() {
+        if (this.conversation != null && !this.conversation.getUserSelectedThread() && TextUtils.isEmpty(binding.textinput.getText())) {
+            Message message = getLastVisibleMessage();
+            if (message == null) {
+                newThread();
+            } else {
+                setThread(message.getThread());
+            }
+        }
+    }
+
     private String getLastVisibleMessageUuid() {
+        Message message =  getLastVisibleMessage();
+        return message == null ? null : message.getUuid();
+    }
+
+    private Message getLastVisibleMessage() {
         if (binding == null) {
             return null;
         }
@@ -2140,7 +2217,7 @@ public class ConversationFragment extends XmppFragment
                     while (message.next() != null && message.next().wasMergedIntoPrevious()) {
                         message = message.next();
                     }
-                    return message.getUuid();
+                    return message;
                 }
             }
         }
@@ -3684,13 +3761,9 @@ public class ConversationFragment extends XmppFragment
 
     @Override
     public void onContactPictureClicked(Message message) {
-        String fingerprint;
-        if (message.getEncryption() == Message.ENCRYPTION_PGP
-                || message.getEncryption() == Message.ENCRYPTION_DECRYPTED) {
-            fingerprint = "pgp";
-        } else {
-            fingerprint = message.getFingerprint();
-        }
+        setThread(message.getThread());
+        conversation.setUserSelectedThread(true);
+
         final boolean received = message.getStatus() <= Message.STATUS_RECEIVED;
         if (received) {
             if (message.getConversation() instanceof Conversation
@@ -3724,15 +3797,8 @@ public class ConversationFragment extends XmppFragment
                                 .show();
                     }
                 }
-                return;
-            } else {
-                if (!message.getContact().isSelf()) {
-                    activity.switchToContactDetails(message.getContact(), fingerprint);
-                    return;
-                }
             }
         }
-        activity.switchToAccount(message.getConversation().getAccount(), fingerprint);
     }
 
     private Activity requireActivity() {

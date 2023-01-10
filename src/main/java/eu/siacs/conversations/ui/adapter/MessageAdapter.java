@@ -42,6 +42,8 @@ import com.cheogram.android.BobTransfer;
 
 import com.google.common.base.Strings;
 
+import com.lelloman.identicon.view.GithubIdenticonView;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -107,6 +109,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     private List<String> highlightedTerm = null;
     private final DisplayMetrics metrics;
     private OnContactPictureClicked mOnContactPictureClickedListener;
+    private OnContactPictureClicked mOnMessageBoxClickedListener;
     private OnContactPictureLongClicked mOnContactPictureLongClickedListener;
     private boolean mUseGreenBackground = false;
     private final boolean mForceNames;
@@ -144,6 +147,10 @@ public class MessageAdapter extends ArrayAdapter<Message> {
 
     public void setOnContactPictureClicked(OnContactPictureClicked listener) {
         this.mOnContactPictureClickedListener = listener;
+    }
+
+    public void setOnMessageBoxClicked(OnContactPictureClicked listener) {
+        this.mOnMessageBoxClickedListener = listener;
     }
 
     public Activity getActivity() {
@@ -717,6 +724,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                     viewHolder.subject = view.findViewById(R.id.message_subject);
                     viewHolder.indicatorReceived = view.findViewById(R.id.indicator_received);
                     viewHolder.audioPlayer = view.findViewById(R.id.audio_player);
+                    viewHolder.thread_identicon = view.findViewById(R.id.thread_identicon);
                     break;
                 case RECEIVED:
                     view = activity.getLayoutInflater().inflate(R.layout.message_received, parent, false);
@@ -733,6 +741,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                     viewHolder.encryption = view.findViewById(R.id.message_encryption);
                     viewHolder.audioPlayer = view.findViewById(R.id.audio_player);
                     viewHolder.commands_list = view.findViewById(R.id.commands_list);
+                    viewHolder.thread_identicon = view.findViewById(R.id.thread_identicon);
                     break;
                 case STATUS:
                     view = activity.getLayoutInflater().inflate(R.layout.message_status, parent, false);
@@ -748,6 +757,19 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             viewHolder = (ViewHolder) view.getTag();
             if (viewHolder == null) {
                 return view;
+            }
+        }
+
+        if (viewHolder.thread_identicon != null) {
+            viewHolder.thread_identicon.setVisibility(View.GONE);
+            final Element thread = message.getThread();
+            if (thread != null) {
+                final String threadId = thread.getContent();
+                if (threadId != null) {
+                    viewHolder.thread_identicon.setVisibility(View.VISIBLE);
+                    viewHolder.thread_identicon.setColor(UIHelper.getColorForName(threadId));
+                    viewHolder.thread_identicon.setHash(UIHelper.identiconHash(threadId));
+                }
             }
         }
 
@@ -822,6 +844,18 @@ public class MessageAdapter extends ArrayAdapter<Message> {
 
         resetClickListener(viewHolder.message_box, viewHolder.messageBody);
 
+        viewHolder.message_box.setOnClickListener(v -> {
+            if (MessageAdapter.this.mOnMessageBoxClickedListener != null) {
+                MessageAdapter.this.mOnMessageBoxClickedListener
+                        .onContactPictureClicked(message);
+            }
+        });
+        viewHolder.messageBody.setOnClickListener(v -> {
+            if (MessageAdapter.this.mOnMessageBoxClickedListener != null) {
+                MessageAdapter.this.mOnMessageBoxClickedListener
+                        .onContactPictureClicked(message);
+            }
+        });
         viewHolder.contact_picture.setOnClickListener(v -> {
             if (MessageAdapter.this.mOnContactPictureClickedListener != null) {
                 MessageAdapter.this.mOnContactPictureClickedListener
@@ -1028,6 +1062,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         protected TextView status_message;
         protected TextView encryption;
         protected ListView commands_list;
+        protected GithubIdenticonView thread_identicon;
     }
 
     class ThumbnailTask extends AsyncTask<DownloadableFile, Void, Drawable[]> {

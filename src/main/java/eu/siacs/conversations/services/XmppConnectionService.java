@@ -568,6 +568,7 @@ public class XmppConnectionService extends Service {
             encryption = Message.ENCRYPTION_DECRYPTED;
         }
         Message message = new Message(conversation, uri.toString(), encryption);
+        message.setThread(conversation.getThread());
         Message.configurePrivateMessage(message);
         if (encryption == Message.ENCRYPTION_DECRYPTED) {
             getPgpEngine().encrypt(message, callback);
@@ -584,6 +585,7 @@ public class XmppConnectionService extends Service {
         } else {
             message = new Message(conversation, "", conversation.getNextEncryption());
         }
+        message.setThread(conversation.getThread());
         if (!Message.configurePrivateFileMessage(message)) {
             message.setCounterpart(conversation.getNextCounterpart());
             message.setType(Message.TYPE_FILE);
@@ -616,6 +618,7 @@ public class XmppConnectionService extends Service {
         } else {
             message = new Message(conversation, "", conversation.getNextEncryption());
         }
+        message.setThread(conversation.getThread());
         if (!Message.configurePrivateFileMessage(message)) {
             message.setCounterpart(conversation.getNextCounterpart());
             message.setType(Message.TYPE_IMAGE);
@@ -980,6 +983,7 @@ public class XmppConnectionService extends Service {
     private void directReply(final Conversation conversation, final String body, final String lastMessageUuid, final boolean dismissAfterReply) {
         final Message inReplyTo = lastMessageUuid == null ? null : conversation.findMessageWithUuid(lastMessageUuid);
         final Message message = new Message(conversation, body, conversation.getNextEncryption());
+        if (inReplyTo != null) message.setThread(inReplyTo.getThread());
         if (inReplyTo != null && inReplyTo.isPrivateMessage()) {
             Message.configurePrivateMessage(message, inReplyTo.getCounterpart());
         }

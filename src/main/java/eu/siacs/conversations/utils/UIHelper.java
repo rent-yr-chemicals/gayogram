@@ -11,8 +11,10 @@ import androidx.annotation.ColorInt;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.google.common.base.Strings;
+import com.google.common.primitives.Ints;
 
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -226,6 +228,16 @@ public class UIHelper {
         } else {
             return context.getString(R.string.last_seen_days,
                     Math.round(difference / (60.0 * 60.0 * 24.0)));
+        }
+    }
+
+    public static int identiconHash(String name) {
+        try {
+            MessageDigest sha1 = MessageDigest.getInstance("SHA-1");
+            byte[] digest = sha1.digest(name.getBytes(StandardCharsets.UTF_8));
+            return Ints.fromByteArray(digest);
+        } catch (Exception e) {
+            return 0;
         }
     }
 

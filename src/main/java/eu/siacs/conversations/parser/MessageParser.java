@@ -610,6 +610,10 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                 if (el.getName().equals("query") && el.getNamespace().equals("http://jabber.org/protocol/disco#items") && el.getAttribute("node").equals("http://jabber.org/protocol/commands")) {
                     message.addPayload(el);
                 }
+                if (el.getName().equals("thread") && (el.getNamespace() == null || el.getNamespace().equals("jabber:client"))) {
+                    el.setAttribute("xmlns", "jabber:client");
+                    message.addPayload(el);
+                }
             }
             if (conversationMultiMode) {
                 message.setMucUser(conversation.getMucOptions().findUserByFullJid(counterpart));
