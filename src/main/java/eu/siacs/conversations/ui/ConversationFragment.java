@@ -1261,9 +1261,14 @@ public class ConversationFragment extends XmppFragment
         binding.threadIdenticonLayout.setOnClickListener(v -> {
             boolean wasLocked = conversation.getLockThread();
             conversation.setLockThread(false);
-            newThread();
-            conversation.setUserSelectedThread(true);
-            if (wasLocked) refresh();
+            if (wasLocked) {
+                conversation.setUserSelectedThread(false);
+                refresh();
+                updateThreadFromLastMessage();
+            } else {
+                newThread();
+                conversation.setUserSelectedThread(true);
+            }
         });
 
         binding.threadIdenticonLayout.setOnLongClickListener(v -> {
@@ -1519,7 +1524,6 @@ public class ConversationFragment extends XmppFragment
                 conversation.setLockThread(true);
                 setThread(selectedMessage.getThread());
                 refresh();
-                setThread(selectedMessage.getThread());
                 return true;
             default:
                 return super.onContextItemSelected(item);
