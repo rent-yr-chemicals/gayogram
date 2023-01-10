@@ -480,6 +480,7 @@ public abstract class XmppActivity extends ActionBarActivity {
         intent.putExtra(ConversationsActivity.EXTRA_CONVERSATION, xmppConnectionService.findOrCreateConversation(account, jid, false, false).getUuid());
         intent.putExtra(ConversationsActivity.EXTRA_POST_INIT_ACTION, "command");
         intent.putExtra(ConversationsActivity.EXTRA_NODE, node);
+        intent.putExtra(ConversationsActivity.EXTRA_JID, (CharSequence) jid);
         intent.setFlags(intent.getFlags() | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         startActivity(intent);
     }

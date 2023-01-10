@@ -100,6 +100,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
     public static final String POST_ACTION_RECORD_VOICE = "record_voice";
     public static final String EXTRA_TYPE = "type";
     public static final String EXTRA_NODE = "node";
+    public static final String EXTRA_JID = "jid";
 
     private static final List<String> VIEW_AND_SHARE_ACTIONS = Arrays.asList(
             ACTION_VIEW_CONVERSATION,
