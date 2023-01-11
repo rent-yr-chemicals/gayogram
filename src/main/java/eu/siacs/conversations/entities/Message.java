@@ -528,6 +528,10 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         this.timeSent = time;
     }
 
+    public void setTimeReceived(long time) {
+        this.timeReceived = time;
+    }
+
     public String getEncryptedBody() {
         return this.encryptedBody;
     }

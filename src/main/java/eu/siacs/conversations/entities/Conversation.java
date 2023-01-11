@@ -691,6 +691,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 Message message = new Message(this, "", Message.ENCRYPTION_NONE);
                 message.setType(Message.TYPE_STATUS);
                 message.setTime(Math.max(getCreated(), getLastClearHistory().getTimestamp()));
+                message.setTimeReceived(Math.max(getCreated(), getLastClearHistory().getTimestamp()));
                 return message;
             } else {
                 return this.messages.get(this.messages.size() - 1);
