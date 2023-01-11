@@ -37,9 +37,13 @@ import androidx.annotation.StringRes;
 import androidx.core.content.FileProvider;
 import androidx.exifinterface.media.ExifInterface;
 
+import com.cheogram.android.BobTransfer;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
+
+import com.wolt.blurhashkt.BlurHashDecoder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -53,11 +57,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.ByteBuffer;
 import java.security.DigestOutputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -78,6 +84,7 @@ import eu.siacs.conversations.utils.FileUtils;
 import eu.siacs.conversations.utils.FileWriterException;
 import eu.siacs.conversations.utils.MimeUtils;
 import eu.siacs.conversations.xmpp.pep.Avatar;
+import eu.siacs.conversations.xml.Element;
 
 public class FileBackend {
 
@@ -1000,8 +1007,89 @@ public class FileBackend {
         }
     }
 
+    public BitmapDrawable getFallbackThumbnail(final Message message, int size) {
+        List<Element> thumbs = message.getFileParams() != null ? message.getFileParams().getThumbnails() : null;
+        if (thumbs != null && !thumbs.isEmpty()) {
+            for (Element thumb : thumbs) {
+                Uri uri = Uri.parse(thumb.getAttribute("uri"));
+                if (uri.getScheme().equals("data")) {
+                    String[] parts = uri.getSchemeSpecificPart().split(",", 2);
+                    if (parts[0].equals("image/blurhash")) {
+                        final LruCache<String, Drawable> cache = mXmppConnectionService.getDrawableCache();
+                        BitmapDrawable cached = (BitmapDrawable) cache.get(parts[1]);
+                        if (cached != null) return cached;
+
+                        int width = message.getFileParams().width;
+                        if (width < 1 && thumb.getAttribute("width") != null) width = Integer.parseInt(thumb.getAttribute("width"));
+                        if (width < 1) width = 1920;
+
+                        int height = message.getFileParams().height;
+                        if (height < 1 && thumb.getAttribute("height") != null) height = Integer.parseInt(thumb.getAttribute("height"));
+                        if (height < 1) height = 1080;
+                        Rect r = rectForSize(width, height, size);
+
+                        Bitmap blurhash = BlurHashDecoder.INSTANCE.decode(parts[1], r.width(), r.height(), 1.0f, false);
+                        if (blurhash != null) {
+                            cached = new BitmapDrawable(blurhash);
+                            cache.put(parts[1], cached);
+                            return cached;
+                        }
+                    }
+                }
+            }
+         }
+
+        return null;
+    }
+
     public Drawable getThumbnail(Message message, Resources res, int size, boolean cacheOnly) throws IOException {
-        return getThumbnail(getFile(message), res, size, cacheOnly);
+        final LruCache<String, Drawable> cache = mXmppConnectionService.getDrawableCache();
+        DownloadableFile file = getFile(message);
+        Drawable thumbnail = cache.get(file.getAbsolutePath());
+        if (thumbnail != null) return thumbnail;
+
+        if ((thumbnail == null) && (!cacheOnly)) {
+            synchronized (THUMBNAIL_LOCK) {
+                List<Element> thumbs = message.getFileParams() != null ? message.getFileParams().getThumbnails() : null;
+                if (thumbs != null && !thumbs.isEmpty()) {
+                    for (Element thumb : thumbs) {
+                        Uri uri = Uri.parse(thumb.getAttribute("uri"));
+                        if (uri.getScheme().equals("data")) {
+                            if (android.os.Build.VERSION.SDK_INT < 28) continue;
+                            String[] parts = uri.getSchemeSpecificPart().split(",", 2);
+                            byte[] data;
+                            if (Arrays.asList(parts[0].split(";")).contains("base64")) {
+                                data = Base64.decode(parts[1], 0);
+                            } else {
+                                data = parts[1].getBytes("UTF-8");
+                            }
+
+                            ImageDecoder.Source source = ImageDecoder.createSource(ByteBuffer.wrap(data));
+                            thumbnail = ImageDecoder.decodeDrawable(source, (decoder, info, src) -> {
+                                int w = info.getSize().getWidth();
+                                int h = info.getSize().getHeight();
+                                Rect r = rectForSize(w, h, size);
+                                decoder.setTargetSize(r.width(), r.height());
+                            });
+
+                            if (thumbnail != null) {
+                                cache.put(file.getAbsolutePath(), thumbnail);
+                                return thumbnail;
+                            }
+                        } else if (uri.getScheme().equals("cid")) {
+                            Cid cid = BobTransfer.cid(uri);
+                            if (cid == null) continue;
+                            DownloadableFile f = mXmppConnectionService.getFileForCid(cid);
+                            if (f != null && f.canRead()) {
+                                return getThumbnail(f, res, size, cacheOnly);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return getThumbnail(file, res, size, cacheOnly);
     }
 
     public Drawable getThumbnail(DownloadableFile file, Resources res, int size, boolean cacheOnly) throws IOException {
@@ -1605,7 +1693,8 @@ public class FileBackend {
         final boolean image =
                 message.getType() == Message.TYPE_IMAGE
                         || (mime != null && mime.startsWith("image/"));
-        Message.FileParams fileParams = new Message.FileParams();
+        Message.FileParams fileParams = message.getFileParams();
+        if (fileParams == null) fileParams = new Message.FileParams();
         if (url != null) {
             fileParams.url = url;
         }

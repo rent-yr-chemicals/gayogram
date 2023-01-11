@@ -916,8 +916,9 @@ public abstract class XmppActivity extends ActionBarActivity {
                 imageView.setBackgroundColor(0xff333333);
                 imageView.setImageDrawable(null);
                 final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
+                final BitmapDrawable fallbackThumb = xmppConnectionService.getFileBackend().getFallbackThumbnail(message, (int) (metrics.density * 288));
                 final AsyncDrawable asyncDrawable = new AsyncDrawable(
-                        getResources(), null, task);
+                        getResources(), fallbackThumb != null ? fallbackThumb.getBitmap() : null, task);
                 imageView.setImageDrawable(asyncDrawable);
                 try {
                     task.execute(message);
@@ -995,7 +996,12 @@ public abstract class XmppActivity extends ActionBarActivity {
             if (!isCancelled()) {
                 final ImageView imageView = imageViewReference.get();
                 if (imageView != null) {
-                    imageView.setImageDrawable(drawable);
+                    Drawable old = imageView.getDrawable();
+                    if (drawable == null && old instanceof AsyncDrawable) {
+                        imageView.setImageDrawable(new BitmapDrawable(((AsyncDrawable) old).getBitmap()));
+                    } else {
+                        imageView.setImageDrawable(drawable);
+                    }
                     imageView.setBackgroundColor(drawable == null ? 0xff333333 : 0x00000000);
                     if (Build.VERSION.SDK_INT >= 28 && drawable instanceof AnimatedImageDrawable) {
                         ((AnimatedImageDrawable) drawable).start();

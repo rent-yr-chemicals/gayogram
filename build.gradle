@@ -100,6 +100,7 @@ dependencies {
     implementation 'me.saket:better-link-movement-method:2.2.0'
     implementation 'com.github.singpolyma:android-identicons:master-SNAPSHOT'
     implementation 'org.snikket:webrtc-android:107.0.0'
+    implementation 'com.github.woltapp:blurhash:master'
     // INSERT
 }
 

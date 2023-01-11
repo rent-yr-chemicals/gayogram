@@ -5,17 +5,21 @@ import android.util.Pair;
 
 import com.cheogram.android.BobTransfer;
 
+import java.io.File;
 import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+
+import io.ipfs.cid.Cid;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
@@ -410,13 +414,19 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
         final Element mucUserElement = packet.findChild("x", Namespace.MUC_USER);
         final String pgpEncrypted = packet.findChildContent("x", "jabber:x:encrypted");
         final Element replaceElement = packet.findChild("replace", "urn:xmpp:message-correct:0");
-        Element oob = packet.findChild("x", Namespace.OOB);
-        if (oob != null && oob.findChildContent("url") == null) {
-            oob = null;
+        Set<Message.FileParams> attachments = new LinkedHashSet<>();
+        for (Element child : packet.getChildren()) {
+            // SIMS first so they get preference in the set
+            if (child.getName().equals("reference") && child.getNamespace().equals("urn:xmpp:reference:0")) {
+                if (child.findChild("media-sharing", "urn:xmpp:sims:1") != null) {
+                    attachments.add(new Message.FileParams(child));
+                }
+            }
         }
-        final Element reference = packet.findChild("reference", "urn:xmpp:reference:0");
-        if (reference != null && reference.findChild("media-sharing", "urn:xmpp:sims:1") != null) {
-            oob = reference;
+        for (Element child : packet.getChildren()) {
+            if (child.getName().equals("x") && child.getNamespace().equals(Namespace.OOB)) {
+                attachments.add(new Message.FileParams(child));
+            }
         }
         String replacementId = replaceElement == null ? null : replaceElement.getAttribute("id");
         if (replacementId == null) {
@@ -485,7 +495,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             }
         }
 
-        if ((body != null || pgpEncrypted != null || (axolotlEncrypted != null && axolotlEncrypted.hasChild("payload")) || oob != null || html != null) && !isMucStatusMessage) {
+        if ((body != null || pgpEncrypted != null || (axolotlEncrypted != null && axolotlEncrypted.hasChild("payload")) || !attachments.isEmpty() || html != null) && !isMucStatusMessage) {
             final boolean conversationIsProbablyMuc = isTypeGroupChat || mucUserElement != null || account.getXmppConnection().getMucServersWithholdAccount().contains(counterpart.getDomain().toEscapedString());
             final Conversation conversation = mXmppConnectionService.findOrCreateConversation(account, counterpart.asBareJid(), conversationIsProbablyMuc, false, query, false);
             final boolean conversationMultiMode = conversation.getMode() == Conversation.MODE_MULTI;
@@ -583,7 +593,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                 if (conversationMultiMode) {
                     message.setTrueCounterpart(origin);
                 }
-            } else if (body == null && oob != null) {
+            } else if (body == null && !attachments.isEmpty()) {
                 message = new Message(conversation, "", Message.ENCRYPTION_NONE, status);
             } else {
                 message = new Message(conversation, body == null ? "HTML-only message" : body.content, Message.ENCRYPTION_NONE, status);
@@ -599,8 +609,8 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             message.setServerMsgId(serverMsgId);
             message.setCarbon(isCarbon);
             message.setTime(timestamp);
-            if (oob != null) {
-                message.setFileParams(new Message.FileParams(oob));
+            if (!attachments.isEmpty()) {
+                message.setFileParams(attachments.iterator().next());
                 if (CryptoHelper.isPgpEncryptedUrl(message.getFileParams().url)) {
                     message.setEncryption(Message.ENCRYPTION_DECRYPTED);
                 }
@@ -768,9 +778,21 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                 processMessageReceipts(account, packet, remoteMsgId, query);
             }
 
+            if (message.getFileParams() != null) {
+                for (Cid cid : message.getFileParams().getCids()) {
+                    File f = mXmppConnectionService.getFileForCid(cid);
+                    if (f != null && f.canRead()) {
+                        message.setRelativeFilePath(f.getAbsolutePath());
+                        mXmppConnectionService.getFileBackend().updateFileParams(message, null, false);
+                        break;
+                    }
+                }
+            }
+
             mXmppConnectionService.databaseBackend.createMessage(message);
+
             final HttpConnectionManager manager = this.mXmppConnectionService.getHttpConnectionManager();
-            if (message.trusted() && message.treatAsDownloadable() && manager.getAutoAcceptFileSize() > 0) {
+            if (message.getRelativeFilePath() == null && message.trusted() && message.treatAsDownloadable() && manager.getAutoAcceptFileSize() > 0) {
                 if (message.getOob() != null && message.getOob().getScheme().equalsIgnoreCase("cid")) {
                     try {
                         BobTransfer transfer = new BobTransfer.ForMessage(message, mXmppConnectionService);
