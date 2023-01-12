@@ -111,7 +111,7 @@ ext {
 
 android {
     namespace 'eu.siacs.conversations'
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     defaultConfig {
         minSdkVersion 21
