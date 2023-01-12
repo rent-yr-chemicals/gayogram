@@ -107,6 +107,8 @@ public class MessageGenerator extends AbstractGenerator {
             final Message.FileParams fileParams = message.getFileParams();
             content = fileParams.url;
             packet.addChild("x", Namespace.OOB).addChild("url").setContent(content);
+            packet.addChild("fallback", "urn:xmpp:fallback:0").setAttribute("for", Namespace.OOB)
+                  .addChild("body", "urn:xmpp:fallback:0");
         } else {
             content = message.getBody();
         }
@@ -121,6 +123,8 @@ public class MessageGenerator extends AbstractGenerator {
             final String url = fileParams.url;
             packet.setBody(url);
             packet.addChild("x", Namespace.OOB).addChild("url").setContent(url);
+            packet.addChild("fallback", "urn:xmpp:fallback:0").setAttribute("for", Namespace.OOB)
+                  .addChild("body", "urn:xmpp:fallback:0");
         } else {
             if (Config.supportUnencrypted()) {
                 packet.setBody(PGP_FALLBACK_MESSAGE);
