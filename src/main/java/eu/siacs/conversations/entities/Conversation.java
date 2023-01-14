@@ -1309,7 +1309,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
         public void startCommand(Element command, XmppConnectionService xmppConnectionService) {
             show();
-            CommandSession session = new CommandSession(command.getAttribute("name"), xmppConnectionService);
+            CommandSession session = new CommandSession(command.getAttribute("name"), command.getAttribute("node"), xmppConnectionService);
 
             final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
             packet.setTo(command.getAttributeAsJid("jid"));
@@ -2046,6 +2046,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected boolean loading = false;
             protected Timer loadingTimer = new Timer();
             protected String mTitle;
+            protected String mNode;
             protected CommandPageBinding mBinding = null;
             protected IqPacket response = null;
             protected Element responseElement = null;
@@ -2056,9 +2057,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected GridLayoutManager layoutManager;
             protected WebView actionToWebview = null;
 
-            CommandSession(String title, XmppConnectionService xmppConnectionService) {
+            CommandSession(String title, String node, XmppConnectionService xmppConnectionService) {
                 loading();
                 mTitle = title;
+                mNode = node;
                 this.xmppConnectionService = xmppConnectionService;
                 if (mPager != null) setupLayoutManager();
                 actionsAdapter = new ArrayAdapter<String>(xmppConnectionService, R.layout.simple_list_item) {
@@ -2104,6 +2106,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                 Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
                 if (iq.getType() == IqPacket.TYPE.RESULT && command != null) {
+                    if (mNode.equals("jabber:iq:register") && command.getAttribute("status").equals("completed")) {
+                        xmppConnectionService.createContact(getAccount().getRoster().getContact(iq.getFrom()), true);
+                    }
+
                     for (Element el : command.getChildren()) {
                         if (el.getName().equals("actions") && el.getNamespace().equals("http://jabber.org/protocol/commands")) {
                             for (Element action : el.getChildren()) {
@@ -2368,7 +2374,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
                 packet.setTo(response.getFrom());
                 final Element c = packet.addChild("command", Namespace.COMMANDS);
-                c.setAttribute("node", command.getAttribute("node"));
+                c.setAttribute("node", mNode);
                 c.setAttribute("sessionid", command.getAttribute("sessionid"));
                 c.setAttribute("action", action);
 

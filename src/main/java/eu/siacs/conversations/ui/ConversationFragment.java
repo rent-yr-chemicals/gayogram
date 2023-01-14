@@ -2641,6 +2641,10 @@ public class ConversationFragment extends XmppFragment
         return true;
     }
 
+    public void refreshForNewCaps() {
+        refreshCommands();
+    }
+
     protected void refreshCommands() {
         if (commandAdapter == null) return;
 
@@ -2760,7 +2764,17 @@ public class ConversationFragment extends XmppFragment
                 if (adapter != null && adapter.getCount() > 1) {
                     binding.conversationViewPager.setCurrentItem(1);
                 }
-                final Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
+                final String jid = extras.getString(ConversationsActivity.EXTRA_JID);
+                Jid commandJid = null;
+                if (jid != null) {
+                    try {
+                        commandJid = Jid.of(jid);
+                    } catch (final IllegalArgumentException e) { }
+                }
+                if (commandJid == null || !commandJid.isFullJid()) {
+                    final Jid discoJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
+                    if (discoJid != null) commandJid = discoJid;
+                }
                 if (node != null && commandJid != null) {
                     conversation.startCommand(commandFor(commandJid, node), activity.xmppConnectionService);
                 }
