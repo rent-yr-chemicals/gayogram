@@ -1280,12 +1280,13 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 
         public boolean equals(Object o) {
             if (!(o instanceof FileParams)) return false;
+            if (url == null) return false;
 
             return url.equals(((FileParams) o).url);
         }
 
         public int hashCode() {
-            return url.hashCode();
+            return url == null ? super.hashCode() : url.hashCode();
         }
     }
 
