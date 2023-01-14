@@ -276,7 +276,7 @@ android {
             if (baseAbiVersionCode != null) {
                 output.versionCodeOverride = (100 * project.android.defaultConfig.versionCode) + baseAbiVersionCode
             } else {
-                output.versionCodeOverride = (100 * project.android.defaultConfig.versionCode) + 89
+                output.versionCodeOverride = (100 * project.android.defaultConfig.versionCode) + 90
             }
         }
 
