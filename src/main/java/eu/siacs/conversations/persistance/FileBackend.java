@@ -1061,6 +1061,8 @@ public class FileBackend {
                         if (uri.getScheme().equals("data")) {
                             if (android.os.Build.VERSION.SDK_INT < 28) continue;
                             String[] parts = uri.getSchemeSpecificPart().split(",", 2);
+                            if (parts[0].equals("image/blurhash")) continue; // blurhash only for fallback
+
                             byte[] data;
                             if (Arrays.asList(parts[0].split(";")).contains("base64")) {
                                 data = Base64.decode(parts[1], 0);
