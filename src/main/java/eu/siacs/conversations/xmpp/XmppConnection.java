@@ -77,6 +77,7 @@ import eu.siacs.conversations.services.MemorizingTrustManager;
 import eu.siacs.conversations.services.MessageArchiveService;
 import eu.siacs.conversations.services.NotificationService;
 import eu.siacs.conversations.services.XmppConnectionService;
+import eu.siacs.conversations.utils.AccountUtils;
 import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.Patterns;
 import eu.siacs.conversations.utils.PhoneHelper;
@@ -1534,7 +1535,7 @@ public class XmppConnection implements Runnable {
             authenticate.addChild("initial-response").setContent(firstMessage);
         }
         final Element userAgent = authenticate.addChild("user-agent");
-        userAgent.setAttribute("id", account.getUuid());
+        userAgent.setAttribute("id", AccountUtils.publicDeviceId(account));
         userAgent
                 .addChild("software")
                 .setContent(mXmppConnectionService.getString(R.string.app_name));
@@ -1907,16 +1908,7 @@ public class XmppConnection implements Runnable {
         }
         Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": starting service discovery");
         mPendingServiceDiscoveries.set(0);
-        if (!waitForDisco
-                || Patches.DISCO_EXCEPTIONS.contains(
-                        account.getJid().getDomain().toEscapedString())) {
-            Log.d(
-                    Config.LOGTAG,
-                    account.getJid().asBareJid() + ": do not wait for service discovery");
-            mWaitForDisco.set(false);
-        } else {
-            mWaitForDisco.set(true);
-        }
+        mWaitForDisco.set(waitForDisco);
         lastDiscoStarted = SystemClock.elapsedRealtime();
         mXmppConnectionService.scheduleWakeUpCall(
                 Config.CONNECT_DISCO_TIMEOUT, account.getUuid().hashCode());
@@ -2545,41 +2537,8 @@ public class XmppConnection implements Runnable {
         this.mInteractive = interactive;
     }
 
-    public Identity getServerIdentity() {
-        synchronized (this.disco) {
-            ServiceDiscoveryResult result = disco.get(account.getJid().getDomain());
-            if (result == null) {
-                return Identity.UNKNOWN;
-            }
-            for (final ServiceDiscoveryResult.Identity id : result.getIdentities()) {
-                if (id.getType().equals("im")
-                        && id.getCategory().equals("server")
-                        && id.getName() != null) {
-                    switch (id.getName()) {
-                        case "Prosody":
-                            return Identity.PROSODY;
-                        case "ejabberd":
-                            return Identity.EJABBERD;
-                        case "Slack-XMPP":
-                            return Identity.SLACK;
-                    }
-                }
-            }
-        }
-        return Identity.UNKNOWN;
-    }
-
     private IqGenerator getIqGenerator() {
         return mXmppConnectionService.getIqGenerator();
-    }
-
-    public enum Identity {
-        FACEBOOK,
-        SLACK,
-        EJABBERD,
-        PROSODY,
-        NIMBUZZ,
-        UNKNOWN
     }
 
     private class MyKeyManager implements X509KeyManager {

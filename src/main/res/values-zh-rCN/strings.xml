@@ -547,7 +547,8 @@
     <string name="share_uri_with">分享链接……</string>
     <string name="welcome_text_quicksy"><![CDATA[Quicksy是从受欢迎的XMPP客户端对话中分离出来的，具有自动联系人发现功能<br><br>您注册了电话号码，Quicksy就会根据您的通讯录中的电话号码自动为您建议可能的联系人<br><br>签署即表示您同意我们的<a href="https://quicksy.im/#privacy">隐私政策</a>。]]></string>
     <string name="agree_and_continue">同意并继续</string>
-    <string name="magic_create_text">此向导将为您在conversations.im¹上创建一个账户。\n您的联系人可以通过您的XMPP完整地址与您聊天。</string>
+    <string name="magic_create_text">此向导将为您在conversations.im 上创建一个账户。
+\n您的联系人可以通过您的XMPP完整地址与您聊天。</string>
     <string name="your_full_jid_will_be">您的XMPP完整地址将是：%s</string>
     <string name="create_account">创建账户</string>
     <string name="use_own_provider">使用我自己的服务器</string>
@@ -989,4 +990,10 @@
     <string name="audio_video_disabled_tor">使用 Tor 时通话被禁用</string>
     <string name="switch_to_video">切换到视频</string>
     <string name="reject_switch_to_video">拒绝切换到视频的请求</string>
+    <string name="pref_up_push_account_title">XMPP 账户</string>
+    <string name="pref_up_push_server_title">推送服务器</string>
+    <string name="no_account_deactivated">无（未激活）</string>
+    <string name="unified_push_distributor">UnifiedPush 分发程序</string>
+    <string name="pref_up_push_account_summary">将通过该账户接收推送消息。</string>
+    <string name="pref_up_push_server_summary">用户选择的推送服务器，通过 XMPP 将推送消息传递到你的设备。</string>
 </resources>
