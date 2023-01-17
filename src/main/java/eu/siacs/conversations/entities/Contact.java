@@ -496,6 +496,12 @@ public class Contact implements ListItem, Blockable {
 
     @Override
     public int compareTo(@NonNull final ListItem another) {
+        if (getJid().isDomainJid() && !another.getJid().isDomainJid()) {
+            return -1;
+        } else if (!getJid().isDomainJid() && another.getJid().isDomainJid()) {
+            return 1;
+        }
+
         return this.getDisplayName().compareToIgnoreCase(
                 another.getDisplayName());
     }
