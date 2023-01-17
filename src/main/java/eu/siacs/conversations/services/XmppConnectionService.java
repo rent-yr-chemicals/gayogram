@@ -1899,6 +1899,8 @@ public class XmppConnectionService extends Service {
         }
         account.removeBookmark(bookmark);
         final XmppConnection connection = account.getXmppConnection();
+        if (connection == null) return;
+
         if (connection.getFeatures().bookmarks2()) {
             IqPacket request = mIqGenerator.deleteItem(Namespace.BOOKMARKS2, bookmark.getJid().asBareJid().toEscapedString());
             sendIqPacket(account, request, (a, response) -> {

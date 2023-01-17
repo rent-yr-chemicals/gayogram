@@ -1568,7 +1568,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Subhead);
                         setTextOrHide(binding.text, cell.reported.getLabel());
                     } else {
-                        SpannableStringBuilder text = new SpannableStringBuilder(cell.el.findChildContent("value", "jabber:x:data"));
+                        String value = cell.el.findChildContent("value", "jabber:x:data");
+                        SpannableStringBuilder text = new SpannableStringBuilder(value == null ? "" : value);
                         if (cell.reported.getType().equals(Optional.of("jid-single"))) {
                             text.setSpan(new FixedURLSpan("xmpp:" + Jid.ofEscaped(text.toString()).toEscapedString()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         }
