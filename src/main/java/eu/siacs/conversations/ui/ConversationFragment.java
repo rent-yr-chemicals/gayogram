@@ -1379,7 +1379,6 @@ public class ConversationFragment extends XmppFragment
                             && (t instanceof JingleFileTransferConnection
                                     || t instanceof HttpDownloadConnection);
             activity.getMenuInflater().inflate(R.menu.message_context, menu);
-            menu.setHeaderTitle(R.string.message_options);
             MenuItem openWith = menu.findItem(R.id.open_with);
             MenuItem copyMessage = menu.findItem(R.id.copy_message);
             MenuItem quoteMessage = menu.findItem(R.id.quote_message);
@@ -1400,12 +1399,7 @@ public class ConversationFragment extends XmppFragment
                     m.getStatus() == Message.STATUS_SEND_FAILED
                             && m.getErrorMessage() != null
                             && !Message.ERROR_MESSAGE_CANCELLED.equals(m.getErrorMessage());
-            if (!m.isFileOrImage()
-                    && !encrypted
-                    && !m.isGeoUri()
-                    && !m.treatAsDownloadable()
-                    && !unInitiatedButKnownSize
-                    && t == null) {
+            if (!encrypted && !m.getBody().equals("")) {
                 copyMessage.setVisible(true);
                 quoteMessage.setVisible(!showError && MessageUtils.prepareQuote(m).length() > 0);
             }
