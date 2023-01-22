@@ -2150,7 +2150,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         }
                     }
 
-                    if (responseElement == null && (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled"))) {
+                    if (responseElement == null && command.getAttribute("status") != null && (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled"))) {
                         removeSession(this);
                         return;
                     }
