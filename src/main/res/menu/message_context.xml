@@ -43,6 +43,10 @@
         android:title="@string/copy_original_url"
         android:visible="false" />
     <item
+        android:id="@+id/save_as_sticker"
+        android:title="@string/save_as_sticker"
+        android:visible="false" />
+    <item
         android:id="@+id/show_error_message"
         android:title="@string/show_error_message"
         android:visible="false" />

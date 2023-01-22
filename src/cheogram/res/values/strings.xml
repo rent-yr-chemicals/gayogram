@@ -28,4 +28,6 @@
     <string name="only_this_thread">Show only this thread</string>
     <string name="pref_dialler_integration_incoming">Use Phone Accounts for Incoming Calls</string>
     <string name="pref_dialler_integration_incoming_summary">Incoming calls from phone numbers may ring with your system dialler instead of this app\'s notification settings</string>
+    <string name="save_as_sticker">Save as Sticker</string>
+    <string name="sticker_name">Sticker Name</string>
 </resources>
