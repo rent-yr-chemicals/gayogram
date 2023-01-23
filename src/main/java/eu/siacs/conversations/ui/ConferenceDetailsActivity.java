@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
@@ -386,7 +387,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
             if (http) {
                 return "https://conversations.im/j/" + XmppUri.lameUrlEncode(mConversation.getJid().asBareJid().toEscapedString());
             } else {
-                return "xmpp:" + mConversation.getJid().asBareJid() + "?join";
+                return "xmpp:" + Uri.encode(mConversation.getJid().asBareJid().toEscapedString(), "@/") + "?join";
             }
         } else {
             return null;
