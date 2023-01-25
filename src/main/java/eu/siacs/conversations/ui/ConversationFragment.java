@@ -75,6 +75,8 @@ import com.google.common.collect.ImmutableList;
 
 import org.jetbrains.annotations.NotNull;
 
+import io.ipfs.cid.Cid;
+
 import java.io.File;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -159,7 +161,8 @@ import eu.siacs.conversations.xmpp.stanzas.IqPacket;
 public class ConversationFragment extends XmppFragment
         implements EditMessage.KeyboardListener,
                 MessageAdapter.OnContactPictureLongClicked,
-                MessageAdapter.OnContactPictureClicked {
+                MessageAdapter.OnContactPictureClicked,
+                MessageAdapter.OnInlineImageLongClicked {
 
     public static final int REQUEST_SEND_MESSAGE = 0x0201;
     public static final int REQUEST_DECRYPT_PGP = 0x0202;
@@ -1282,6 +1285,7 @@ public class ConversationFragment extends XmppFragment
         messageListAdapter = new MessageAdapter((XmppActivity) getActivity(), this.messageList);
         messageListAdapter.setOnContactPictureClicked(this);
         messageListAdapter.setOnContactPictureLongClicked(this);
+        messageListAdapter.setOnInlineImageLongClicked(this);
         binding.messagesView.setAdapter(messageListAdapter);
 
         registerForContextMenu(binding.messagesView);
@@ -1340,6 +1344,7 @@ public class ConversationFragment extends XmppFragment
         Log.d(Config.LOGTAG, "ConversationFragment.onDestroyView()");
         messageListAdapter.setOnContactPictureClicked(null);
         messageListAdapter.setOnContactPictureLongClicked(null);
+        messageListAdapter.setOnInlineImageLongClicked(null);
         if (conversation != null) conversation.setupViewPager(null, null);
     }
 
@@ -2324,6 +2329,14 @@ public class ConversationFragment extends XmppFragment
                 });
         builder.setPositiveButton(R.string.confirm, null);
         builder.create().show();
+    }
+
+    public boolean onInlineImageLongClicked(Cid cid) {
+        DownloadableFile f = activity.xmppConnectionService.getFileForCid(cid);
+        if (f == null) return false;
+
+        saveAsSticker(f, null);
+        return true;
     }
 
     private void saveAsSticker(final Message m) {
