@@ -21,6 +21,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
+import android.widget.GridLayout;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -72,6 +73,7 @@ import eu.siacs.conversations.databinding.CommandPageBinding;
 import eu.siacs.conversations.databinding.CommandNoteBinding;
 import eu.siacs.conversations.databinding.CommandResultFieldBinding;
 import eu.siacs.conversations.databinding.CommandResultCellBinding;
+import eu.siacs.conversations.databinding.CommandItemCardBinding;
 import eu.siacs.conversations.databinding.CommandCheckboxFieldBinding;
 import eu.siacs.conversations.databinding.CommandProgressBarBinding;
 import eu.siacs.conversations.databinding.CommandRadioEditFieldBinding;
@@ -1588,6 +1590,38 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
+            class ItemCardViewHolder extends ViewHolder<CommandItemCardBinding> {
+                public ItemCardViewHolder(CommandItemCardBinding binding) { super(binding); }
+
+                @Override
+                public void bind(Item item) {
+                    for (Field field : reported) {
+                        CommandResultFieldBinding row = DataBindingUtil.inflate(LayoutInflater.from(binding.getRoot().getContext()), R.layout.command_result_field, binding.fields, false);
+                        GridLayout.LayoutParams param = new GridLayout.LayoutParams();
+                        param.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, GridLayout.FILL, 1f);
+                        param.width = 0;
+                        row.getRoot().setLayoutParams(param);
+                        binding.fields.addView(row.getRoot());
+                        for (Element el : item.el.getChildren()) {
+                            if (el.getName().equals("field") && el.getNamespace().equals("jabber:x:data") && el.getAttribute("var") != null && el.getAttribute("var").equals(field.getVar())) {
+                                for (String label : field.getLabel().asSet()) {
+                                    el.setAttribute("label", label);
+                                }
+                                for (String desc : field.getDesc().asSet()) {
+                                    el.setAttribute("desc", desc);
+                                }
+                                for (String type : field.getType().asSet()) {
+                                    el.setAttribute("type", type);
+                                }
+                                Element validate = field.el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                                if (validate != null) el.addChild(validate);
+                                new ResultFieldViewHolder(row).bind(new Field(el, -1));
+                            }
+                        }
+                    }
+                }
+            }
+
             class CheckboxFieldViewHolder extends ViewHolder<CommandCheckboxFieldBinding> implements CompoundButton.OnCheckedChangeListener {
                 public CheckboxFieldViewHolder(CommandCheckboxFieldBinding binding) {
                     super(binding);
@@ -2043,6 +2077,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_RESULT_CELL = 9;
             final int TYPE_PROGRESSBAR = 10;
             final int TYPE_SEARCH_LIST_FIELD = 11;
+            final int TYPE_ITEM_CARD = 12;
 
             protected boolean loading = false;
             protected Timer loadingTimer = new Timer();
@@ -2130,7 +2165,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             if (el.getAttribute("type").equals("result") || el.getAttribute("type").equals("form")) {
                                 this.responseElement = el;
                                 setupReported(el.findChild("reported", "jabber:x:data"));
-                                layoutManager.setSpanCount(this.reported == null ? 1 : this.reported.size());
+                                if (mBinding != null) mBinding.form.setLayoutManager(setupLayoutManager());
                             }
                             break;
                         }
@@ -2205,7 +2240,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         }
 
                         if (el.getName().equals("reported") || el.getName().equals("item")) {
-                            if (reported != null) i += reported.size();
+                            if ((layoutManager == null ? 1 : layoutManager.getSpanCount()) < 2) {
+                                if (el.getName().equals("reported")) continue;
+                                i += 1;
+                            } else {
+                                if (reported != null) i += reported.size();
+                            }
                             continue;
                         }
 
@@ -2236,21 +2276,29 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                 Cell cell = null;
 
                                 if (reported != null) {
-                                    if (reported.size() > position - i) {
-                                        Field reportedField = reported.get(position - i);
-                                        Element itemField = null;
-                                        if (el.getName().equals("item")) {
-                                            for (Element subel : el.getChildren()) {
-                                                if (subel.getAttribute("var").equals(reportedField.getVar())) {
-                                                   itemField = subel;
-                                                   break;
+                                    if ((layoutManager == null ? 1 : layoutManager.getSpanCount()) < 2) {
+                                        if (el.getName().equals("reported")) continue;
+                                        if (i == position) {
+                                            items.put(position, new Item(el, TYPE_ITEM_CARD));
+                                            return items.get(position);
+                                        }
+                                    } else {
+                                        if (reported.size() > position - i) {
+                                            Field reportedField = reported.get(position - i);
+                                            Element itemField = null;
+                                            if (el.getName().equals("item")) {
+                                                for (Element subel : el.getChildren()) {
+                                                    if (subel.getAttribute("var").equals(reportedField.getVar())) {
+                                                       itemField = subel;
+                                                       break;
+                                                    }
                                                 }
                                             }
+                                            cell = new Cell(reportedField, itemField);
+                                        } else {
+                                            i += reported.size();
+                                            continue;
                                         }
-                                        cell = new Cell(reportedField, itemField);
-                                    } else {
-                                        i += reported.size();
-                                        continue;
                                     }
                                 }
 
@@ -2300,6 +2348,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     case TYPE_RESULT_CELL: {
                         CommandResultCellBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_result_cell, container, false);
                         return new ResultCellViewHolder(binding);
+                    }
+                    case TYPE_ITEM_CARD: {
+                        CommandItemCardBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_item_card, container, false);
+                        return new ItemCardViewHolder(binding);
                     }
                     case TYPE_CHECKBOX_FIELD: {
                         CommandCheckboxFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_checkbox_field, container, false);
@@ -2420,7 +2472,26 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             protected GridLayoutManager setupLayoutManager() {
-                layoutManager = new GridLayoutManager(mPager.getContext(), layoutManager == null ? 1 : layoutManager.getSpanCount());
+                int spanCount = 1;
+
+                if (reported != null && mPager != null) {
+                    float screenWidth = mPager.getContext().getResources().getDisplayMetrics().widthPixels;
+                    TextPaint paint = ((TextView) LayoutInflater.from(mPager.getContext()).inflate(R.layout.command_result_cell, null)).getPaint();
+                    float tableHeaderWidth = reported.stream().reduce(
+                        0f,
+                        (total, field) -> total + StaticLayout.getDesiredWidth(field.getLabel().or("--------"), paint),
+                        (a, b) -> a + b
+                    );
+
+                    spanCount = tableHeaderWidth > 0.75 * screenWidth ? 1 : this.reported.size();
+                }
+
+                if (layoutManager != null && layoutManager.getSpanCount() != spanCount) {
+                    items.clear();
+                    notifyDataSetChanged();
+                }
+
+                layoutManager = new GridLayoutManager(mPager.getContext(), spanCount);
                 layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                     @Override
                     public int getSpanSize(int position) {
