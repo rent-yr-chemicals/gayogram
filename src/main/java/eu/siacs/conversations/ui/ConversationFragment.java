@@ -2570,6 +2570,8 @@ public class ConversationFragment extends XmppFragment
             return false;
         }
 
+        setThread(conversation.getThread());
+
         stopScrolling();
         Log.d(Config.LOGTAG, "reInit(hasExtras=" + hasExtras + ")");
 
