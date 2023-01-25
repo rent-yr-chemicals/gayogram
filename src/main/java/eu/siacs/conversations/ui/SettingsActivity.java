@@ -1,6 +1,7 @@
 package eu.siacs.conversations.ui;
 
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -9,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.storage.StorageManager;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -89,6 +91,12 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
                         StyledAttributes.getColor(this, R.attr.color_background_primary));
         setSupportActionBar(findViewById(R.id.toolbar));
         configureActionBar(getSupportActionBar());
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(this);
+        p.edit().putString("sticker_directory", data.getData().toString()).commit();
     }
 
     @Override
@@ -363,6 +371,13 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
                 privacyCategory.removePreference(omemoPreference);
             }
         }
+
+        final Preference stickerDir = mSettingsFragment.findPreference("sticker_directory");
+        stickerDir.setOnPreferenceClickListener((p) -> {
+            Intent intent = ((StorageManager) getSystemService(Context.STORAGE_SERVICE)).getPrimaryStorageVolume().createOpenDocumentTreeIntent();
+            startActivityForResult(Intent.createChooser(intent, "Choose sticker location"), 0);
+            return true;
+        });
     }
 
     private void changeOmemoSettingSummary() {
