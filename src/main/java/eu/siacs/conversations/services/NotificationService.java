@@ -1437,7 +1437,7 @@ public class NotificationService {
             final Person me = meBuilder.build();
             NotificationCompat.MessagingStyle messagingStyle =
                     new NotificationCompat.MessagingStyle(me);
-            final boolean multiple = conversation.getMode() == Conversation.MODE_MULTI;
+            final boolean multiple = conversation.getMode() == Conversation.MODE_MULTI || messages.get(0).getTrueCounterpart() != null;
             if (multiple) {
                 messagingStyle.setConversationTitle(conversation.getName());
             }
@@ -1469,7 +1469,7 @@ public class NotificationService {
             messagingStyle.setGroupConversation(multiple);
             builder.setStyle(messagingStyle);
         } else {
-            if (messages.get(0).getConversation().getMode() == Conversation.MODE_SINGLE) {
+            if (messages.get(0).getConversation().getMode() == Conversation.MODE_SINGLE && messages.get(0).getTrueCounterpart() == null) {
                 builder.setStyle(
                         new NotificationCompat.BigTextStyle().bigText(getMergedBodies(messages)));
                 final CharSequence preview =
