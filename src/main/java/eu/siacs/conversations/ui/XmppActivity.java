@@ -510,7 +510,7 @@ public abstract class XmppActivity extends ActionBarActivity {
     }
 
     public void switchToConversation(Conversation conversation, String text, boolean asQuote, String nick, boolean pm, boolean doNotAppend) {
-        switchToConversation(conversation, null, false, nick, true, false, null);
+        switchToConversation(conversation, text, asQuote, nick, pm, doNotAppend, null);
     }
 
     public void switchToConversation(Conversation conversation, String text, boolean asQuote, String nick, boolean pm, boolean doNotAppend, String postInit) {
