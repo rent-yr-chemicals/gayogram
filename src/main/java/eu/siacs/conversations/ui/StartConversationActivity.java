@@ -450,7 +450,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
     public static void shareAsChannel(final Context context, final String address) {
         Intent shareIntent = new Intent();
         shareIntent.setAction(Intent.ACTION_SEND);
-        shareIntent.putExtra(Intent.EXTRA_TEXT, "xmpp:" + address + "?join");
+        shareIntent.putExtra(Intent.EXTRA_TEXT, "xmpp:" + Uri.encode(address, "@/") + "?join");
         shareIntent.setType("text/plain");
         try {
             context.startActivity(Intent.createChooser(shareIntent, context.getText(R.string.share_uri_with)));
