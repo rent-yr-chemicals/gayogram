@@ -452,7 +452,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
         }
         boolean notify = false;
 
-        Element html = original.findChild("html", "http://jabber.org/protocol/xhtml-im");
+        Element html = packet.findChild("html", "http://jabber.org/protocol/xhtml-im");
         if (html != null && html.findChild("body", "http://www.w3.org/1999/xhtml") == null) {
             html = null;
         }
@@ -619,7 +619,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             }
 
             if (html != null) message.addPayload(html);
-            message.setSubject(original.findChildContent("subject"));
+            message.setSubject(packet.findChildContent("subject"));
             message.setCounterpart(counterpart);
             message.setRemoteMsgId(remoteMsgId);
             message.setServerMsgId(serverMsgId);
