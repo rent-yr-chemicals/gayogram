@@ -89,7 +89,6 @@ public class BobTransfer implements Transferable {
 				if (packet.getType() == IqPacket.TYPE.ERROR || data == null) {
 					Log.d(Config.LOGTAG, "BobTransfer failed: " + packet);
 					finish(null);
-					xmppConnectionService.showErrorToastInUi(R.string.download_failed_file_not_found);
 				} else {
 					final String contentType = data.getAttribute("type");
 					String fileExtension = "dat";
