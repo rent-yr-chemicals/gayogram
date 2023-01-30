@@ -60,6 +60,7 @@ import eu.siacs.conversations.utils.StringUtils;
 import eu.siacs.conversations.utils.StylingHelper;
 import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xmpp.Jid;
+import eu.siacs.conversations.xmpp.XmppConnection;
 import me.drakeet.support.toast.ToastCompat;
 
 import static eu.siacs.conversations.entities.Bookmark.printableValue;
@@ -510,7 +511,8 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         }
         setTitle(mucOptions.isPrivateAndNonAnonymous() ? R.string.action_muc_details : R.string.channel_details);
         final Bookmark bookmark = mConversation.getBookmark();
-        this.binding.editMucNameButton.setVisibility((self.getAffiliation().ranks(MucOptions.Affiliation.OWNER) || mucOptions.canChangeSubject() || (bookmark != null && mConversation.getAccount().getXmppConnection().getFeatures().bookmarks2())) ? View.VISIBLE : View.GONE);
+        final XmppConnection connection = mConversation.getAccount().getXmppConnection();
+        this.binding.editMucNameButton.setVisibility((self.getAffiliation().ranks(MucOptions.Affiliation.OWNER) || mucOptions.canChangeSubject() || (bookmark != null && connection != null && connection.getFeatures().bookmarks2())) ? View.VISIBLE : View.GONE);
         this.binding.detailsAccount.setText(getString(R.string.using_account, account));
         this.binding.truejid.setVisibility(View.GONE);
         if (mConversation.isPrivateAndNonAnonymous()) {
