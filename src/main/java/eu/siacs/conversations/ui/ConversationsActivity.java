@@ -32,16 +32,19 @@ package eu.siacs.conversations.ui;
 
 import static eu.siacs.conversations.ui.ConversationFragment.REQUEST_DECRYPT_PGP;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.util.Log;
@@ -60,6 +63,8 @@ import org.openintents.openpgp.util.OpenPgpApi;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import eu.siacs.conversations.Config;
@@ -110,6 +115,8 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
 
     public static final int REQUEST_OPEN_MESSAGE = 0x9876;
     public static final int REQUEST_PLAY_PAUSE = 0x5432;
+    public static final int REQUEST_MICROPHONE = 0x5432f;
+    public static final int DIALLER_INTEGRATION = 0x5432ff;
 
 
     //secondary fragment (when holding the conversation, must be initialized before refreshing the overview fragment
@@ -121,6 +128,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
     private boolean mActivityPaused = true;
     private final AtomicBoolean mRedirectInProcess = new AtomicBoolean(false);
     private boolean refreshForNewCaps = false;
+    private int mRequestCode = -1;
 
     private static boolean isViewOrShareIntent(Intent i) {
         Log.d(Config.LOGTAG, "action: " + (i == null ? null : i.getAction()));
@@ -211,7 +219,9 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
             if (ExceptionHelper.checkForCrash(this)) {
                 return;
             }
-            openBatteryOptimizationDialogIfNeeded();
+            if (!offerToSetupDiallerIntegration()) {
+                openBatteryOptimizationDialogIfNeeded();
+            }
         }
     }
 
@@ -246,6 +256,54 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
             dialog.setCanceledOnTouchOutside(false);
             dialog.show();
         }
+    }
+
+    private boolean offerToSetupDiallerIntegration() {
+        if (mRequestCode == DIALLER_INTEGRATION) {
+            mRequestCode = -1;
+            return true;
+        }
+        if (Build.VERSION.SDK_INT < 23) return false;
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELECOM)) return false;
+        } else {
+            if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONNECTION_SERVICE)) return false;
+        }
+
+        Set<String> pstnGateways = new HashSet<>();
+        for (Account account : xmppConnectionService.getAccounts()) {
+            for (Contact contact : account.getRoster().getContacts()) {
+                if (contact.getPresences().anyIdentity("gateway", "pstn")) {
+                    pstnGateways.add(contact.getJid().asBareJid().toEscapedString());
+                }
+            }
+        }
+
+        if (pstnGateways.size() < 1) return false;
+        Set<String> fromPrefs = getPreferences().getStringSet("pstn_gateways", Set.of("UPGRADE"));
+        getPreferences().edit().putStringSet("pstn_gateways", pstnGateways).apply();
+        pstnGateways.removeAll(fromPrefs);
+        if (pstnGateways.size() < 1) return false;
+
+        if (fromPrefs.contains("UPGRADE")) return false;
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Dialler Integration");
+        builder.setMessage("Cheogram Android is able to integrate with your system's dialler app to allow dialling calls via your configured gateway " + String.join(", ", pstnGateways) + ".\n\nEnabling this integration will require granting microphone permission to the app.  Would you like to enable it now?");
+        builder.setPositiveButton(R.string.yes, (dialog, which) -> {
+            final String[] permissions;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                permissions = new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.BLUETOOTH_CONNECT};
+            } else {
+                permissions = new String[]{Manifest.permission.RECORD_AUDIO};
+            }
+            requestPermissions(permissions, REQUEST_MICROPHONE);
+        });
+        builder.setNegativeButton(R.string.no, (dialog, which) -> { });
+        final AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+        return true;
     }
 
     private void notifyFragmentOfBackendConnected(@IdRes int id) {
@@ -288,6 +346,12 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
                     case REQUEST_PLAY_PAUSE:
                         ConversationFragment.startStopPending(this);
                         break;
+                    case REQUEST_MICROPHONE:
+                        Intent intent = new Intent();
+                        intent.setComponent(new ComponentName("com.android.server.telecom",
+                            "com.android.server.telecom.settings.EnableAccountPreferenceActivity"));
+                        startActivityForResult(intent, DIALLER_INTEGRATION);
+                        break;
                 }
             }
         }
@@ -296,6 +360,13 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
     @Override
     public void onActivityResult(int requestCode, int resultCode, final Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == DIALLER_INTEGRATION) {
+            mRequestCode = requestCode;
+            startActivity(new Intent(android.telecom.TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS));
+            return;
+        }
+
         ActivityResult activityResult = ActivityResult.of(requestCode, resultCode, data);
         if (xmppConnectionService != null) {
             handleActivityResult(activityResult);
