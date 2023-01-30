@@ -1,8 +1,10 @@
 package eu.siacs.conversations.ui;
 
+import android.Manifest;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.security.KeyChain;
@@ -46,6 +48,7 @@ public class ManageAccountActivity extends XmppActivity implements OnAccountUpda
     private final String STATE_SELECTED_ACCOUNT = "selected_account";
 
     private static final int REQUEST_IMPORT_BACKUP = 0x63fb;
+    private static final int REQUEST_MICROPHONE = 0x63fb1;
 
     protected Account selectedAccount = null;
     protected Jid selectedAccountJid = null;
@@ -54,6 +57,7 @@ public class ManageAccountActivity extends XmppActivity implements OnAccountUpda
     protected ListView accountListView;
     protected AccountAdapter mAccountAdapter;
     protected AtomicBoolean mInvokedAddAccount = new AtomicBoolean(false);
+    protected Intent mMicIntent = null;
 
     protected Pair<Integer, Intent> mPostponedActivityResult = null;
 
@@ -78,13 +82,14 @@ public class ManageAccountActivity extends XmppActivity implements OnAccountUpda
 
         findViewById(R.id.phone_accounts).setVisibility(View.GONE);
         findViewById(R.id.phone_accounts).setOnClickListener((View v) -> {
-            Intent intent = new Intent();
-            intent.setComponent(new ComponentName("com.android.server.telecom",
+            mMicIntent = new Intent();
+            mMicIntent.setComponent(new ComponentName("com.android.server.telecom",
                 "com.android.server.telecom.settings.EnableAccountPreferenceActivity"));
-            startActivity(intent);
+            requestMicPermission();
         });
         findViewById(R.id.phone_accounts_settings).setOnClickListener((View v) -> {
-            startActivity(new Intent(android.telecom.TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS));
+            mMicIntent = new Intent(android.telecom.TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS);
+            requestMicPermission();
         });
 
         if (Build.VERSION.SDK_INT < 23) return;
@@ -251,18 +256,50 @@ public class ManageAccountActivity extends XmppActivity implements OnAccountUpda
         return super.onOptionsItemSelected(item);
     }
 
+    private void requestMicPermission() {
+        final String[] permissions;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            permissions = new String[]{Manifest.permission.RECORD_AUDIO, Manifest.permission.BLUETOOTH_CONNECT};
+        } else {
+            permissions = new String[]{Manifest.permission.RECORD_AUDIO};
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED && shouldShowRequestPermissionRationale(Manifest.permission.RECORD_AUDIO)) {
+                final AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Dialler Integration");
+                builder.setMessage("You will be asked to grant microphone permission, which is needed for the dialler integration to function.");
+                builder.setPositiveButton("I Understand", (dialog, which) -> {
+                    requestPermissions(permissions, REQUEST_MICROPHONE);
+                });
+                builder.setCancelable(true);
+                final AlertDialog dialog = builder.create();
+                dialog.setCanceledOnTouchOutside(true);
+                dialog.show();
+            } else {
+                requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_MICROPHONE);
+            }
+        }
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         if (grantResults.length > 0) {
             if (allGranted(grantResults)) {
                 switch (requestCode) {
+                    case REQUEST_MICROPHONE:
+                        startActivity(mMicIntent);
+                        mMicIntent = null;
+                        return;
                     case REQUEST_IMPORT_BACKUP:
                         startActivity(new Intent(this, ImportBackupActivity.class));
                         break;
                 }
             } else {
-                Toast.makeText(this, R.string.no_storage_permission, Toast.LENGTH_SHORT).show();
+                if (requestCode == REQUEST_MICROPHONE) {
+                    Toast.makeText(this, "Microphone access was denied", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(this, R.string.no_storage_permission, Toast.LENGTH_SHORT).show();
+                }
             }
         }
         if (writeGranted(grantResults, permissions)) {
