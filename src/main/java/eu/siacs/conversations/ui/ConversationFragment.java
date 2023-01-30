@@ -53,6 +53,7 @@ import android.widget.PopupMenu;
 import android.widget.TextView.OnEditorActionListener;
 import android.widget.Toast;
 
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -575,6 +576,16 @@ public class ConversationFragment extends XmppFragment
                     }
                 }
             };
+    private OnBackPressedCallback backPressedLeaveSingleThread = new OnBackPressedCallback(false) {
+        @Override
+        public void handleOnBackPressed() {
+            conversation.setLockThread(false);
+            this.setEnabled(false);
+            conversation.setUserSelectedThread(false);
+            refresh();
+            updateThreadFromLastMessage();
+        }
+    };
     private int completionIndex = 0;
     private int lastCompletionLength = 0;
     private String incomplete;
@@ -1153,6 +1164,7 @@ public class ConversationFragment extends XmppFragment
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        activity.getOnBackPressedDispatcher().addCallback(backPressedLeaveSingleThread);
     }
 
     @Override
@@ -1261,6 +1273,7 @@ public class ConversationFragment extends XmppFragment
         binding.threadIdenticonLayout.setOnClickListener(v -> {
             boolean wasLocked = conversation.getLockThread();
             conversation.setLockThread(false);
+            backPressedLeaveSingleThread.setEnabled(false);
             if (wasLocked) {
                 conversation.setUserSelectedThread(false);
                 refresh();
@@ -1275,6 +1288,7 @@ public class ConversationFragment extends XmppFragment
         binding.threadIdenticonLayout.setOnLongClickListener(v -> {
             boolean wasLocked = conversation.getLockThread();
             conversation.setLockThread(false);
+            backPressedLeaveSingleThread.setEnabled(false);
             setThread(null);
             conversation.setUserSelectedThread(true);
             if (wasLocked) refresh();
@@ -1527,6 +1541,7 @@ public class ConversationFragment extends XmppFragment
                 return true;
             case R.id.only_this_thread:
                 conversation.setLockThread(true);
+                backPressedLeaveSingleThread.setEnabled(true);
                 setThread(selectedMessage.getThread());
                 refresh();
                 return true;
@@ -1608,6 +1623,19 @@ public class ConversationFragment extends XmppFragment
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public boolean onBackPressed() {
+        boolean wasLocked = conversation.getLockThread();
+        conversation.setLockThread(false);
+        backPressedLeaveSingleThread.setEnabled(false);
+        if (wasLocked) {
+            conversation.setUserSelectedThread(false);
+            refresh();
+            updateThreadFromLastMessage();
+            return true;
+        }
+        return false;
     }
 
     private void startSearch() {

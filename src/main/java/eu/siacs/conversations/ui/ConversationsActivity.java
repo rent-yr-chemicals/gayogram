@@ -492,6 +492,12 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
         switch (item.getItemId()) {
             case android.R.id.home:
                 FragmentManager fm = getFragmentManager();
+                Fragment f = fm.getFragments().get(fm.getFragments().size() - 1);
+                if (f != null && f instanceof ConversationFragment) {
+                    if (((ConversationFragment) f).onBackPressed()) {
+                        return true;
+                    }
+                }
                 if (fm.getBackStackEntryCount() > 0) {
                     try {
                         fm.popBackStack();
