@@ -205,6 +205,7 @@ public class ConversationFragment extends XmppFragment
     private Toast messageLoaderToast;
     private ConversationsActivity activity;
     private boolean reInitRequiredOnStart = true;
+    private int identiconWidth = -1;
     private final OnClickListener clickToMuc =
             new OnClickListener() {
 
@@ -1349,6 +1350,7 @@ public class ConversationFragment extends XmppFragment
                 binding.threadIdenticon.setHash(UIHelper.identiconHash(threadId));
             }
         }
+        updateSendButton();
     }
 
     @Override
@@ -3156,9 +3158,15 @@ public class ConversationFragment extends XmppFragment
                     SendButtonTool.getSendButtonImageResource(activity, action, status));
         }
 
+        ViewGroup.LayoutParams params = binding.threadIdenticonLayout.getLayoutParams();
+        if (identiconWidth < 0) identiconWidth = params.width;
         if (hasAttachments || binding.textinput.getText().length() > 0) {
             binding.conversationViewPager.setCurrentItem(0);
+            params.width = conversation.getThread() == null ? 0 : identiconWidth;
+        } else {
+            params.width = identiconWidth;
         }
+        binding.threadIdenticonLayout.setLayoutParams(params);
     }
 
     protected void updateStatusMessages() {
