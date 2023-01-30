@@ -154,6 +154,12 @@ public class Bookmark extends Element implements ListItem {
 
 	@Override
 	public int compareTo(final @NonNull ListItem another) {
+		if (getJid().isDomainJid() && !another.getJid().isDomainJid()) {
+			return -1;
+		} else if (!getJid().isDomainJid() && another.getJid().isDomainJid()) {
+			return 1;
+		}
+
 		return this.getDisplayName().compareToIgnoreCase(
 				another.getDisplayName());
 	}
