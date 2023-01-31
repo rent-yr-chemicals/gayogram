@@ -23,7 +23,9 @@ import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
+import android.os.storage.StorageManager;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
@@ -62,6 +64,7 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.view.inputmethod.InputConnectionCompat;
 import androidx.core.view.inputmethod.InputContentInfoCompat;
 import androidx.databinding.DataBindingUtil;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
@@ -72,6 +75,9 @@ import com.google.common.collect.ImmutableList;
 
 import org.jetbrains.annotations.NotNull;
 
+import io.ipfs.cid.Cid;
+
+import java.io.File;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -155,7 +161,8 @@ import eu.siacs.conversations.xmpp.stanzas.IqPacket;
 public class ConversationFragment extends XmppFragment
         implements EditMessage.KeyboardListener,
                 MessageAdapter.OnContactPictureLongClicked,
-                MessageAdapter.OnContactPictureClicked {
+                MessageAdapter.OnContactPictureClicked,
+                MessageAdapter.OnInlineImageLongClicked {
 
     public static final int REQUEST_SEND_MESSAGE = 0x0201;
     public static final int REQUEST_DECRYPT_PGP = 0x0202;
@@ -167,6 +174,7 @@ public class ConversationFragment extends XmppFragment
     public static final int REQUEST_COMMIT_ATTACHMENTS = 0x0212;
     public static final int REQUEST_START_AUDIO_CALL = 0x213;
     public static final int REQUEST_START_VIDEO_CALL = 0x214;
+    public static final int REQUEST_SAVE_STICKER = 0x215;
     public static final int ATTACHMENT_CHOICE_CHOOSE_IMAGE = 0x0301;
     public static final int ATTACHMENT_CHOICE_TAKE_PHOTO = 0x0302;
     public static final int ATTACHMENT_CHOICE_CHOOSE_FILE = 0x0303;
@@ -206,6 +214,8 @@ public class ConversationFragment extends XmppFragment
     private ConversationsActivity activity;
     private boolean reInitRequiredOnStart = true;
     private int identiconWidth = -1;
+    private File savingAsSticker = null;
+    private String savingAsStickerName = null;
     private final OnClickListener clickToMuc =
             new OnClickListener() {
 
@@ -986,6 +996,24 @@ public class ConversationFragment extends XmppFragment
 
     private void handlePositiveActivityResult(int requestCode, final Intent data) {
         switch (requestCode) {
+            case REQUEST_SAVE_STICKER:
+                final DocumentFile df = DocumentFile.fromTreeUri(activity, data.getData());
+                final File f = savingAsSticker;
+                final String existingName = savingAsStickerName;
+                savingAsSticker = null;
+                savingAsStickerName = null;
+                activity.quickEdit(existingName, R.string.sticker_name, (name) -> {
+                    try {
+                        activity.xmppConnectionService.getFileBackend().copyFileToDocumentFile(activity, f, df, name);
+                    } catch (final FileBackend.FileCopyException e) {
+                        Toast.makeText(activity, e.getResId(), Toast.LENGTH_SHORT).show();
+                        return null;
+                    }
+
+                    Toast.makeText(activity, "Sticker saved", Toast.LENGTH_SHORT).show();
+                    return null;
+                });
+                break;
             case REQUEST_TRUST_KEYS_TEXT:
                 sendMessage();
                 break;
@@ -1257,6 +1285,7 @@ public class ConversationFragment extends XmppFragment
         messageListAdapter = new MessageAdapter((XmppActivity) getActivity(), this.messageList);
         messageListAdapter.setOnContactPictureClicked(this);
         messageListAdapter.setOnContactPictureLongClicked(this);
+        messageListAdapter.setOnInlineImageLongClicked(this);
         binding.messagesView.setAdapter(messageListAdapter);
 
         registerForContextMenu(binding.messagesView);
@@ -1315,6 +1344,7 @@ public class ConversationFragment extends XmppFragment
         Log.d(Config.LOGTAG, "ConversationFragment.onDestroyView()");
         messageListAdapter.setOnContactPictureClicked(null);
         messageListAdapter.setOnContactPictureLongClicked(null);
+        messageListAdapter.setOnInlineImageLongClicked(null);
         if (conversation != null) conversation.setupViewPager(null, null);
     }
 
@@ -1405,6 +1435,7 @@ public class ConversationFragment extends XmppFragment
             MenuItem shareWith = menu.findItem(R.id.share_with);
             MenuItem sendAgain = menu.findItem(R.id.send_again);
             MenuItem copyUrl = menu.findItem(R.id.copy_url);
+            MenuItem saveAsSticker = menu.findItem(R.id.save_as_sticker);
             MenuItem downloadFile = menu.findItem(R.id.download_file);
             MenuItem cancelTransmission = menu.findItem(R.id.cancel_transmission);
             MenuItem deleteFile = menu.findItem(R.id.delete_file);
@@ -1467,6 +1498,7 @@ public class ConversationFragment extends XmppFragment
                 if (path == null
                         || !path.startsWith("/")
                         || FileBackend.inConversationsDirectory(requireActivity(), path)) {
+                    saveAsSticker.setVisible(true);
                     deleteFile.setVisible(true);
                     deleteFile.setTitle(
                             activity.getString(
@@ -1522,6 +1554,9 @@ public class ConversationFragment extends XmppFragment
                 return true;
             case R.id.copy_url:
                 ShareUtil.copyUrlToClipboard(activity, selectedMessage);
+                return true;
+            case R.id.save_as_sticker:
+                saveAsSticker(selectedMessage);
                 return true;
             case R.id.download_file:
                 startDownloadable(selectedMessage);
@@ -2294,6 +2329,40 @@ public class ConversationFragment extends XmppFragment
                 });
         builder.setPositiveButton(R.string.confirm, null);
         builder.create().show();
+    }
+
+    public boolean onInlineImageLongClicked(Cid cid) {
+        DownloadableFile f = activity.xmppConnectionService.getFileForCid(cid);
+        if (f == null) return false;
+
+        saveAsSticker(f, null);
+        return true;
+    }
+
+    private void saveAsSticker(final Message m) {
+        String existingName = m.getFileParams() != null && m.getFileParams().getName() != null ? m.getFileParams().getName() : "";
+        existingName = existingName.lastIndexOf(".") == -1 ? existingName : existingName.substring(0, existingName.lastIndexOf("."));
+        saveAsSticker(activity.xmppConnectionService.getFileBackend().getFile(m), existingName);
+    }
+
+    private void saveAsSticker(final File file, final String name) {
+        savingAsSticker = file;
+        savingAsStickerName = name;
+
+        Intent intent = ((StorageManager) activity.getSystemService(Context.STORAGE_SERVICE)).getPrimaryStorageVolume().createOpenDocumentTreeIntent();
+
+        SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(activity);
+        final String dir = p.getString("sticker_directory", "Stickers");
+        if (dir.startsWith("content://")) {
+            intent.putExtra("android.provider.extra.INITIAL_URI", Uri.parse(dir));
+        } else {
+            new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/" + dir + "/User Pack").mkdirs();
+            Uri uri = intent.getParcelableExtra("android.provider.extra.INITIAL_URI");
+            intent.putExtra("android.provider.extra.INITIAL_URI", Uri.parse(uri.toString().replace("/root/", "/document/") + "%3APictures%2F" + dir));
+        }
+
+        Toast.makeText(activity, "Choose a sticker pack to add this sticker to", Toast.LENGTH_SHORT).show();
+        startActivityForResult(Intent.createChooser(intent, "Choose sticker pack"), REQUEST_SAVE_STICKER);
     }
 
     private void deleteFile(final Message message) {

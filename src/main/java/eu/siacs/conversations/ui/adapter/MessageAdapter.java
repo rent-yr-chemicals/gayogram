@@ -14,6 +14,8 @@ import android.preference.PreferenceManager;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.SpannableStringBuilder;
+import android.text.style.ImageSpan;
+import android.text.style.ClickableSpan;
 import android.text.format.DateUtils;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.RelativeSizeSpan;
@@ -111,6 +113,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     private OnContactPictureClicked mOnContactPictureClickedListener;
     private OnContactPictureClicked mOnMessageBoxClickedListener;
     private OnContactPictureLongClicked mOnContactPictureLongClickedListener;
+    private OnInlineImageLongClicked mOnInlineImageLongClickedListener;
     private boolean mUseGreenBackground = false;
     private final boolean mForceNames;
 
@@ -160,6 +163,10 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     public void setOnContactPictureLongClicked(
             OnContactPictureLongClicked listener) {
         this.mOnContactPictureLongClickedListener = listener;
+    }
+
+    public void setOnInlineImageLongClicked(OnInlineImageLongClicked listener) {
+        this.mOnInlineImageLongClickedListener = listener;
     }
 
     @Override
@@ -577,7 +584,26 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             MyLinkify.addLinks(body, message.getConversation().getAccount());
             viewHolder.messageBody.setAutoLinkMask(0);
             viewHolder.messageBody.setText(body);
-            BetterLinkMovementMethod method = BetterLinkMovementMethod.newInstance();
+            BetterLinkMovementMethod method = new BetterLinkMovementMethod() {
+                @Override
+                protected void dispatchUrlLongClick(TextView tv, ClickableSpan span) {
+                    if (span instanceof URLSpan || mOnInlineImageLongClickedListener == null) {
+                        super.dispatchUrlLongClick(tv, span);
+                        return;
+                    }
+
+                    Spannable body = (Spannable) tv.getText();
+                    ImageSpan[] imageSpans = body.getSpans(body.getSpanStart(span), body.getSpanEnd(span), ImageSpan.class);
+                    if (imageSpans.length > 0) {
+                        Uri uri = Uri.parse(imageSpans[0].getSource());
+                        Cid cid = BobTransfer.cid(uri);
+                        if (cid == null) return;
+                        if (mOnInlineImageLongClickedListener.onInlineImageLongClicked(cid)) {
+                            tv.dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_CANCEL, 0f, 0f, 0));
+                        }
+                    }
+                }
+            };
             method.setOnLinkLongClickListener((tv, url) -> {
                 tv.dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_CANCEL, 0f, 0f, 0));
                 ShareUtil.copyLinkToClipboard(activity, url);
@@ -1094,6 +1120,10 @@ public class MessageAdapter extends ArrayAdapter<Message> {
 
     public interface OnContactPictureLongClicked {
         void onContactPictureLongClicked(View v, Message message);
+    }
+
+    public interface OnInlineImageLongClicked {
+        boolean onInlineImageLongClicked(Cid cid);
     }
 
     private static class ViewHolder {

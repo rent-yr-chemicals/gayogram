@@ -35,6 +35,7 @@ import android.util.LruCache;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import androidx.core.content.FileProvider;
+import androidx.documentfile.provider.DocumentFile;
 import androidx.exifinterface.media.ExifInterface;
 
 import com.cheogram.android.BobTransfer;
@@ -671,6 +672,34 @@ public class FileBackend {
 
     public String getOriginalPath(Uri uri) {
         return FileUtils.getPath(mXmppConnectionService, uri);
+    }
+
+    public void copyFileToDocumentFile(Context ctx, File file, DocumentFile df, String name) throws FileCopyException {
+        Log.d(
+                Config.LOGTAG,
+                "copy file (" + file + ") to " + df + " / " + name);
+        final DocumentFile dff = df.createFile(MimeUtils.guessMimeTypeFromUri(ctx, getUriForFile(ctx, file)), name);
+        try (final InputStream is = new FileInputStream(file);
+                final OutputStream os =
+                        mXmppConnectionService.getContentResolver().openOutputStream(dff.getUri())) {
+            if (is == null) {
+                throw new FileCopyException(R.string.error_file_not_found);
+            }
+            try {
+                ByteStreams.copy(is, os);
+                os.flush();
+            } catch (IOException e) {
+                throw new FileWriterException(file);
+            }
+        } catch (final FileNotFoundException e) {
+            throw new FileCopyException(R.string.error_file_not_found);
+        } catch (final FileWriterException e) {
+            throw new FileCopyException(R.string.error_unable_to_create_temporary_file);
+        } catch (final SecurityException | IllegalStateException e) {
+            throw new FileCopyException(R.string.error_security_exception);
+        } catch (final IOException e) {
+            throw new FileCopyException(R.string.error_io_exception);
+        }
     }
 
     private void copyFileToPrivateStorage(File file, Uri uri) throws FileCopyException {

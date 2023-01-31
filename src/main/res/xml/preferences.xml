@@ -326,6 +326,11 @@
                     android:summary="@string/pref_scroll_to_bottom_summary"
                     android:title="@string/pref_scroll_to_bottom" />
             </PreferenceCategory>
+            <PreferenceCategory android:key="expert_media" android:title="Media">
+                <Preference
+                    android:title="Change Stickers Location"
+                    android:key="sticker_directory" />
+            </PreferenceCategory>
             <PreferenceCategory android:title="@string/pref_presence_settings">
                 <CheckBoxPreference
                     android:defaultValue="@bool/manually_change_presence"
