@@ -357,6 +357,11 @@ public class ConnectionService extends android.telecom.ConnectionService {
 
 		@Override
 		public void onPlayDtmfTone(char c) {
+			if (rtpConnection == null || rtpConnection.get() == null) {
+				postDial.push("" + c);
+				return;
+			}
+
 			rtpConnection.get().applyDtmfTone("" + c);
 		}
 
