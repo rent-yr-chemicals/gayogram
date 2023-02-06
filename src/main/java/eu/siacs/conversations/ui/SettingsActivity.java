@@ -95,6 +95,8 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (data.getData() == null) return;
+
         SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(this);
         p.edit().putString("sticker_directory", data.getData().toString()).commit();
     }
