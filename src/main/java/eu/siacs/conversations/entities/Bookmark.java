@@ -258,11 +258,15 @@ public class Bookmark extends Element implements ListItem {
 				}
 			}
 			return true;
-		} else {
+		} else if (parts.length > 0) {
 			final Jid jid = getJid();
 			return (jid != null && jid.toString().contains(parts[0])) ||
 				getDisplayName().toLowerCase(Locale.US).contains(parts[0]) ||
 				matchInTag(context, parts[0]);
+		} else {
+			final Jid jid = getJid();
+			return (jid != null && jid.toString().contains(needle)) ||
+				getDisplayName().toLowerCase(Locale.US).contains(needle);
 		}
 	}
 

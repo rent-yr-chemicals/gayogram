@@ -231,10 +231,13 @@ public class Contact implements ListItem, Blockable {
                 }
             }
             return true;
-        } else {
+        } else if(parts.length > 0) {
             return jid.toString().contains(parts[0]) ||
                     getDisplayName().toLowerCase(Locale.US).contains(parts[0]) ||
                     matchInTag(context, parts[0]);
+        } else {
+            return jid.toString().contains(needle) ||
+                    getDisplayName().toLowerCase(Locale.US).contains(needle);
         }
     }
 
