@@ -314,6 +314,10 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
             intent = savedInstanceState.getParcelable("intent");
         }
 
+        if (intent.getBooleanExtra("init", false)) {
+            pendingViewIntent.push(intent);
+        }
+
         if (isViewIntent(intent)) {
             pendingViewIntent.push(intent);
             createdByViewIntent = true;
@@ -868,6 +872,41 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
         this.mActivatedAccounts.addAll(AccountUtils.getEnabledAccounts(xmppConnectionService));
         configureHomeButton();
         Intent intent = pendingViewIntent.pop();
+
+        if (intent != null && intent.getBooleanExtra("init", false)) {
+            Account selectedAccount = xmppConnectionService.getAccounts().get(0);
+            final String accountJid = intent.getStringExtra(EXTRA_ACCOUNT);
+            intent = null;
+            boolean hasPstnOrSms = false;
+            outer:
+            for (Account account : xmppConnectionService.getAccounts()) {
+                if (accountJid != null) {
+                    if(account.getJid().asBareJid().toEscapedString().equals(accountJid)) {
+                        selectedAccount = account;
+                    } else {
+                        continue;
+                    }
+                }
+
+                for (Contact contact : account.getRoster().getContacts()) {
+                    if (contact.getPresences().anyIdentity("gateway", "pstn")) {
+                        hasPstnOrSms = true;
+                        break outer;
+                    }
+                    if (contact.getPresences().anyIdentity("gateway", "sms")) {
+                        hasPstnOrSms = true;
+                        break outer;
+                    }
+                }
+            }
+
+            if (!hasPstnOrSms) {
+                startCommand(selectedAccount, Jid.of("cheogram.com/CHEOGRAM%jabber:iq:register"), "jabber:iq:register");
+                finish();
+                return;
+            }
+        }
+
         if (intent != null && processViewIntent(intent)) {
             filter(null);
         } else {

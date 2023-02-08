@@ -447,9 +447,7 @@ public class EditAccountActivity extends OmemoActivity implements OnAccountUpdat
             final boolean wasFirstAccount = xmppConnectionService != null && xmppConnectionService.getAccounts().size() == 1;
             if (avatar != null || (connection != null && !connection.getFeatures().pep())) {
                 intent = new Intent(getApplicationContext(), StartConversationActivity.class);
-                if (wasFirstAccount) {
-                    intent.putExtra("init", true);
-                }
+                intent.putExtra("init", true);
                 intent.putExtra(EXTRA_ACCOUNT, mAccount.getJid().asBareJid().toEscapedString());
             } else {
                 intent = new Intent(getApplicationContext(), PublishProfilePictureActivity.class);

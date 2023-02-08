@@ -3,7 +3,7 @@
     <string name="pick_a_server">Pick your Jabber service</string>
     <string name="use_conversations.im">Use ChatterboxTown</string>
     <string name="get_jabber_id">Get Jabber ID</string>
-    <string name="create_new_account">I need to sign up for a new Jabber ID</string>
+    <string name="create_new_account">I need to sign up</string>
     <string name="i_already_have_an_account">I already have a Jabber ID</string>
     <string name="i_am_snikket_user">I am a Snikket user</string>
     <string name="do_you_have_an_account">Do you already have a Jabber ID? This might be the case if you are already using a different Jabber client or have used Cheogram Android, Conversations, or Snikket before. If not you can create a new Jabber ID right now.</string>

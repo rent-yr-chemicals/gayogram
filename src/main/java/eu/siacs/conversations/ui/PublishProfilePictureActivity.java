@@ -108,10 +108,7 @@ public class PublishProfilePictureActivity extends XmppActivity implements XmppC
                         final Intent intent =
                                 new Intent(
                                         getApplicationContext(), StartConversationActivity.class);
-                        if (xmppConnectionService != null
-                                && xmppConnectionService.getAccounts().size() == 1) {
-                            intent.putExtra("init", true);
-                        }
+                        intent.putExtra("init", true);
                         StartConversationActivity.addInviteUri(intent, getIntent());
                         if (account != null) {
                             intent.putExtra(
