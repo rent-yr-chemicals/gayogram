@@ -102,7 +102,7 @@ public class Data extends Element {
 	}
 
 	public String getTitle() {
-		return findChildContent("title");
+		return findChildContent("title", "jabber:x:data");
 	}
 
 

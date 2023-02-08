@@ -1,4 +1,4 @@
-package eu.siacs.conversations.xmpp;
+package eu.siacs.conversations.xmpp.forms;
 
 import java.util.ArrayList;
 import java.util.List;
