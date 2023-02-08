@@ -65,4 +65,8 @@ public class Field extends Element {
 	public boolean isRequired() {
 		return hasChild("required");
 	}
+
+	public List<Option> getOptions() {
+		return Option.forField(this);
+	}
 }

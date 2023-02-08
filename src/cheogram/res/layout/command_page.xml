@@ -16,6 +16,7 @@
 
         <GridView
             android:id="@+id/actions"
+            android:background="@color/perpy"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentStart="true"

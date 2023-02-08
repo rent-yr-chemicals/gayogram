@@ -1,6 +1,7 @@
 package eu.siacs.conversations.entities;
 
 import android.content.ContentValues;
+import android.content.Context;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.graphics.Rect;
@@ -31,6 +32,7 @@ import android.webkit.WebMessage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
+import android.util.Pair;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
@@ -93,8 +95,9 @@ import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.Jid;
-import eu.siacs.conversations.xmpp.Option;
 import eu.siacs.conversations.xmpp.chatstate.ChatState;
+import eu.siacs.conversations.xmpp.forms.Data;
+import eu.siacs.conversations.xmpp.forms.Option;
 import eu.siacs.conversations.xmpp.mam.MamReference;
 import eu.siacs.conversations.xmpp.stanzas.IqPacket;
 
@@ -1615,7 +1618,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                 }
                                 Element validate = field.el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
                                 if (validate != null) el.addChild(validate);
-                                new ResultFieldViewHolder(row).bind(new Field(el, -1));
+                                new ResultFieldViewHolder(row).bind(new Field(eu.siacs.conversations.xmpp.forms.Field.parse(el), -1));
                             }
                         }
                     }
@@ -1955,7 +1958,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             class Field extends Item {
-                Field(Element el, int viewType) { super(el, viewType); }
+                Field(eu.siacs.conversations.xmpp.forms.Field el, int viewType) { super(el, viewType); }
 
                 @Override
                 public boolean validate() {
@@ -2034,7 +2037,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         }
                     }
 
-                    return new Field(el, viewType);
+                    return new Field(eu.siacs.conversations.xmpp.forms.Field.parse(el), viewType);
                 }
 
                 return null;
@@ -2066,6 +2069,35 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return item;
             }
 
+            class ActionsAdapter extends ArrayAdapter<Pair<String, String>> {
+                protected Context ctx;
+
+                public ActionsAdapter(Context ctx) {
+                    super(ctx, R.layout.simple_list_item);
+                    this.ctx = ctx;
+                }
+
+                @Override
+                public View getView(int position, View convertView, ViewGroup parent) {
+                    View v = super.getView(position, convertView, parent);
+                    TextView tv = (TextView) v.findViewById(android.R.id.text1);
+                    tv.setGravity(Gravity.CENTER);
+                    tv.setText(getItem(position).second);
+                    int resId = ctx.getResources().getIdentifier("action_" + getItem(position).first, "string" , ctx.getPackageName());
+                    if (resId != 0) tv.setText(ctx.getResources().getString(resId));
+                    tv.setTextColor(ContextCompat.getColor(ctx, R.color.white));
+                    tv.setBackgroundColor(UIHelper.getColorForName(getItem(position).first));
+                    return v;
+                }
+
+                public int getPosition(String s) {
+                    for(int i = 0; i < getCount(); i++) {
+                        if (getItem(i).first.equals(s)) return i;
+                    }
+                    return -1;
+                }
+            }
+
             final int TYPE_ERROR = 1;
             final int TYPE_NOTE = 2;
             final int TYPE_WEB = 3;
@@ -2089,7 +2121,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected List<Field> reported = null;
             protected SparseArray<Item> items = new SparseArray<>();
             protected XmppConnectionService xmppConnectionService;
-            protected ArrayAdapter<String> actionsAdapter;
+            protected ActionsAdapter actionsAdapter;
             protected GridLayoutManager layoutManager;
             protected WebView actionToWebview = null;
 
@@ -2099,19 +2131,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 mNode = node;
                 this.xmppConnectionService = xmppConnectionService;
                 if (mPager != null) setupLayoutManager();
-                actionsAdapter = new ArrayAdapter<String>(xmppConnectionService, R.layout.simple_list_item) {
-                    @Override
-                    public View getView(int position, View convertView, ViewGroup parent) {
-                        View v = super.getView(position, convertView, parent);
-                        TextView tv = (TextView) v.findViewById(android.R.id.text1);
-                        tv.setGravity(Gravity.CENTER);
-                        int resId = xmppConnectionService.getResources().getIdentifier("action_" + tv.getText() , "string" , xmppConnectionService.getPackageName());
-                        if (resId != 0) tv.setText(xmppConnectionService.getResources().getString(resId));
-                        tv.setTextColor(ContextCompat.getColor(xmppConnectionService, R.color.white));
-                        tv.setBackgroundColor(UIHelper.getColorForName(tv.getText().toString()));
-                        return v;
-                    }
-                };
+                actionsAdapter = new ActionsAdapter(xmppConnectionService);
                 actionsAdapter.registerDataSetObserver(new DataSetObserver() {
                     @Override
                     public void onChanged() {
@@ -2152,11 +2172,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                 if (!el.getNamespace().equals("http://jabber.org/protocol/commands")) continue;
                                 if (action.getName().equals("execute")) continue;
 
-                                actionsAdapter.add(action.getName());
+                                actionsAdapter.add(Pair.create(action.getName(), action.getName()));
                             }
                         }
                         if (el.getName().equals("x") && el.getNamespace().equals("jabber:x:data")) {
-                            String title = el.findChildContent("title", "jabber:x:data");
+                            Data form = Data.parse(el);
+                            String title = form.getTitle();
                             if (title != null) {
                                 mTitle = title;
                                 ConversationPagerAdapter.this.notifyDataSetChanged();
@@ -2166,6 +2187,15 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                 this.responseElement = el;
                                 setupReported(el.findChild("reported", "jabber:x:data"));
                                 if (mBinding != null) mBinding.form.setLayoutManager(setupLayoutManager());
+                            }
+
+                            eu.siacs.conversations.xmpp.forms.Field actionList = form.getFieldByName("http://jabber.org/protocol/commands#actions");
+                            if (actionList != null) {
+                                actionsAdapter.clear();
+
+                                for (Option action : actionList.getOptions()) {
+                                    actionsAdapter.add(Pair.create(action.getValue(), action.toString()));
+                                }
                             }
                             break;
                         }
@@ -2193,20 +2223,20 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     if (command.getAttribute("status").equals("executing") && actionsAdapter.getCount() < 1) {
                         // No actions have been given, but we are not done?
                         // This is probably a spec violation, but we should do *something*
-                        actionsAdapter.add("execute");
+                        actionsAdapter.add(Pair.create("execute", "execute"));
                     }
 
                     if (!actionsAdapter.isEmpty()) {
                         if (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled")) {
-                            actionsAdapter.add("close");
+                            actionsAdapter.add(Pair.create("close", "close"));
                         } else if (actionsAdapter.getPosition("cancel") < 0) {
-                            actionsAdapter.insert("cancel", 0);
+                            actionsAdapter.insert(Pair.create("cancel", "cancel"), 0);
                         }
                     }
                 }
 
                 if (actionsAdapter.isEmpty()) {
-                    actionsAdapter.add("close");
+                    actionsAdapter.add(Pair.create("close", "close"));
                 }
 
                 notifyDataSetChanged();
@@ -2237,6 +2267,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         if (el.getName().equals("field")) {
                             String type = el.getAttribute("type");
                             if (type != null && type.equals("hidden")) continue;
+                            if (el.getAttribute("var") != null && el.getAttribute("var").equals("http://jabber.org/protocol/commands#actions")) continue;
                         }
 
                         if (el.getName().equals("reported") || el.getName().equals("item")) {
@@ -2270,6 +2301,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             if (el.getName().equals("field")) {
                                 String type = el.getAttribute("type");
                                 if (type != null && type.equals("hidden")) continue;
+                                if (el.getAttribute("var") != null && el.getAttribute("var").equals("http://jabber.org/protocol/commands#actions")) continue;
                             }
 
                             if (el.getName().equals("reported") || el.getName().equals("item")) {
@@ -2407,7 +2439,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             public boolean execute(int actionPosition) {
-                return execute(actionsAdapter.getItem(actionPosition));
+                return execute(actionsAdapter.getItem(actionPosition).first);
             }
 
             public boolean execute(String action) {
@@ -2429,7 +2461,6 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 final Element c = packet.addChild("command", Namespace.COMMANDS);
                 c.setAttribute("node", mNode);
                 c.setAttribute("sessionid", command.getAttribute("sessionid"));
-                c.setAttribute("action", action);
 
                 String formType = responseElement == null ? null : responseElement.getAttribute("type");
                 if (!action.equals("cancel") &&
@@ -2439,6 +2470,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     responseElement.getNamespace().equals("jabber:x:data") &&
                     formType != null && formType.equals("form")) {
 
+                    Data form = Data.parse(responseElement);
+                    eu.siacs.conversations.xmpp.forms.Field actionList = form.getFieldByName("http://jabber.org/protocol/commands#actions");
+                    if (actionList != null) {
+                        actionList.setValue(action);
+                        c.setAttribute("action", "execute");
+                    }
+
                     responseElement.setAttribute("type", "submit");
                     Element rsm = responseElement.findChild("set", "http://jabber.org/protocol/rsm");
                     if (rsm != null) {
@@ -2446,8 +2484,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         max.setContent("1000");
                         rsm.addChild(max);
                     }
+
                     c.addChild(responseElement);
                 }
+
+                if (c.getAttribute("action") == null) c.setAttribute("action", action);
 
                 xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
                     getView().post(() -> {
