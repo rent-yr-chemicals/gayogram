@@ -10,14 +10,14 @@
     android:paddingRight="8dp"
     android:paddingTop="3dp">
 
-    <com.makeramen.roundedimageview.RoundedImageView
+    <com.google.android.material.imageview.ShapeableImageView
         android:id="@+id/message_photo"
         android:layout_width="48dp"
         android:layout_height="48dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentTop="true"
         android:scaleType="fitXY"
-        app:riv_corner_radius="2dp" />
+        app:shapeAppearance="@style/ShapeAppearanceOverlay.Photo" />
 
     <LinearLayout
         android:id="@+id/message_box"

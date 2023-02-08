@@ -19,13 +19,13 @@
                 android:orientation="horizontal"
                 android:padding="8dp">
 
-                <com.makeramen.roundedimageview.RoundedImageView
+                <com.google.android.material.imageview.ShapeableImageView
                     android:id="@+id/conversation_image"
                     android:layout_width="56dp"
                     android:layout_height="56dp"
                     android:layout_alignParentLeft="true"
                     android:scaleType="centerCrop"
-                    app:riv_corner_radius="2dp" />
+                    app:shapeAppearance="@style/ShapeAppearanceOverlay.Photo" />
 
                 <RelativeLayout
                     android:layout_width="fill_parent"

@@ -1,0 +1,13 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+
+<style name="ShapeAppearanceOverlay.Photo" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+	<item name="cornerFamily">rounded</item>
+	<item name="cornerSize">2dp</item>
+</style>
+
+<style name="ShapeAppearanceOverlay.IncomingCall" parent="ShapeAppearance.MaterialComponents.SmallComponent">
+	<item name="cornerFamily">rounded</item>
+	<item name="cornerSize">@dimen/incoming_call_radius</item>
+</style>
+
+</resources>

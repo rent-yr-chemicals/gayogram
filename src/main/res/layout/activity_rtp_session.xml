@@ -99,12 +99,12 @@
                 android:layout_alignParentBottom="true"
                 android:visibility="gone" />
 
-            <com.makeramen.roundedimageview.RoundedImageView
+            <com.google.android.material.imageview.ShapeableImageView
                 android:id="@+id/contact_photo"
                 android:layout_width="@dimen/publish_avatar_size"
                 android:layout_height="@dimen/publish_avatar_size"
                 android:layout_centerInParent="true"
-                app:riv_corner_radius="@dimen/incoming_call_radius" />
+                app:shapeAppearance="@style/ShapeAppearanceOverlay.IncomingCall" />
 
         </RelativeLayout>
 
