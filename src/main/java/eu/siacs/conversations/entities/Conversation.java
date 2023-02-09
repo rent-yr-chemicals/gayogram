@@ -2189,7 +2189,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     tv.setGravity(Gravity.CENTER);
                     tv.setText(getItem(position).second);
                     int resId = ctx.getResources().getIdentifier("action_" + getItem(position).first, "string" , ctx.getPackageName());
-                    if (resId != 0) tv.setText(ctx.getResources().getString(resId));
+                    if (resId != 0 && getItem(position).second.equals(getItem(position).first)) tv.setText(ctx.getResources().getString(resId));
                     tv.setTextColor(ContextCompat.getColor(ctx, R.color.white));
                     tv.setBackgroundColor(UIHelper.getColorForName(getItem(position).first));
                     return v;
