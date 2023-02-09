@@ -5,6 +5,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.DataSetObserver;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.text.Editable;
@@ -34,6 +37,7 @@ import android.webkit.WebMessage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
+import android.util.DisplayMetrics;
 import android.util.Pair;
 import android.util.SparseArray;
 
@@ -48,6 +52,8 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.viewpager.widget.ViewPager;
+
+import com.caverock.androidsvg.SVG;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputLayout;
@@ -1858,6 +1864,18 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                 mValue.setContent(getItem(position).getValue());
                                 execute();
                             });
+
+                            final SVG icon = getItem(position).getIcon();
+                            if (icon != null) {
+                                 v.post(() -> {
+                                     icon.setDocumentPreserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.TOP);
+                                     Bitmap bitmap = Bitmap.createBitmap(v.getHeight(), v.getHeight(), Bitmap.Config.ARGB_8888);
+                                     Canvas bmcanvas = new Canvas(bitmap);
+                                     icon.renderToCanvas(bmcanvas);
+                                     v.setCompoundDrawablesRelativeWithIntrinsicBounds(new BitmapDrawable(bitmap), null, null, null);
+                                 });
+                            }
+
                             return v;
                         }
                     };
@@ -1931,6 +1949,18 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     } else {
                         theOptions.remove(defaultOption);
                         binding.defaultButton.setVisibility(View.VISIBLE);
+
+                        final SVG defaultIcon = defaultOption.getIcon();
+                        if (defaultIcon != null) {
+                             defaultIcon.setDocumentPreserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.TOP);
+                             DisplayMetrics display = mPager.getContext().getResources().getDisplayMetrics();
+                             Bitmap bitmap = Bitmap.createBitmap((int)(display.heightPixels*display.density/4), (int)(display.heightPixels*display.density/4), Bitmap.Config.ARGB_8888);
+                             bitmap.setDensity(display.densityDpi);
+                             Canvas bmcanvas = new Canvas(bitmap);
+                             defaultIcon.renderToCanvas(bmcanvas);
+                             binding.defaultButton.setCompoundDrawablesRelativeWithIntrinsicBounds(null, new BitmapDrawable(bitmap), null, null);
+                        }
+
                         binding.defaultButton.setText(defaultOption.toString());
                         binding.defaultButton.setOnClickListener((view) -> {
                             mValue.setContent(defaultOption.getValue());
