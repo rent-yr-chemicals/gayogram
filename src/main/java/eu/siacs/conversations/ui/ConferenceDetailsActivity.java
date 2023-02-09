@@ -388,7 +388,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
             if (http) {
                 return "https://conversations.im/j/" + XmppUri.lameUrlEncode(mConversation.getJid().asBareJid().toEscapedString());
             } else {
-                return "xmpp:" + Uri.encode(mConversation.getJid().asBareJid().toEscapedString(), "@/") + "?join";
+                return "xmpp:" + Uri.encode(mConversation.getJid().asBareJid().toEscapedString(), "@/+") + "?join";
             }
         } else {
             return null;

@@ -203,7 +203,7 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
         if (http) {
             return "https://conversations.im/i/" + XmppUri.lameUrlEncode(contact.getJid().asBareJid().toEscapedString());
         } else {
-            return "xmpp:" + Uri.encode(contact.getJid().asBareJid().toEscapedString(), "@/");
+            return "xmpp:" + Uri.encode(contact.getJid().asBareJid().toEscapedString(), "@/+");
         }
     }
 
