@@ -1946,6 +1946,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             break;
                         }
                     }
+                    if (defaultOption == null && !mValue.getContent().equals("")) {
+                        // Synthesize default option for custom value
+                        defaultOption = new Option(mValue.getContent(), mValue.getContent());
+                    }
                     if (defaultOption == null) {
                         binding.defaultButton.setVisibility(View.GONE);
                     } else {
