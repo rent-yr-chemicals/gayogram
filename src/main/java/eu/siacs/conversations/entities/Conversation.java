@@ -1937,7 +1937,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     });
 
                     options.clear();
-                    List<Option> theOptions = field.getOptions();
+                    List<Option> theOptions = field.getType().equals(Optional.of("boolean")) ? new ArrayList<>(List.of(new Option("false", binding.getRoot().getContext().getString(R.string.no)), new Option("true", binding.getRoot().getContext().getString(R.string.yes)))) : field.getOptions();
 
                     defaultOption = null;
                     for (Option option : theOptions) {
@@ -2158,7 +2158,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         viewType = TYPE_RESULT_FIELD;
                     } else if (formType.equals("form")) {
                         if (fieldType.equals("boolean")) {
-                            viewType = TYPE_CHECKBOX_FIELD;
+                            if (fillableFieldCount == 1 && actionsAdapter.countExceptCancel() < 1) {
+                                viewType = TYPE_BUTTON_GRID_FIELD;
+                            } else {
+                                viewType = TYPE_CHECKBOX_FIELD;
+                            }
                         } else if (fieldType.equals("list-single")) {
                             Element validate = el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
                             if (Option.forField(el).size() > 9) {
@@ -2357,14 +2361,16 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             }
 
                             String fillableFieldType = null;
+                            String fillableFieldValue = null;
                             for (eu.siacs.conversations.xmpp.forms.Field field : form.getFields()) {
                                 if (field.getType() != null && !field.getType().equals("hidden") && !field.getType().equals("fixed") && !field.getFieldName().equals("http://jabber.org/protocol/commands#actions")) {
                                     fillableFieldType = field.getType();
+                                    fillableFieldValue = field.getValue();
                                     fillableFieldCount++;
                                 }
                             }
 
-                            if (fillableFieldCount == 1 && actionsAdapter.countExceptCancel() < 2 && fillableFieldType != null && fillableFieldType.equals("list-single")) {
+                            if (fillableFieldCount == 1 && actionsAdapter.countExceptCancel() < 2 && fillableFieldType != null && (fillableFieldType.equals("list-single") || (fillableFieldType.equals("boolean") && fillableFieldValue == null))) {
                                 actionsAdapter.clearExceptCancel();
                             }
                             break;
