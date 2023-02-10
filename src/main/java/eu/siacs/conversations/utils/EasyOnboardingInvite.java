@@ -81,6 +81,9 @@ public class EasyOnboardingInvite implements Parcelable {
         return Strings.isNullOrEmpty(landingUrl) ? uri : landingUrl;
     }
 
+    public String getUri() {
+        return uri;
+    }
 
     public String getDomain() {
         return domain;

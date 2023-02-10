@@ -69,13 +69,25 @@
                 style="@style/Widget.Conversations.Button.Borderless"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
+                android:layout_above="@+id/use_myself_button"
                 android:minWidth="0dp"
                 android:paddingLeft="16dp"
                 android:paddingRight="16dp"
                 android:text="@string/share"
                 android:layout_centerHorizontal="true"
                 android:textColor="?attr/colorAccent" />
+
+            <Button
+                android:id="@+id/use_myself_button"
+                style="@style/Widget.Conversations.Button.Borderless"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:minWidth="0dp"
+                android:paddingLeft="16dp"
+                android:paddingRight="16dp"
+                android:text="Or, create new account for yourself"
+                android:layout_centerHorizontal="true" />
 
         </RelativeLayout>
 

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Point;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
@@ -37,6 +38,13 @@ public class EasyOnboardingInviteActivity extends XmppActivity implements EasyOn
         setSupportActionBar(binding.toolbar);
         configureActionBar(getSupportActionBar(), true);
         this.binding.shareButton.setOnClickListener(v -> share());
+        this.binding.useMyselfButton.setOnClickListener(v -> {
+            final Intent intent = new Intent(this, UriHandlerActivity.class);
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setData(Uri.parse(easyOnboardingInvite.getUri().replace("roster;", "register;").replaceFirst(":[^@]+@", ":")));
+            startActivity(intent);
+            finish();
+        });
         if (bundle != null && bundle.containsKey("invite")) {
             this.easyOnboardingInvite = bundle.getParcelable("invite");
             if (this.easyOnboardingInvite != null) {
