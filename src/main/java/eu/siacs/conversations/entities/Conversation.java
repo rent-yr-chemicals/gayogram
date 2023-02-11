@@ -1598,6 +1598,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                 @Override
                 public void bind(Item item) {
+                    binding.fields.removeAllViews();
+
                     for (Field field : reported) {
                         CommandResultFieldBinding row = DataBindingUtil.inflate(LayoutInflater.from(binding.getRoot().getContext()), R.layout.command_result_field, binding.fields, false);
                         GridLayout.LayoutParams param = new GridLayout.LayoutParams();
