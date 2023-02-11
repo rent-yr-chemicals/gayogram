@@ -88,6 +88,7 @@ import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.utils.ExceptionHelper;
 import eu.siacs.conversations.utils.SignupUtils;
+import eu.siacs.conversations.utils.ThemeHelper;
 import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist;
@@ -619,7 +620,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
     protected void onStart() {
         super.onStart();
         final int theme = findTheme();
-        if (this.mTheme != theme) {
+        if (this.mTheme != theme || !this.mCustomColors.equals(ThemeHelper.applyCustomColors(this))) {
             this.mSkipBackgroundBinding = true;
             recreate();
         } else {

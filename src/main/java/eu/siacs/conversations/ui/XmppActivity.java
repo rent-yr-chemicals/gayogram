@@ -61,6 +61,7 @@ import com.google.common.base.Strings;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 
@@ -106,6 +107,7 @@ public abstract class XmppActivity extends ActionBarActivity {
     private boolean isCameraFeatureAvailable = false;
 
     protected int mTheme;
+    protected HashMap<Integer,Integer> mCustomColors;
     protected boolean mUsingEnterKey = false;
     protected boolean mUseTor = false;
     protected Toast mToast;
@@ -417,6 +419,7 @@ public abstract class XmppActivity extends ActionBarActivity {
         this.isCameraFeatureAvailable = getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_ANY);
         this.mTheme = findTheme();
         setTheme(this.mTheme);
+        this.mCustomColors = ThemeHelper.applyCustomColors(this);
     }
 
     protected boolean isCameraFeatureAvailable() {

@@ -49,6 +49,7 @@ import eu.siacs.conversations.services.UnifiedPushDistributor;
 import eu.siacs.conversations.ui.util.SettingsUtils;
 import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.utils.GeoHelper;
+import eu.siacs.conversations.utils.ThemeHelper;
 import eu.siacs.conversations.utils.TimeFrameUtils;
 import eu.siacs.conversations.xmpp.Jid;
 
@@ -85,6 +86,7 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
         mSettingsFragment.setActivityIntent(getIntent());
         this.mTheme = findTheme();
         setTheme(this.mTheme);
+        ThemeHelper.applyCustomColors(this);
         getWindow()
                 .getDecorView()
                 .setBackgroundColor(
@@ -382,6 +384,13 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
                 return true;
             });
         }
+
+        final String theTheme = PreferenceManager.getDefaultSharedPreferences(this).getString(THEME, "");
+        if (Build.VERSION.SDK_INT < 30 || !theTheme.equals("custom")) {
+            final PreferenceCategory uiCategory = (PreferenceCategory) mSettingsFragment.findPreference("ui");
+            final Preference customTheme = mSettingsFragment.findPreference("custom_theme");
+            if (customTheme != null) uiCategory.removePreference(customTheme);
+        }
     }
 
     private void changeOmemoSettingSummary() {
@@ -535,12 +544,11 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
             xmppConnectionService.reinitializeMuclumbusService();
         } else if (name.equals(AUTOMATIC_MESSAGE_DELETION)) {
             xmppConnectionService.expireOldMessages(true);
-        } else if (name.equals(THEME)) {
+        } else if (name.equals(THEME) || name.equals("custom_theme_primary") || name.equals("custom_theme_primary_dark") || name.equals("custom_theme_accent") || name.equals("custom_theme_dark")) {
             final int theme = findTheme();
-            if (this.mTheme != theme) {
-                xmppConnectionService.setTheme(theme);
-                recreate();
-            }
+            xmppConnectionService.setTheme(theme);
+            ThemeHelper.applyCustomColors(xmppConnectionService);
+            recreate();
         } else if (name.equals(PREVENT_SCREENSHOTS)) {
             SettingsUtils.applyScreenshotPreventionSetting(this);
         } else if (UnifiedPushDistributor.PREFERENCES.contains(name)) {

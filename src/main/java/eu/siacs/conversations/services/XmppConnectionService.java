@@ -1171,6 +1171,7 @@ public class XmppConnectionService extends Service {
     @Override
     public void onCreate() {
         setTheme(ThemeHelper.find(this));
+        ThemeHelper.applyCustomColors(this);
         if (Compatibility.runsTwentySix()) {
             mNotificationService.initializeChannels();
         }
