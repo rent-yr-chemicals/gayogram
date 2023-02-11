@@ -2,8 +2,12 @@ package eu.siacs.conversations.entities;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.database.DataSetObserver;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.net.Uri;
 import android.text.Editable;
@@ -22,6 +26,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.GridLayout;
 import android.widget.ListView;
@@ -33,11 +38,14 @@ import android.webkit.WebMessage;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebChromeClient;
+import android.util.DisplayMetrics;
 import android.util.Pair;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AlertDialog.Builder;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 import androidx.databinding.ViewDataBinding;
@@ -45,6 +53,8 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.viewpager.widget.ViewPager;
+
+import com.caverock.androidsvg.SVG;
 
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputLayout;
@@ -72,24 +82,27 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.crypto.OmemoSetting;
 import eu.siacs.conversations.crypto.PgpDecryptionService;
-import eu.siacs.conversations.databinding.CommandPageBinding;
-import eu.siacs.conversations.databinding.CommandNoteBinding;
-import eu.siacs.conversations.databinding.CommandResultFieldBinding;
-import eu.siacs.conversations.databinding.CommandResultCellBinding;
-import eu.siacs.conversations.databinding.CommandItemCardBinding;
+import eu.siacs.conversations.databinding.CommandButtonGridFieldBinding;
 import eu.siacs.conversations.databinding.CommandCheckboxFieldBinding;
+import eu.siacs.conversations.databinding.CommandItemCardBinding;
+import eu.siacs.conversations.databinding.CommandNoteBinding;
+import eu.siacs.conversations.databinding.CommandPageBinding;
 import eu.siacs.conversations.databinding.CommandProgressBarBinding;
 import eu.siacs.conversations.databinding.CommandRadioEditFieldBinding;
+import eu.siacs.conversations.databinding.CommandResultCellBinding;
+import eu.siacs.conversations.databinding.CommandResultFieldBinding;
 import eu.siacs.conversations.databinding.CommandSearchListFieldBinding;
 import eu.siacs.conversations.databinding.CommandSpinnerFieldBinding;
 import eu.siacs.conversations.databinding.CommandTextFieldBinding;
 import eu.siacs.conversations.databinding.CommandWebviewBinding;
+import eu.siacs.conversations.databinding.DialogQuickeditBinding;
 import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.ui.text.FixedURLSpan;
 import eu.siacs.conversations.ui.util.ShareUtil;
+import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.utils.MessageUtils;
 import eu.siacs.conversations.utils.UIHelper;
@@ -1843,6 +1856,133 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
 
+            class ButtonGridFieldViewHolder extends ViewHolder<CommandButtonGridFieldBinding> {
+                public ButtonGridFieldViewHolder(CommandButtonGridFieldBinding binding) {
+                    super(binding);
+                    options = new ArrayAdapter<Option>(binding.getRoot().getContext(), R.layout.button_grid_item) {
+                        @Override
+                        public View getView(int position, View convertView, ViewGroup parent) {
+                            Button v = (Button) super.getView(position, convertView, parent);
+                            v.setOnClickListener((view) -> {
+                                loading = true;
+                                mValue.setContent(getItem(position).getValue());
+                                execute();
+                            });
+
+                            final SVG icon = getItem(position).getIcon();
+                            if (icon != null) {
+                                 v.post(() -> {
+                                     icon.setDocumentPreserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.TOP);
+                                     Bitmap bitmap = Bitmap.createBitmap(v.getHeight(), v.getHeight(), Bitmap.Config.ARGB_8888);
+                                     Canvas bmcanvas = new Canvas(bitmap);
+                                     icon.renderToCanvas(bmcanvas);
+                                     v.setCompoundDrawablesRelativeWithIntrinsicBounds(new BitmapDrawable(bitmap), null, null, null);
+                                 });
+                            }
+
+                            return v;
+                        }
+                    };
+                }
+                protected Element mValue = null;
+                protected ArrayAdapter<Option> options;
+                protected Option defaultOption = null;
+
+                @Override
+                public void bind(Item item) {
+                    Field field = (Field) item;
+                    setTextOrHide(binding.label, field.getLabel());
+                    setTextOrHide(binding.desc, field.getDesc());
+
+                    if (field.error != null) {
+                        binding.desc.setVisibility(View.VISIBLE);
+                        binding.desc.setText(field.error);
+                        binding.desc.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Design_Error);
+                    } else {
+                        binding.desc.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Status);
+                    }
+
+                    mValue = field.getValue();
+
+                    Element validate = field.el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                    binding.openButton.setVisibility((validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null) ? View.VISIBLE : View.GONE);
+                    binding.openButton.setOnClickListener((view) -> {
+                        AlertDialog.Builder builder = new AlertDialog.Builder(binding.getRoot().getContext());
+                        DialogQuickeditBinding dialogBinding = DataBindingUtil.inflate(LayoutInflater.from(binding.getRoot().getContext()), R.layout.dialog_quickedit, null, false);
+                        builder.setPositiveButton(R.string.action_execute, null);
+                        if (field.getDesc().isPresent()) {
+                            dialogBinding.inputLayout.setHint(field.getDesc().get());
+                        }
+                        dialogBinding.inputEditText.requestFocus();
+                        dialogBinding.inputEditText.getText().append(mValue.getContent());
+                        builder.setView(dialogBinding.getRoot());
+                        builder.setNegativeButton(R.string.cancel, null);
+                        final AlertDialog dialog = builder.create();
+                        dialog.setOnShowListener(d -> SoftKeyboardUtils.showKeyboard(dialogBinding.inputEditText));
+                        dialog.show();
+                        View.OnClickListener clickListener = v -> {
+                            loading = true;
+                            String value = dialogBinding.inputEditText.getText().toString();
+                            mValue.setContent(value);
+                            SoftKeyboardUtils.hideSoftKeyboard(dialogBinding.inputEditText);
+                            dialog.dismiss();
+                            execute();
+                        };
+                        dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(clickListener);
+                        dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener((v -> {
+                            SoftKeyboardUtils.hideSoftKeyboard(dialogBinding.inputEditText);
+                            dialog.dismiss();
+                        }));
+                        dialog.setCanceledOnTouchOutside(false);
+                        dialog.setOnDismissListener(dialog1 -> {
+                            SoftKeyboardUtils.hideSoftKeyboard(dialogBinding.inputEditText);
+                        });
+                    });
+
+                    options.clear();
+                    List<Option> theOptions = field.getType().equals(Optional.of("boolean")) ? new ArrayList<>(List.of(new Option("false", binding.getRoot().getContext().getString(R.string.no)), new Option("true", binding.getRoot().getContext().getString(R.string.yes)))) : field.getOptions();
+
+                    defaultOption = null;
+                    for (Option option : theOptions) {
+                        if (option.getValue().equals(mValue.getContent())) {
+                            defaultOption = option;
+                            break;
+                        }
+                    }
+                    if (defaultOption == null && !mValue.getContent().equals("")) {
+                        // Synthesize default option for custom value
+                        defaultOption = new Option(mValue.getContent(), mValue.getContent());
+                    }
+                    if (defaultOption == null) {
+                        binding.defaultButton.setVisibility(View.GONE);
+                    } else {
+                        theOptions.remove(defaultOption);
+                        binding.defaultButton.setVisibility(View.VISIBLE);
+
+                        final SVG defaultIcon = defaultOption.getIcon();
+                        if (defaultIcon != null) {
+                             defaultIcon.setDocumentPreserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.TOP);
+                             DisplayMetrics display = mPager.getContext().getResources().getDisplayMetrics();
+                             Bitmap bitmap = Bitmap.createBitmap((int)(display.heightPixels*display.density/4), (int)(display.heightPixels*display.density/4), Bitmap.Config.ARGB_8888);
+                             bitmap.setDensity(display.densityDpi);
+                             Canvas bmcanvas = new Canvas(bitmap);
+                             defaultIcon.renderToCanvas(bmcanvas);
+                             binding.defaultButton.setCompoundDrawablesRelativeWithIntrinsicBounds(null, new BitmapDrawable(bitmap), null, null);
+                        }
+
+                        binding.defaultButton.setText(defaultOption.toString());
+                        binding.defaultButton.setOnClickListener((view) -> {
+                            loading = true;
+                            mValue.setContent(defaultOption.getValue());
+                            execute();
+                        });
+                    }
+
+                    options.addAll(theOptions);
+                    binding.buttons.setAdapter(options);
+                }
+            }
+
             class TextFieldViewHolder extends ViewHolder<CommandTextFieldBinding> implements TextWatcher {
                 public TextFieldViewHolder(CommandTextFieldBinding binding) {
                     super(binding);
@@ -2025,11 +2165,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         viewType = TYPE_RESULT_FIELD;
                     } else if (formType.equals("form")) {
                         if (fieldType.equals("boolean")) {
-                            viewType = TYPE_CHECKBOX_FIELD;
+                            if (fillableFieldCount == 1 && actionsAdapter.countExceptCancel() < 1) {
+                                viewType = TYPE_BUTTON_GRID_FIELD;
+                            } else {
+                                viewType = TYPE_CHECKBOX_FIELD;
+                            }
                         } else if (fieldType.equals("list-single")) {
                             Element validate = el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
                             if (Option.forField(el).size() > 9) {
                                 viewType = TYPE_SEARCH_LIST_FIELD;
+                            } else if (fillableFieldCount == 1 && actionsAdapter.countExceptCancel() < 1) {
+                                viewType = TYPE_BUTTON_GRID_FIELD;
                             } else if (el.findChild("value", "jabber:x:data") == null || (validate != null && validate.findChild("open", "http://jabber.org/protocol/xdata-validate") != null)) {
                                 viewType = TYPE_RADIO_EDIT_FIELD;
                             } else {
@@ -2087,7 +2233,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     tv.setGravity(Gravity.CENTER);
                     tv.setText(getItem(position).second);
                     int resId = ctx.getResources().getIdentifier("action_" + getItem(position).first, "string" , ctx.getPackageName());
-                    if (resId != 0) tv.setText(ctx.getResources().getString(resId));
+                    if (resId != 0 && getItem(position).second.equals(getItem(position).first)) tv.setText(ctx.getResources().getString(resId));
                     tv.setTextColor(ContextCompat.getColor(ctx, R.color.white));
                     tv.setBackgroundColor(UIHelper.getColorForName(getItem(position).first));
                     return v;
@@ -2098,6 +2244,23 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         if (getItem(i).first.equals(s)) return i;
                     }
                     return -1;
+                }
+
+                public int countExceptCancel() {
+                    int count = 0;
+                    for(int i = 0; i < getCount(); i++) {
+                        if (!getItem(i).first.equals("cancel")) count++;
+                    }
+                    return count;
+                }
+
+                public void clearExceptCancel() {
+                    Pair<String,String> cancelItem = null;
+                    for(int i = 0; i < getCount(); i++) {
+                        if (getItem(i).first.equals("cancel")) cancelItem = getItem(i);
+                    }
+                    clear();
+                    if (cancelItem != null) add(cancelItem);
                 }
             }
 
@@ -2113,6 +2276,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_PROGRESSBAR = 10;
             final int TYPE_SEARCH_LIST_FIELD = 11;
             final int TYPE_ITEM_CARD = 12;
+            final int TYPE_BUTTON_GRID_FIELD = 13;
 
             protected boolean loading = false;
             protected Timer loadingTimer = new Timer();
@@ -2127,6 +2291,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected ActionsAdapter actionsAdapter;
             protected GridLayoutManager layoutManager;
             protected WebView actionToWebview = null;
+            protected int fillableFieldCount = 0;
 
             CommandSession(String title, String node, XmppConnectionService xmppConnectionService) {
                 loading();
@@ -2157,6 +2322,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 this.loadingTimer = new Timer();
                 this.loading = false;
                 this.responseElement = null;
+                this.fillableFieldCount = 0;
                 this.reported = null;
                 this.response = iq;
                 this.items.clear();
@@ -2200,6 +2366,20 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                     actionsAdapter.add(Pair.create(action.getValue(), action.toString()));
                                 }
                             }
+
+                            String fillableFieldType = null;
+                            String fillableFieldValue = null;
+                            for (eu.siacs.conversations.xmpp.forms.Field field : form.getFields()) {
+                                if (field.getType() != null && !field.getType().equals("hidden") && !field.getType().equals("fixed") && !field.getFieldName().equals("http://jabber.org/protocol/commands#actions")) {
+                                    fillableFieldType = field.getType();
+                                    fillableFieldValue = field.getValue();
+                                    fillableFieldCount++;
+                                }
+                            }
+
+                            if (fillableFieldCount == 1 && actionsAdapter.countExceptCancel() < 2 && fillableFieldType != null && (fillableFieldType.equals("list-single") || (fillableFieldType.equals("boolean") && fillableFieldValue == null))) {
+                                actionsAdapter.clearExceptCancel();
+                            }
                             break;
                         }
                         if (el.getName().equals("x") && el.getNamespace().equals("jabber:x:oob")) {
@@ -2223,13 +2403,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         return;
                     }
 
-                    if (command.getAttribute("status").equals("executing") && actionsAdapter.getCount() < 1) {
+                    if (command.getAttribute("status").equals("executing") && actionsAdapter.countExceptCancel() < 1 && fillableFieldCount > 1) {
                         // No actions have been given, but we are not done?
                         // This is probably a spec violation, but we should do *something*
                         actionsAdapter.add(Pair.create("execute", "execute"));
                     }
 
-                    if (!actionsAdapter.isEmpty()) {
+                    if (!actionsAdapter.isEmpty() || fillableFieldCount > 0) {
                         if (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled")) {
                             actionsAdapter.add(Pair.create("close", "close"));
                         } else if (actionsAdapter.getPosition("cancel") < 0) {
@@ -2403,6 +2583,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     case TYPE_SPINNER_FIELD: {
                         CommandSpinnerFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_spinner_field, container, false);
                         return new SpinnerFieldViewHolder(binding);
+                    }
+                    case TYPE_BUTTON_GRID_FIELD: {
+                        CommandButtonGridFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_button_grid_field, container, false);
+                        return new ButtonGridFieldViewHolder(binding);
                     }
                     case TYPE_TEXT_FIELD: {
                         CommandTextFieldBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_text_field, container, false);
