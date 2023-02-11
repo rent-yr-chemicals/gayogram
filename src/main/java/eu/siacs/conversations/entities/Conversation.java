@@ -19,6 +19,7 @@ import android.view.MotionEvent;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AbsListView;
 import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
@@ -2558,12 +2559,16 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             if (childView instanceof ViewGroup) {
                                 childView = findViewAt((ViewGroup) childView, location[0] + e.getX(), location[1] + e.getY());
                             }
-                            if ((childView instanceof ListView && ((ListView) childView).canScrollList(1)) || childView instanceof WebView) {
-                                int action = e.getAction();
-                                switch (action) {
-                                    case MotionEvent.ACTION_DOWN:
+                            int action = e.getAction();
+                            switch (action) {
+                                case MotionEvent.ACTION_DOWN:
+                                    if ((childView instanceof AbsListView && ((AbsListView) childView).canScrollList(1)) || childView instanceof WebView) {
                                         rv.requestDisallowInterceptTouchEvent(true);
-                                }
+                                    }
+                                case MotionEvent.ACTION_UP:
+                                    if ((childView instanceof AbsListView && ((AbsListView) childView).canScrollList(-11)) || childView instanceof WebView) {
+                                        rv.requestDisallowInterceptTouchEvent(true);
+                                    }
                             }
                         }
 
@@ -2592,7 +2597,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             private View findViewAt(ViewGroup viewGroup, float x, float y) {
                 for(int i = 0; i < viewGroup.getChildCount(); i++) {
                     View child = viewGroup.getChildAt(i);
-                    if (child instanceof ViewGroup && !(child instanceof ListView) && !(child instanceof WebView)) {
+                    if (child instanceof ViewGroup && !(child instanceof AbsListView) && !(child instanceof WebView)) {
                         View foundView = findViewAt((ViewGroup) child, x, y);
                         if (foundView != null && foundView.isShown()) {
                             return foundView;
