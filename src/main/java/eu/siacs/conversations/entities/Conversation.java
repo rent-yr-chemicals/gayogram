@@ -2329,6 +2329,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 this.actionsAdapter.clear();
                 layoutManager.setSpanCount(1);
 
+                boolean actionsCleared = false;
                 Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
                 if (iq.getType() == IqPacket.TYPE.RESULT && command != null) {
                     if (mNode.equals("jabber:iq:register") && command.getAttribute("status").equals("completed")) {
@@ -2378,6 +2379,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             }
 
                             if (fillableFieldCount == 1 && actionsAdapter.countExceptCancel() < 2 && fillableFieldType != null && (fillableFieldType.equals("list-single") || (fillableFieldType.equals("boolean") && fillableFieldValue == null))) {
+                                actionsCleared = true;
                                 actionsAdapter.clearExceptCancel();
                             }
                             break;
@@ -2403,7 +2405,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         return;
                     }
 
-                    if (command.getAttribute("status").equals("executing") && actionsAdapter.countExceptCancel() < 1 && fillableFieldCount > 1) {
+                    if (command.getAttribute("status").equals("executing") && actionsAdapter.countExceptCancel() < 1 && !actionsCleared) {
                         // No actions have been given, but we are not done?
                         // This is probably a spec violation, but we should do *something*
                         actionsAdapter.add(Pair.create("execute", "execute"));
