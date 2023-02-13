@@ -3,8 +3,8 @@
 
     <style name="ConversationsTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="colorPrimary">@color/perpy</item>
-        <item name="colorPrimaryDark">#1E0036</item>
-        <item name="colorAccent">#1E0036</item>
+        <item name="colorPrimaryDark">@color/black_perpy</item>
+        <item name="colorAccent">@color/black_perpy</item>
         <item name="popupOverlayStyle">@style/ThemeOverlay.AppCompat.Light</item>
 
         <item name="message_bubble_received_bg">?colorPrimary</item>
@@ -154,7 +154,7 @@
 
     <style name="ConversationsTheme.Dark" parent="Theme.AppCompat.NoActionBar">
         <item name="colorPrimary">@color/perpy</item>
-        <item name="colorPrimaryDark">#1E0036</item>
+        <item name="colorPrimaryDark">@color/black_perpy</item>
         <item name="colorAccent">@color/yeller</item>
         <item name="popupOverlayStyle">@style/ThemeOverlay.AppCompat.Dark</item>
         <item name="android:navigationBarColor" tools:targetApi="21">@color/black</item>
@@ -308,8 +308,8 @@
     </style>
 
     <style name="ConversationsTheme.Obsidian" parent="ConversationsTheme.Dark">
-        <item name="colorPrimary">#1E0036</item>
-        <item name="colorPrimaryDark">#1E0036</item>
+        <item name="colorPrimary">@color/black_perpy</item>
+        <item name="colorPrimaryDark">@color/black_perpy</item>
         <item name="colorAccent">@color/yeller</item>
 
         <item name="message_bubble_received_bg">?colorPrimary</item>
@@ -320,10 +320,10 @@
 
         <item name="color_background_primary">#0E0020</item>
         <item name="color_background_secondary">@color/black</item>
-        <item name="color_background_tertiary">#1E0036</item>
+        <item name="color_background_tertiary">@color/black_perpy</item>
         <item name="color_background_overlay">@color/black26</item>
 
-        <item name="unread_count">#1E0036</item>
+        <item name="unread_count">@color/black_perpy</item>
     </style>
 
     <style name="ConversationsTheme.OLEDBlack" parent="ConversationsTheme.Dark">
@@ -342,7 +342,19 @@
         <item name="color_background_tertiary">@color/black</item>
         <item name="color_background_overlay">@color/black26</item>
 
-        <item name="unread_count">#1E0036</item>
+        <item name="unread_count">@color/black_perpy</item>
+    </style>
+
+    <style name="ConversationsTheme.Custom" parent="ConversationsTheme">
+        <item name="colorPrimary">@color/custom_theme_primary</item>
+        <item name="colorPrimaryDark">@color/custom_theme_primary_dark</item>
+        <item name="colorAccent">@color/custom_theme_accent</item>
+    </style>
+
+    <style name="ConversationsTheme.CustomDark" parent="ConversationsTheme.Dark">
+        <item name="colorPrimary">@color/custom_theme_primary</item>
+        <item name="colorPrimaryDark">@color/custom_theme_primary_dark</item>
+        <item name="colorAccent">@color/custom_theme_accent</item>
     </style>
 
     <style name="ConversationsTheme.Medium" parent="ConversationsTheme">
@@ -370,6 +382,30 @@
     </style>
 
     <style name="ConversationsTheme.Obsidian.Medium" parent="ConversationsTheme.Obsidian">
+        <item name="TextSizeCaption">14sp</item>
+        <item name="TextSizeBody1">16sp</item>
+        <item name="TextSizeBody2">16sp</item>
+        <item name="TextSizeSubhead">18sp</item>
+        <item name="TextSizeTitle">22sp</item>
+        <item name="TextSizeDisplay2">47sp</item>
+        <item name="TextSizeInput">18sp</item>
+        <item name="TextSeparation">6sp</item>
+        <item name="IconSize">20sp</item>
+    </style>
+
+    <style name="ConversationsTheme.CustomDark.Medium" parent="ConversationsTheme.CustomDark">
+        <item name="TextSizeCaption">14sp</item>
+        <item name="TextSizeBody1">16sp</item>
+        <item name="TextSizeBody2">16sp</item>
+        <item name="TextSizeSubhead">18sp</item>
+        <item name="TextSizeTitle">22sp</item>
+        <item name="TextSizeDisplay2">47sp</item>
+        <item name="TextSizeInput">18sp</item>
+        <item name="TextSeparation">6sp</item>
+        <item name="IconSize">20sp</item>
+    </style>
+
+    <style name="ConversationsTheme.Custom.Medium" parent="ConversationsTheme.Custom">
         <item name="TextSizeCaption">14sp</item>
         <item name="TextSizeBody1">16sp</item>
         <item name="TextSizeBody2">16sp</item>
@@ -418,6 +454,30 @@
     </style>
 
     <style name="ConversationsTheme.OLEDBlack.Large" parent="ConversationsTheme.OLEDBlack">
+        <item name="TextSizeCaption">16sp</item>
+        <item name="TextSizeBody1">18sp</item>
+        <item name="TextSizeBody2">18sp</item>
+        <item name="TextSizeSubhead">20sp</item>
+        <item name="TextSizeTitle">24sp</item>
+        <item name="TextSizeDisplay2">48sp</item>
+        <item name="TextSizeInput">20sp</item>
+        <item name="TextSeparation">7sp</item>
+        <item name="IconSize">22sp</item>
+    </style>
+
+    <style name="ConversationsTheme.Custom.Large" parent="ConversationsTheme.Custom">
+        <item name="TextSizeCaption">16sp</item>
+        <item name="TextSizeBody1">18sp</item>
+        <item name="TextSizeBody2">18sp</item>
+        <item name="TextSizeSubhead">20sp</item>
+        <item name="TextSizeTitle">24sp</item>
+        <item name="TextSizeDisplay2">48sp</item>
+        <item name="TextSizeInput">20sp</item>
+        <item name="TextSeparation">7sp</item>
+        <item name="IconSize">22sp</item>
+    </style>
+
+    <style name="ConversationsTheme.CustomDark.Large" parent="ConversationsTheme.CustomDark">
         <item name="TextSizeCaption">16sp</item>
         <item name="TextSizeBody1">18sp</item>
         <item name="TextSizeBody2">18sp</item>
