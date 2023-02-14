@@ -22,6 +22,7 @@ import eu.siacs.conversations.databinding.ActivityEasyInviteBinding;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.services.BarcodeProvider;
 import eu.siacs.conversations.utils.EasyOnboardingInvite;
+import eu.siacs.conversations.utils.XmppUri;
 import eu.siacs.conversations.xmpp.Jid;
 
 public class EasyOnboardingInviteActivity extends XmppActivity implements EasyOnboardingInvite.OnInviteRequested {
@@ -109,6 +110,11 @@ public class EasyOnboardingInviteActivity extends XmppActivity implements EasyOn
         final int width = Math.min(size.x, size.y);
         final Bitmap bitmap = BarcodeProvider.create2dBarcodeBitmap(invite.getShareableLink(), width);
         binding.qrCode.setImageBitmap(bitmap);
+
+        XmppUri xmppUri = new XmppUri(invite.getUri());
+        if (xmppUri.isAction(XmppUri.ACTION_ROSTER) && !"y".equals(xmppUri.getParameter(XmppUri.PARAMETER_IBR))) {
+            binding.useMyselfButton.setVisibility(View.INVISIBLE);
+        }
     }
 
     @Override
