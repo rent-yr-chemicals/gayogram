@@ -1390,26 +1390,21 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final Element c = packet.addChild("command", Namespace.COMMANDS);
             c.setAttribute("node", command.getAttribute("node"));
             c.setAttribute("action", "execute");
-            View v = mPager;
 
             if (command.getAttribute("node").equals("jabber:iq:register") && packet.getTo().asBareJid().equals(Jid.of("cheogram.com"))) {
-                new com.cheogram.android.CheogramLicenseChecker(v.getContext(), (signedData, signature) -> {
+                new com.cheogram.android.CheogramLicenseChecker(mPager.getContext(), (signedData, signature) -> {
                     if (signedData != null && signature != null) {
                         c.addChild("license", "https://ns.cheogram.com/google-play").setContent(signedData);
                         c.addChild("licenseSignature", "https://ns.cheogram.com/google-play").setContent(signature);
                     }
 
                     xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
-                        v.post(() -> {
-                            session.updateWithResponse(iq);
-                        });
+                        session.updateWithResponse(iq);
                     });
                 }).checkLicense();
             } else {
                 xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
-                    v.post(() -> {
-                        session.updateWithResponse(iq);
-                    });
+                    session.updateWithResponse(iq);
                 });
             }
 
@@ -2376,6 +2371,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected GridLayoutManager layoutManager;
             protected WebView actionToWebview = null;
             protected int fillableFieldCount = 0;
+            protected IqPacket pendingResponsePacket = null;
 
             CommandSession(String title, String node, XmppConnectionService xmppConnectionService) {
                 loading();
@@ -2401,7 +2397,15 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return mTitle;
             }
 
-            public void updateWithResponse(IqPacket iq) {
+            public void updateWithResponse(final IqPacket iq) {
+                if (getView().isAttachedToWindow()) {
+                    getView().post(() -> updateWithResponseUiThread(iq));
+                } else {
+                    pendingResponsePacket = iq;
+                }
+            }
+
+            protected void updateWithResponseUiThread(final IqPacket iq) {
                 this.loadingTimer.cancel();
                 this.loadingTimer = new Timer();
                 this.loading = false;
@@ -2764,9 +2768,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 if (c.getAttribute("action") == null) c.setAttribute("action", action);
 
                 xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
-                    getView().post(() -> {
-                        updateWithResponse(iq);
-                    });
+                    updateWithResponse(iq);
                 });
 
                 loading();
@@ -2861,6 +2863,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 });
 
                 actionsAdapter.notifyDataSetChanged();
+
+                if (pendingResponsePacket != null) {
+                    updateWithResponseUiThread(pendingResponsePacket);
+                    pendingResponsePacket = null;
+                }
             }
 
             // https://stackoverflow.com/a/36037991/8611
