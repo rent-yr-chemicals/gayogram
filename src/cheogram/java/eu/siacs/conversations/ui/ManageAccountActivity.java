@@ -93,6 +93,11 @@ public class ManageAccountActivity extends XmppActivity implements OnAccountUpda
         });
 
         if (Build.VERSION.SDK_INT < 23) return;
+        if (Build.VERSION.SDK_INT >= 33) {
+            if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELECOM)) return;
+        } else {
+            if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONNECTION_SERVICE)) return;
+        }
 
         outer:
         for (Account account : xmppConnectionService.getAccounts()) {
@@ -287,7 +292,11 @@ public class ManageAccountActivity extends XmppActivity implements OnAccountUpda
             if (allGranted(grantResults)) {
                 switch (requestCode) {
                     case REQUEST_MICROPHONE:
-                        startActivity(mMicIntent);
+                        try {
+                            startActivity(mMicIntent);
+                        } catch (final android.content.ActivityNotFoundException e) {
+                            Toast.makeText(this, "Your OS has blocked dialler integration", Toast.LENGTH_SHORT).show();
+                        }
                         mMicIntent = null;
                         return;
                     case REQUEST_IMPORT_BACKUP:
