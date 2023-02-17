@@ -783,8 +783,9 @@ public class RtpSessionActivity extends XmppActivity
                             .getJingleConnectionManager()
                             .getTerminalSessionState(with, sessionId);
             if (terminatedRtpSession == null) {
-                throw new IllegalStateException(
-                        "failed to initialize activity with running rtp session. session not found");
+                Log.e(Config.LOGTAG, "failed to initialize activity with running rtp session. session not found");
+                finish();
+                return true;
             }
             initializeWithTerminatedSessionState(account, with, terminatedRtpSession);
             return true;
