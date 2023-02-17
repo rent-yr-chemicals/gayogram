@@ -536,7 +536,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
                 prefilledJid,
                 invite == null ? null : invite.account,
                 invite == null || !invite.hasFingerprints(),
-                true
+                EnterJidDialog.SanityCheck.ALLOW_MUC
         );
 
         dialog.setOnEnterJidDialogPositiveListener((accountJid, contactJid) -> {
@@ -548,25 +548,32 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
             if (account == null) {
                 return true;
             }
-
             final Contact contact = account.getRoster().getContact(contactJid);
+
             if (invite != null && invite.getName() != null) {
                 contact.setServerName(invite.getName());
             }
-            if (contact.isSelf()) {
-                switchToConversation(contact);
-                return true;
-            } else if (contact.showInRoster()) {
-                throw new EnterJidDialog.JidError(getString(R.string.contact_already_exists));
-            } else {
-                final String preAuth = invite == null ? null : invite.getParameter(XmppUri.PARAMETER_PRE_AUTH);
-                xmppConnectionService.createContact(contact, true, preAuth);
-                if (invite != null && invite.hasFingerprints()) {
-                    xmppConnectionService.verifyFingerprints(contact, invite.getFingerprints());
-                }
+
+            if (contact.isSelf() || contact.showInRoster()) {
                 switchToConversationDoNotAppend(contact, invite == null ? null : invite.getBody());
                 return true;
             }
+
+            xmppConnectionService.checkIfMuc(account, contactJid, (isMuc) -> {
+                if (isMuc) {
+                    final Conversation conversation = xmppConnectionService.findOrCreateConversation(account, contactJid, true, true, true);
+                    switchToConversationDoNotAppend(conversation, invite == null ? null : invite.getBody());
+                } else {
+                    final String preAuth = invite == null ? null : invite.getParameter(XmppUri.PARAMETER_PRE_AUTH);
+                    xmppConnectionService.createContact(contact, true, preAuth);
+                    if (invite != null && invite.hasFingerprints()) {
+                        xmppConnectionService.verifyFingerprints(contact, invite.getFingerprints());
+                    }
+                    switchToConversationDoNotAppend(contact, invite == null ? null : invite.getBody());
+                }
+            });
+
+            return true;
         });
         dialog.show(ft, FRAGMENT_TAG_DIALOG);
     }

@@ -82,7 +82,7 @@ public class BlocklistActivity extends AbstractSearchableListItemActivity implem
 				null,
 				account.getJid().asBareJid().toEscapedString(),
 				true,
-				false
+				EnterJidDialog.SanityCheck.NO
 		);
 
 		dialog.setOnEnterJidDialogPositiveListener((accountJid, contactJid) -> {

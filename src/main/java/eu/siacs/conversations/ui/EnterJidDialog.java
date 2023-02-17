@@ -68,10 +68,16 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
 
     private EnterJidDialogBinding binding;
     private AlertDialog dialog;
-    private boolean sanityCheckJid = false;
+    private SanityCheck sanityCheckJid = SanityCheck.NO;
 
     private boolean issuedWarning = false;
     private GatewayListAdapter gatewayListAdapter = new GatewayListAdapter();
+
+    public static enum SanityCheck {
+        NO,
+        YES,
+        ALLOW_MUC
+    }
 
     public static EnterJidDialog newInstance(
             final List<String> activatedAccounts,
@@ -80,7 +86,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
             final String prefilledJid,
             final String account,
             boolean allowEditJid,
-            final boolean sanity_check_jid) {
+            final SanityCheck sanity_check_jid) {
         EnterJidDialog dialog = new EnterJidDialog();
         Bundle bundle = new Bundle();
         bundle.putString(TITLE_KEY, title);
@@ -89,7 +95,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         bundle.putString(ACCOUNT_KEY, account);
         bundle.putBoolean(ALLOW_EDIT_JID_KEY, allowEditJid);
         bundle.putStringArrayList(ACCOUNTS_LIST_KEY, (ArrayList<String>) activatedAccounts);
-        bundle.putBoolean(SANITY_CHECK_JID, sanity_check_jid);
+        bundle.putInt(SANITY_CHECK_JID, sanity_check_jid.ordinal());
         dialog.setArguments(bundle);
         return dialog;
     }
@@ -131,7 +137,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                 binding.jid.setCursorVisible(false);
             }
         }
-        sanityCheckJid = getArguments().getBoolean(SANITY_CHECK_JID, false);
+        sanityCheckJid = SanityCheck.values()[getArguments().getInt(SANITY_CHECK_JID, SanityCheck.NO.ordinal())];
 
         DelayedHintHelper.setHint(R.string.account_settings_example_jabber_id, binding.jid);
 
@@ -236,7 +242,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                     return;
                 }
 
-                final Jid contactJid;
+                Jid contactJid = null;
                 try {
                     contactJid = Jid.ofEscaped(jidString);
                 } catch (final IllegalArgumentException e) {
@@ -244,14 +250,14 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                     return;
                 }
 
-                if (!issuedWarning && sanityCheckJid) {
+                if (!issuedWarning && sanityCheckJid != SanityCheck.NO) {
                     if (contactJid.isDomainJid()) {
                         binding.jidLayout.setError(getActivity().getString(R.string.this_looks_like_a_domain));
                         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
                         issuedWarning = true;
                         return;
                     }
-                    if (suspiciousSubDomain(contactJid.getDomain().toEscapedString())) {
+                    if (sanityCheckJid != SanityCheck.ALLOW_MUC && suspiciousSubDomain(contactJid.getDomain().toEscapedString())) {
                         binding.jidLayout.setError(getActivity().getString(R.string.this_looks_like_channel));
                         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
                         issuedWarning = true;
