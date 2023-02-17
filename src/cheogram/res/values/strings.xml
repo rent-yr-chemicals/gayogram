@@ -31,4 +31,5 @@
     <string name="pref_dialler_integration_incoming_summary">Incoming calls from phone numbers may ring with your system dialler instead of this app\'s notification settings</string>
     <string name="save_as_sticker">Save as Sticker</string>
     <string name="sticker_name">Sticker Name</string>
+    <string name="add_contact">New Contact or Channel</string>
 </resources>

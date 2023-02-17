@@ -2859,6 +2859,9 @@ public class ConversationFragment extends XmppFragment
             attachFile(ATTACHMENT_CHOICE_RECORD_VOICE, false);
             return;
         }
+        if ("call".equals(postInitAction)) {
+            checkPermissionAndTriggerAudioCall();
+        }
         if ("message".equals(postInitAction)) {
             binding.conversationViewPager.post(() -> {
                 binding.conversationViewPager.setCurrentItem(0);

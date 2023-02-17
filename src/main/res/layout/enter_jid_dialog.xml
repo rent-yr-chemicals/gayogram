@@ -43,5 +43,14 @@
                 android:imeOptions="actionDone|flagNoExtractUi"
                 android:inputType="textEmailAddress" />
         </com.google.android.material.textfield.TextInputLayout>
+
+        <CheckBox
+            android:id="@+id/bookmark"
+            style="@style/Widget.Conversations.CheckBox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:checked="true"
+            android:text="Save as Contact / Bookmark"/>
     </LinearLayout>
 </layout>

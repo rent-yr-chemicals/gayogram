@@ -80,12 +80,14 @@ public class BlocklistActivity extends AbstractSearchableListItemActivity implem
 				getString(R.string.block_jabber_id),
 				getString(R.string.block),
 				null,
+				null,
 				account.getJid().asBareJid().toEscapedString(),
 				true,
+				false,
 				EnterJidDialog.SanityCheck.NO
 		);
 
-		dialog.setOnEnterJidDialogPositiveListener((accountJid, contactJid) -> {
+		dialog.setOnEnterJidDialogPositiveListener((accountJid, contactJid, x, y) -> {
 			Blockable blockable = new RawBlockable(account, contactJid);
 			if (xmppConnectionService.sendBlockRequest(blockable, false)) {
 				Toast.makeText(BlocklistActivity.this, R.string.corresponding_conversations_closed, Toast.LENGTH_SHORT).show();

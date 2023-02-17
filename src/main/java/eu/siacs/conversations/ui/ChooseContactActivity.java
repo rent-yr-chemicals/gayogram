@@ -326,13 +326,15 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
                 mActivatedAccounts,
                 getString(R.string.enter_contact),
                 getString(R.string.select),
+                null,
                 jid == null ? null : jid.asBareJid().toString(),
                 getIntent().getStringExtra(EXTRA_ACCOUNT),
                 true,
+                false,
                 EnterJidDialog.SanityCheck.NO
         );
 
-        dialog.setOnEnterJidDialogPositiveListener((accountJid, contactJid) -> {
+        dialog.setOnEnterJidDialogPositiveListener((accountJid, contactJid, x, y) -> {
             final Intent request = getIntent();
             final Intent data = new Intent();
             data.putExtra("contact", contactJid.toString());
