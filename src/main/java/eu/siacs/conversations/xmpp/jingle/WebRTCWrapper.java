@@ -533,8 +533,14 @@ public class WebRTCWrapper {
     }
 
     boolean isMicrophoneEnabled() {
-        final Optional<AudioTrack> audioTrack =
-                TrackWrapper.get(peerConnection, this.localAudioTrack);
+        Optional<AudioTrack> audioTrack = null;
+        try {
+            audioTrack = TrackWrapper.get(peerConnection, this.localAudioTrack);
+        } catch (final IllegalStateException e) {
+            Log.d(Config.LOGTAG, "unable to check microphone", e);
+            // ignoring race condition in case sender has been disposed
+            return false;
+        }
         if (audioTrack.isPresent()) {
             try {
                 return audioTrack.get().enabled();
