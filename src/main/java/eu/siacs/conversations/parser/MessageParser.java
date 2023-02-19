@@ -724,6 +724,8 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                     } else {
                         Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": received message correction but verification didn't check out");
                     }
+                } else if (replaceAsRetraction) {
+                    return;
                 }
             }
 
