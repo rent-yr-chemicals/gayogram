@@ -429,11 +429,13 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             }
         }
         String replacementId = replaceElement == null ? null : replaceElement.getAttribute("id");
+        boolean replaceAsRetraction = false;
         if (replacementId == null) {
             Element fasten = packet.findChild("apply-to", "urn:xmpp:fasten:0");
-            if (fasten != null && (fasten.findChild("retract", "urn:xmpp:message-retract:0") != null || fasten.findChild("urn:xmpp:message-moderate:0") != null)) {
+            if (fasten != null && (fasten.findChild("retract", "urn:xmpp:message-retract:0") != null || fasten.findChild("moderated", "urn:xmpp:message-moderate:0") != null)) {
                 replacementId = fasten.getAttribute("id");
                 packet.setBody("");
+                replaceAsRetraction = true;
             }
         }
         final LocalizedContent body = packet.getBody();
@@ -671,10 +673,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             }
 
             if (replacementId != null && mXmppConnectionService.allowMessageCorrection()) {
-                final Message replacedMessage = conversation.findMessageWithRemoteIdAndCounterpart(replacementId,
-                        counterpart,
-                        message.getStatus() == Message.STATUS_RECEIVED,
-                        message.isCarbon());
+                final Message replacedMessage = conversation.findMessageWithRemoteIdAndCounterpart(replacementId, counterpart);
                 if (replacedMessage != null) {
                     final boolean fingerprintsMatch = replacedMessage.getFingerprint() == null
                             || replacedMessage.getFingerprint().equals(message.getFingerprint());
@@ -683,7 +682,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                             && replacedMessage.getTrueCounterpart().asBareJid().equals(message.getTrueCounterpart().asBareJid());
                     final boolean mucUserMatches = query == null && replacedMessage.sameMucUser(message); //can not be checked when using mam
                     final boolean duplicate = conversation.hasDuplicateMessage(message);
-                    if (fingerprintsMatch && (trueCountersMatch || !conversationMultiMode || mucUserMatches) && !duplicate) {
+                    if (fingerprintsMatch && (trueCountersMatch || !conversationMultiMode || mucUserMatches || counterpart.isBareJid()) && !duplicate) {
                         Log.d(Config.LOGTAG, "replaced message '" + replacedMessage.getBody() + "' with '" + message.getBody() + "'");
                         synchronized (replacedMessage) {
                             final String uuid = replacedMessage.getUuid();
@@ -691,6 +690,13 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                             replacedMessage.setBody(message.getBody());
                             replacedMessage.putEdited(replacedMessage.getRemoteMsgId(), replacedMessage.getServerMsgId());
                             replacedMessage.setRemoteMsgId(remoteMsgId);
+                            if (replaceAsRetraction) {
+                                mXmppConnectionService.getFileBackend().deleteFile(replacedMessage);
+                                mXmppConnectionService.evictPreview(message.getUuid());
+                                replacedMessage.clearPayloads();
+                                replacedMessage.setFileParams(null);
+                                replacedMessage.setDeleted(true);
+                            }
                             if (replacedMessage.getServerMsgId() == null || message.getServerMsgId() != null) {
                                 replacedMessage.setServerMsgId(message.getServerMsgId());
                             }

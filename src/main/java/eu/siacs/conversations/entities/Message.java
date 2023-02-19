@@ -981,6 +981,10 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         }
     }
 
+    public void clearPayloads() {
+        this.payloads.clear();
+    }
+
     public void addPayload(Element el) {
         if (el == null) return;
 
@@ -1080,7 +1084,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     }
 
     public synchronized void setFileParams(FileParams fileParams) {
-        if (this.fileParams != null && this.fileParams.sims != null && fileParams.sims == null) {
+        if (fileParams != null && this.fileParams != null && this.fileParams.sims != null && fileParams.sims == null) {
             fileParams.sims = this.fileParams.sims;
         }
         this.fileParams = fileParams;

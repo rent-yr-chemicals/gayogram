@@ -36,6 +36,7 @@ import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Bookmark;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.DownloadableFile;
+import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.services.MessageArchiveService;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.xml.Element;
@@ -407,6 +408,19 @@ public class IqGenerator extends AbstractGenerator {
         Element item = packet.query("http://jabber.org/protocol/muc#admin").addChild("item");
         item.setAttribute("nick", nick);
         item.setAttribute("role", role);
+        return packet;
+    }
+
+    public IqPacket moderateMessage(Account account, Message m, String reason) {
+        IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
+        packet.setTo(m.getConversation().getJid().asBareJid());
+        packet.setFrom(account.getJid());
+        Element moderate =
+            packet.addChild("apply-to", "urn:xmpp:fasten:0")
+                  .setAttribute("id", m.getServerMsgId())
+                  .addChild("moderate", "urn:xmpp:message-moderate:0");
+        moderate.addChild("retract", "urn:xmpp:message-retract:0");
+        moderate.addChild("reason", "urn:xmpp:message-moderate:0").setContent(reason);
         return packet;
     }
 

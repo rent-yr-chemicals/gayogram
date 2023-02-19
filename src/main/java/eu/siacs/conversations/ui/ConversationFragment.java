@@ -1002,7 +1002,7 @@ public class ConversationFragment extends XmppFragment
                 final String existingName = savingAsStickerName;
                 savingAsSticker = null;
                 savingAsStickerName = null;
-                activity.quickEdit(existingName, R.string.sticker_name, (name) -> {
+                activity.quickEdit(existingName, (name) -> {
                     try {
                         activity.xmppConnectionService.getFileBackend().copyFileToDocumentFile(activity, f, df, name);
                     } catch (final FileBackend.FileCopyException e) {
@@ -1012,7 +1012,7 @@ public class ConversationFragment extends XmppFragment
 
                     Toast.makeText(activity, "Sticker saved", Toast.LENGTH_SHORT).show();
                     return null;
-                });
+                }, R.string.sticker_name, false, false, true);
                 break;
             case REQUEST_TRUST_KEYS_TEXT:
                 sendMessage();
@@ -1431,6 +1431,7 @@ public class ConversationFragment extends XmppFragment
             MenuItem retryDecryption = menu.findItem(R.id.retry_decryption);
             MenuItem correctMessage = menu.findItem(R.id.correct_message);
             MenuItem retractMessage = menu.findItem(R.id.retract_message);
+            MenuItem moderateMessage = menu.findItem(R.id.moderate_message);
             MenuItem onlyThisThread = menu.findItem(R.id.only_this_thread);
             MenuItem shareWith = menu.findItem(R.id.share_with);
             MenuItem sendAgain = menu.findItem(R.id.send_again);
@@ -1460,6 +1461,9 @@ public class ConversationFragment extends XmppFragment
                     && m.getConversation() instanceof Conversation) {
                 correctMessage.setVisible(true);
                 if (!relevantForCorrection.getBody().equals("") && !relevantForCorrection.getBody().equals(" ")) retractMessage.setVisible(true);
+            }
+            if (conversation.getMode() == Conversation.MODE_MULTI && conversation.getMucOptions().getSelf().getRole().ranks(MucOptions.Role.MODERATOR) && conversation.getMucOptions().hasFeature("urn:xmpp:message-moderate:0")) {
+                moderateMessage.setVisible(true);
             }
             if ((m.isFileOrImage() && !deleted && !receiving)
                     || (m.getType() == Message.TYPE_TEXT && !m.treatAsDownloadable())
@@ -1542,6 +1546,12 @@ public class ConversationFragment extends XmppFragment
                         sendMessage(message);
                     })
                     .setNegativeButton(R.string.no, null).show();
+                return true;
+            case R.id.moderate_message:
+                activity.quickEdit("Spam", (reason) -> {
+                    activity.xmppConnectionService.moderateMessage(conversation.getAccount(), selectedMessage, reason);
+                    return null;
+                }, R.string.moderate_reason, false, false, true);
                 return true;
             case R.id.copy_message:
                 ShareUtil.copyToClipboard(activity, selectedMessage);

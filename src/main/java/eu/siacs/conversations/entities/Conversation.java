@@ -478,7 +478,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         return null;
     }
 
-    public Message findMessageWithRemoteIdAndCounterpart(String id, Jid counterpart, boolean received, boolean carbon) {
+    public Message findMessageWithRemoteIdAndCounterpart(String id, Jid counterpart) {
         synchronized (this.messages) {
             for (int i = this.messages.size() - 1; i >= 0; --i) {
                 final Message message = messages.get(i);
@@ -486,14 +486,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 if (mcp == null) {
                     continue;
                 }
-                if (mcp.equals(counterpart) && ((message.getStatus() == Message.STATUS_RECEIVED) == received)
-                        && (carbon == message.isCarbon() || received)) {
-                    final boolean idMatch = id.equals(message.getRemoteMsgId()) || message.remoteMsgIdMatchInEdit(id);
-                    if (idMatch && !message.isFileOrImage() && !message.treatAsDownloadable()) {
-                        return message;
-                    } else {
-                        return null;
-                    }
+                if (mcp.equals(counterpart) || mcp.asBareJid().equals(counterpart)) {
+                    final boolean idMatch = id.equals(message.getRemoteMsgId()) || message.remoteMsgIdMatchInEdit(id) || (getMode() == MODE_MULTI && id.equals(message.getServerMsgId()));
+                    if (idMatch) return message;
                 }
             }
         }
