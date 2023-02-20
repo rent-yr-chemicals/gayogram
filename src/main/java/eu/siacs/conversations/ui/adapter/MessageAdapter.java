@@ -212,7 +212,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
         }
 
         if (viewHolder.edit_indicator != null) {
-            if (message.edited()) {
+            if (message.edited() && message.getModerated() == null) {
                 viewHolder.edit_indicator.setVisibility(View.VISIBLE);
                 viewHolder.edit_indicator.setImageResource(darkBackground ? R.drawable.ic_mode_edit_white_18dp : R.drawable.ic_mode_edit_black_18dp);
                 viewHolder.edit_indicator.setAlpha(darkBackground ? 0.7f : 0.57f);
