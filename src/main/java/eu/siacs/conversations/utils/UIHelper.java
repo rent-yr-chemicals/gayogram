@@ -339,7 +339,7 @@ public class UIHelper {
                 if (textColor != 0) {
                     StylingHelper.format(styledBody, 0, styledBody.length() - 1, textColor);
                 }
-                MyLinkify.addLinks(styledBody, message.getConversation().getAccount());
+                MyLinkify.addLinks(styledBody, message.getConversation().getAccount(), message.getConversation().getJid());
                 SpannableStringBuilder builder = new SpannableStringBuilder();
                 for (CharSequence l : CharSequenceUtils.split(styledBody, '\n')) {
                     if (l.length() > 0) {

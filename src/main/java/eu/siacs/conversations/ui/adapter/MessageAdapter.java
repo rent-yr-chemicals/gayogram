@@ -581,7 +581,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             if (highlightedTerm != null) {
                 StylingHelper.highlight(activity, body, highlightedTerm, StylingHelper.isDarkText(viewHolder.messageBody));
             }
-            MyLinkify.addLinks(body, message.getConversation().getAccount());
+            MyLinkify.addLinks(body, message.getConversation().getAccount(), message.getConversation().getJid());
             viewHolder.messageBody.setAutoLinkMask(0);
             viewHolder.messageBody.setText(body);
             BetterLinkMovementMethod method = new BetterLinkMovementMethod() {
