@@ -32,6 +32,6 @@
     <string name="save_as_sticker">Save as Sticker</string>
     <string name="sticker_name">Sticker Name</string>
     <string name="moderate_message">Moderate</string>
-    <string name="moderate_reason">Moderation Resaon</string>
+    <string name="moderate_reason">Moderation Reason</string>
     <string name="unable_to_moderate">Unable to Moderate</string>
 </resources>
