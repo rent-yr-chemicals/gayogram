@@ -1462,7 +1462,7 @@ public class ConversationFragment extends XmppFragment
                 correctMessage.setVisible(true);
                 if (!relevantForCorrection.getBody().equals("") && !relevantForCorrection.getBody().equals(" ")) retractMessage.setVisible(true);
             }
-            if (conversation.getMode() == Conversation.MODE_MULTI && conversation.getMucOptions().getSelf().getRole().ranks(MucOptions.Role.MODERATOR) && conversation.getMucOptions().hasFeature("urn:xmpp:message-moderate:0")) {
+            if (conversation.getMode() == Conversation.MODE_MULTI && m.getServerMsgId() != null && m.getModerated() == null && conversation.getMucOptions().getSelf().getRole().ranks(MucOptions.Role.MODERATOR) && conversation.getMucOptions().hasFeature("urn:xmpp:message-moderate:0")) {
                 moderateMessage.setVisible(true);
             }
             if ((m.isFileOrImage() && !deleted && !receiving)
