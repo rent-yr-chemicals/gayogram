@@ -3557,9 +3557,7 @@ public class XmppConnectionService extends Service {
 
     public void moderateMessage(final Account account, final Message m, final String reason) {
         IqPacket request = this.mIqGenerator.moderateMessage(account, m, reason);
-                Log.d(Config.LOGTAG, "moderate: " + request);
         sendIqPacket(account, request, (a, packet) -> {
-                Log.d(Config.LOGTAG, "moderate1: " + packet);
             if (packet.getType() != IqPacket.TYPE.RESULT) {
                 showErrorToastInUi(R.string.unable_to_moderate);
                 Log.d(Config.LOGTAG, a.getJid().asBareJid() + " unable to moderate: " + packet);
