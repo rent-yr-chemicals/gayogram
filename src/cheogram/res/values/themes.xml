@@ -73,7 +73,7 @@
             @drawable/message_bubble_received
         </item>
 
-        <item name="unread_count">@color/perpy</item>
+        <item name="unread_count">?colorPrimary</item>
 
         <item name="conversations_overview_background">@color/green700</item>
 
@@ -228,7 +228,7 @@
         <item name="ic_attach_photo" type="reference">@drawable/ic_attach_photo_white</item>
         <item name="ic_attach_record" type="reference">@drawable/ic_attach_record_white</item>
 
-        <item name="unread_count">@color/perpy</item>
+        <item name="unread_count">?colorPrimary</item>
 
         <item name="conversations_overview_background">@color/green900</item>
 
@@ -323,7 +323,7 @@
         <item name="color_background_tertiary">@color/black_perpy</item>
         <item name="color_background_overlay">@color/black26</item>
 
-        <item name="unread_count">@color/black_perpy</item>
+        <item name="unread_count">?colorPrimary</item>
     </style>
 
     <style name="ConversationsTheme.OLEDBlack" parent="ConversationsTheme.Dark">
@@ -342,7 +342,7 @@
         <item name="color_background_tertiary">@color/black</item>
         <item name="color_background_overlay">@color/black26</item>
 
-        <item name="unread_count">@color/black_perpy</item>
+        <item name="unread_count">?colorPrimary</item>
     </style>
 
     <style name="ConversationsTheme.Custom" parent="ConversationsTheme">
