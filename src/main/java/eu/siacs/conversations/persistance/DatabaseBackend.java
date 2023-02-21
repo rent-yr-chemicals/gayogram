@@ -801,6 +801,11 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         return is;
     }
 
+    public void clearBlockedMedia() {
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("DELETE FROM cheogram.blocked_media");
+    }
+
     public void createConversation(Conversation conversation) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.insert(Conversation.TABLENAME, null, conversation.getContentValues());

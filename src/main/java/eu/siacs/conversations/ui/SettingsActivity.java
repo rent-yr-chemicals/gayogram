@@ -385,6 +385,15 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
             });
         }
 
+        final Preference clearBlockedMedia = mSettingsFragment.findPreference("clear_blocked_media");
+        if (clearBlockedMedia != null) {
+            clearBlockedMedia.setOnPreferenceClickListener((p) -> {
+                xmppConnectionService.clearBlockedMedia();
+                displayToast("Blocked media will be displayed again.");
+                return true;
+            });
+        }
+
         final String theTheme = PreferenceManager.getDefaultSharedPreferences(this).getString(THEME, "");
         if (Build.VERSION.SDK_INT < 30 || !theTheme.equals("custom")) {
             final PreferenceCategory uiCategory = (PreferenceCategory) mSettingsFragment.findPreference("ui");

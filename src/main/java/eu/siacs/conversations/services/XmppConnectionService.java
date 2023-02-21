@@ -581,6 +581,10 @@ public class XmppConnectionService extends Service {
         this.databaseBackend.blockMedia(cid);
     }
 
+    public void clearBlockedMedia() {
+        this.databaseBackend.clearBlockedMedia();
+    }
+
     public AvatarService getAvatarService() {
         return this.mAvatarService;
     }
