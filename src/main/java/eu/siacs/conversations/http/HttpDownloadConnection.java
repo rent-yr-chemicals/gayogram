@@ -201,6 +201,10 @@ public class HttpDownloadConnection implements Transferable {
             Log.w(Config.LOGTAG, "Failed to rename downloaded file: " + e);
             file = tmp;
             message.setRelativeFilePath(file.getAbsolutePath());
+        } catch (final XmppConnectionService.BlockedMediaException e) {
+            file = tmp;
+            tmp.delete();
+            message.setDeleted(true);
         }
         message.setTransferable(null);
         mXmppConnectionService.updateMessage(message);

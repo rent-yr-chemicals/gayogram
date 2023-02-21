@@ -64,6 +64,8 @@ import org.openintents.openpgp.util.OpenPgpApi;
 import org.openintents.openpgp.util.OpenPgpServiceConnection;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
@@ -559,8 +561,20 @@ public class XmppConnectionService extends Service {
         return this.databaseBackend.getFileForCid(cid);
     }
 
-    public void saveCid(Cid cid, File file) {
+    public void saveCid(Cid cid, File file) throws BlockedMediaException {
+        if (this.databaseBackend.isBlockedMedia(cid)) {
+            throw new BlockedMediaException();
+        }
         this.databaseBackend.saveCid(cid, file);
+    }
+
+    public void blockMedia(File f) {
+        try {
+            Cid[] cids = getFileBackend().calculateCids(new FileInputStream(f));
+            for (Cid cid : cids) {
+                blockMedia(cid);
+            }
+        } catch (final IOException e) { }
     }
 
     public void blockMedia(Cid cid) {
@@ -5027,8 +5041,20 @@ public class XmppConnectionService extends Service {
         sendIqPacket(account, set, null);
     }
 
+    public void evictPreview(File f) {
+        if (mBitmapCache.remove(f.getAbsolutePath()) != null) {
+            Log.d(Config.LOGTAG, "deleted cached preview");
+        }
+        if (mDrawableCache.remove(f.getAbsolutePath()) != null) {
+            Log.d(Config.LOGTAG, "deleted cached preview");
+        }
+    }
+
     public void evictPreview(String uuid) {
         if (mBitmapCache.remove(uuid) != null) {
+            Log.d(Config.LOGTAG, "deleted cached preview");
+        }
+        if (mDrawableCache.remove(uuid) != null) {
             Log.d(Config.LOGTAG, "deleted cached preview");
         }
     }
@@ -5154,4 +5180,6 @@ public class XmppConnectionService extends Service {
             return Objects.hashCode(id, media, reconnecting);
         }
     }
+
+    public static class BlockedMediaException extends Exception { }
 }

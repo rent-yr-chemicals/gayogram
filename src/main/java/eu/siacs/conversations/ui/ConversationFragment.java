@@ -1439,6 +1439,7 @@ public class ConversationFragment extends XmppFragment
             MenuItem saveAsSticker = menu.findItem(R.id.save_as_sticker);
             MenuItem downloadFile = menu.findItem(R.id.download_file);
             MenuItem cancelTransmission = menu.findItem(R.id.cancel_transmission);
+            MenuItem blockMedia = menu.findItem(R.id.block_media);
             MenuItem deleteFile = menu.findItem(R.id.delete_file);
             MenuItem showErrorMessage = menu.findItem(R.id.show_error_message);
             onlyThisThread.setVisible(!conversation.getLockThread() && m.getThread() != null);
@@ -1503,6 +1504,7 @@ public class ConversationFragment extends XmppFragment
                         || !path.startsWith("/")
                         || FileBackend.inConversationsDirectory(requireActivity(), path)) {
                     saveAsSticker.setVisible(true);
+                    blockMedia.setVisible(true);
                     deleteFile.setVisible(true);
                     deleteFile.setTitle(
                             activity.getString(
@@ -1576,6 +1578,23 @@ public class ConversationFragment extends XmppFragment
                 return true;
             case R.id.retry_decryption:
                 retryDecryption(selectedMessage);
+                return true;
+            case R.id.block_media:
+                new AlertDialog.Builder(activity)
+                    .setTitle(R.string.block_media)
+                    .setMessage("Do you really want to block this media in all messages?")
+                    .setPositiveButton(R.string.yes, (dialog, whichButton) -> {
+                        File f = activity.xmppConnectionService.getFileBackend().getFile(selectedMessage);
+                        activity.xmppConnectionService.blockMedia(f);
+                        if (activity.xmppConnectionService.getFileBackend().deleteFile(selectedMessage)) {
+                            selectedMessage.setDeleted(true);
+                            activity.xmppConnectionService.evictPreview(f);
+                            activity.xmppConnectionService.updateMessage(selectedMessage, false);
+                            activity.onConversationsListItemUpdated();
+                            refresh();
+                        }
+                    })
+                    .setNegativeButton(R.string.no, null).show();
                 return true;
             case R.id.delete_file:
                 deleteFile(selectedMessage);
@@ -2038,6 +2057,7 @@ public class ConversationFragment extends XmppFragment
         if (writeGranted(grantResults, permissions)) {
             if (activity != null && activity.xmppConnectionService != null) {
                 activity.xmppConnectionService.getBitmapCache().evictAll();
+                activity.xmppConnectionService.getDrawableCache().evictAll();
                 activity.xmppConnectionService.restartFileObserver();
             }
             refresh();
@@ -2385,7 +2405,7 @@ public class ConversationFragment extends XmppFragment
                 (dialog, which) -> {
                     if (activity.xmppConnectionService.getFileBackend().deleteFile(message)) {
                         message.setDeleted(true);
-                        activity.xmppConnectionService.evictPreview(message.getUuid());
+                        activity.xmppConnectionService.evictPreview(activity.xmppConnectionService.getFileBackend().getFile(message));
                         activity.xmppConnectionService.updateMessage(message, false);
                         activity.onConversationsListItemUpdated();
                         refresh();

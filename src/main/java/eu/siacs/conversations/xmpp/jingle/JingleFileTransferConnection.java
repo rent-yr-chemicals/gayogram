@@ -38,6 +38,7 @@ import eu.siacs.conversations.entities.TransferablePlaceholder;
 import eu.siacs.conversations.parser.IqParser;
 import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.services.AbstractConnectionManager;
+import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.MimeUtils;
 import eu.siacs.conversations.xml.Element;
@@ -138,6 +139,11 @@ public class JingleFileTransferConnection extends AbstractJingleConnection imple
                 } catch (final IOException e) {
                     finalFile = file;
                     message.setRelativeFilePath(finalFile.getAbsolutePath());
+                } catch (final XmppConnectionService.BlockedMediaException e) {
+                    finalFile = file;
+                    file.delete();
+                    message.setRelativeFilePath(null);
+                    message.setDeleted(true);
                 }
 
                 xmppConnectionService.getFileBackend().updateFileParams(message, null, false);

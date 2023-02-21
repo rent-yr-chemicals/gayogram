@@ -111,7 +111,7 @@ public class BobTransfer implements Transferable {
 						outputStream.close();
 
 						finish(file);
-					} catch (IOException e) {
+					} catch (final IOException | XmppConnectionService.BlockedMediaException e) {
 						finish(null);
 						xmppConnectionService.showErrorToastInUi(R.string.download_failed_could_not_write_file);
 					}
