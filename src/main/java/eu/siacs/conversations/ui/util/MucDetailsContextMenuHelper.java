@@ -149,12 +149,20 @@ public final class MucDetailsContextMenuHelper {
                 }
                 return true;
             case R.id.action_block_avatar:
-                activity.xmppConnectionService.getFileBackend().getAvatarFile(user.getAvatar()).delete();
-                activity.xmppConnectionService.blockMedia(user.getAvatarCid());
-                activity.avatarService().clear(user);
-                if (user.getContact() != null) activity.avatarService().clear(user.getContact());
-                user.setAvatar(null);
-                activity.xmppConnectionService.updateConversationUi();
+                new AlertDialog.Builder(activity)
+                    .setTitle(R.string.block_media)
+                    .setMessage("Do you really want to block this avatar?")
+                    .setPositiveButton(R.string.yes, (dialog, whichButton) -> {
+                        activity.xmppConnectionService.blockMedia(
+                            activity.xmppConnectionService.getFileBackend().getAvatarFile(user.getAvatar())
+                        );
+                        activity.xmppConnectionService.getFileBackend().getAvatarFile(user.getAvatar()).delete();
+                        activity.avatarService().clear(user);
+                        if (user.getContact() != null) activity.avatarService().clear(user.getContact());
+                        user.setAvatar(null);
+                        activity.xmppConnectionService.updateConversationUi();
+                    })
+                    .setNegativeButton(R.string.no, null).show();
                 return true;
             case R.id.start_conversation:
                 startConversation(user, activity);
