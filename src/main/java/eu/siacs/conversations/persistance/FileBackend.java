@@ -1600,7 +1600,7 @@ public class FileBackend {
         return new File(mXmppConnectionService.getFilesDir(), "/avatars/");
     }
 
-    private File getAvatarFile(String avatar) {
+    public File getAvatarFile(String avatar) {
         return new File(mXmppConnectionService.getCacheDir(), "/avatars/" + avatar);
     }
 

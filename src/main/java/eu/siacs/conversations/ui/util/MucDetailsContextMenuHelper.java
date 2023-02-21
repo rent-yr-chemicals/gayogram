@@ -57,6 +57,7 @@ public final class MucDetailsContextMenuHelper {
         MenuItem sendPrivateMessage = menu.findItem(R.id.send_private_message);
         if (user != null && user.getRealJid() != null) {
             MenuItem showContactDetails = menu.findItem(R.id.action_contact_details);
+            MenuItem blockAvatar = menu.findItem(R.id.action_block_avatar);
             MenuItem startConversation = menu.findItem(R.id.start_conversation);
             MenuItem giveMembership = menu.findItem(R.id.give_membership);
             MenuItem removeMembership = menu.findItem(R.id.remove_membership);
@@ -75,6 +76,9 @@ public final class MucDetailsContextMenuHelper {
             final User self = conversation.getMucOptions().getSelf();
             if ((contact != null && contact.showInRoster()) || mucOptions.isPrivateAndNonAnonymous()) {
                 showContactDetails.setVisible(contact == null || !contact.isSelf());
+            }
+            if (user.getAvatar() != null) {
+                blockAvatar.setVisible(true);
             }
             if ((activity instanceof ConferenceDetailsActivity || activity instanceof MucUsersActivity) && user.getRole() == MucOptions.Role.NONE) {
                 invite.setVisible(true);
@@ -143,6 +147,14 @@ public final class MucDetailsContextMenuHelper {
                 if (contact != null) {
                     activity.switchToContactDetails(contact, fingerprint);
                 }
+                return true;
+            case R.id.action_block_avatar:
+                activity.xmppConnectionService.getFileBackend().getAvatarFile(user.getAvatar()).delete();
+                activity.xmppConnectionService.blockMedia(user.getAvatarCid());
+                activity.avatarService().clear(user);
+                if (user.getContact() != null) activity.avatarService().clear(user.getContact());
+                user.setAvatar(null);
+                activity.xmppConnectionService.updateConversationUi();
                 return true;
             case R.id.start_conversation:
                 startConversation(user, activity);

@@ -274,6 +274,15 @@ public class DatabaseBackend extends SQLiteOpenHelper {
                 db.execSQL("PRAGMA cheogram.user_version = 5");
             }
 
+            if(cheogramVersion < 6) {
+                db.execSQL(
+                    "CREATE TABLE cheogram.blocked_media (" +
+                    "cid TEXT NOT NULL PRIMARY KEY" +
+                    ")"
+                );
+                db.execSQL("PRAGMA cheogram.user_version = 6");
+            }
+
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
@@ -772,6 +781,24 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         cv.put("cid", cid.toString());
         cv.put("path", file.getAbsolutePath());
         db.insertWithOnConflict("cheogram.cids", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    public void blockMedia(Cid cid) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues cv = new ContentValues();
+        cv.put("cid", cid.toString());
+        db.insertWithOnConflict("cheogram.blocked_media", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+    }
+
+    public boolean isBlockedMedia(Cid cid) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("cheogram.blocked_media", new String[]{"count(*)"}, "cid=?", new String[]{cid.toString()}, null, null, null);
+        boolean is = false;
+        if (cursor.moveToNext()) {
+            is = cursor.getInt(0) > 0;
+        }
+        cursor.close();
+        return is;
     }
 
     public void createConversation(Conversation conversation) {

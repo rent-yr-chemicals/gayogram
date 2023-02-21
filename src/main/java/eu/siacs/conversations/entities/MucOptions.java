@@ -12,6 +12,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
+import io.ipfs.cid.Cid;
+
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.services.AvatarService;
@@ -815,6 +817,14 @@ public class MucOptions {
             }
             Avatar avatar = realJid != null ? getAccount().getRoster().getContact(realJid).getAvatar() : null;
             return avatar == null ? null : avatar.getFilename();
+        }
+
+        public Cid getAvatarCid() {
+            if (avatar != null) {
+                return avatar.cid();
+            }
+            Avatar avatar = realJid != null ? getAccount().getRoster().getContact(realJid).getAvatar() : null;
+            return avatar == null ? null : avatar.cid();
         }
 
         public Account getAccount() {

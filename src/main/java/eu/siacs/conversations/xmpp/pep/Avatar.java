@@ -2,6 +2,11 @@ package eu.siacs.conversations.xmpp.pep;
 
 import android.util.Base64;
 
+import java.security.NoSuchAlgorithmException;
+
+import io.ipfs.cid.Cid;
+
+import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xmpp.Jid;
 
@@ -79,6 +84,16 @@ public class Avatar {
 			return other.getFilename().equals(this.getFilename());
 		} else {
 			return false;
+		}
+	}
+
+	public Cid cid() {
+		if (sha1sum == null) return null;
+
+		try {
+			return CryptoHelper.cid(CryptoHelper.hexToBytes(sha1sum), "sha-1");
+		} catch (final NoSuchAlgorithmException e) {
+			return null;
 		}
 	}
 

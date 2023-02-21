@@ -9,6 +9,10 @@
         android:title="@string/action_contact_details"
         android:visible="false" />
     <item
+        android:id="@+id/action_block_avatar"
+        android:title="Block Avatar"
+        android:visible="false" />
+    <item
         android:id="@+id/invite"
         android:title="@string/invite_again"
         android:visible="false" />

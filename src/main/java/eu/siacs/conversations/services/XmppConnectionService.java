@@ -563,6 +563,10 @@ public class XmppConnectionService extends Service {
         this.databaseBackend.saveCid(cid, file);
     }
 
+    public void blockMedia(Cid cid) {
+        this.databaseBackend.blockMedia(cid);
+    }
+
     public AvatarService getAvatarService() {
         return this.mAvatarService;
     }
@@ -3889,6 +3893,11 @@ public class XmppConnectionService extends Service {
     }
 
     public void fetchAvatar(Account account, final Avatar avatar, final UiCallback<Avatar> callback) {
+        if (databaseBackend.isBlockedMedia(avatar.cid())) {
+            if (callback != null) callback.error(0, null);
+            return;
+        }
+
         final String KEY = generateFetchKey(account, avatar);
         synchronized (this.mInProgressAvatarFetches) {
             if (mInProgressAvatarFetches.add(KEY)) {
