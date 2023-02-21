@@ -55,9 +55,14 @@ public final class MucDetailsContextMenuHelper {
         final boolean advancedMode = PreferenceManager.getDefaultSharedPreferences(activity).getBoolean("advanced_muc_mode", false);
         final boolean isGroupChat = mucOptions.isPrivateAndNonAnonymous();
         MenuItem sendPrivateMessage = menu.findItem(R.id.send_private_message);
+
+        MenuItem blockAvatar = menu.findItem(R.id.action_block_avatar);
+        if (user != null && user.getAvatar() != null) {
+            blockAvatar.setVisible(true);
+        }
+
         if (user != null && user.getRealJid() != null) {
             MenuItem showContactDetails = menu.findItem(R.id.action_contact_details);
-            MenuItem blockAvatar = menu.findItem(R.id.action_block_avatar);
             MenuItem startConversation = menu.findItem(R.id.start_conversation);
             MenuItem giveMembership = menu.findItem(R.id.give_membership);
             MenuItem removeMembership = menu.findItem(R.id.remove_membership);
@@ -76,9 +81,6 @@ public final class MucDetailsContextMenuHelper {
             final User self = conversation.getMucOptions().getSelf();
             if ((contact != null && contact.showInRoster()) || mucOptions.isPrivateAndNonAnonymous()) {
                 showContactDetails.setVisible(contact == null || !contact.isSelf());
-            }
-            if (user.getAvatar() != null) {
-                blockAvatar.setVisible(true);
             }
             if ((activity instanceof ConferenceDetailsActivity || activity instanceof MucUsersActivity) && user.getRole() == MucOptions.Role.NONE) {
                 invite.setVisible(true);
