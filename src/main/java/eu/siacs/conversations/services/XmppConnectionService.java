@@ -562,10 +562,14 @@ public class XmppConnectionService extends Service {
     }
 
     public void saveCid(Cid cid, File file) throws BlockedMediaException {
+        saveCid(cid, file, null);
+    }
+
+    public void saveCid(Cid cid, File file, String url) throws BlockedMediaException {
         if (this.databaseBackend.isBlockedMedia(cid)) {
             throw new BlockedMediaException();
         }
-        this.databaseBackend.saveCid(cid, file);
+        this.databaseBackend.saveCid(cid, file, url);
     }
 
     public void blockMedia(File f) {

@@ -7,6 +7,7 @@
     <application tools:ignore="GoogleAppIndexingWarning">
         <!-- INSERT -->
 
+        <service android:name="com.cheogram.android.DownloadDefaultStickers" />
         <service android:name="com.cheogram.android.ConnectionService"
             android:label="Cheogram"
             android:permission="android.permission.BIND_TELECOM_CONNECTION_SERVICE"
