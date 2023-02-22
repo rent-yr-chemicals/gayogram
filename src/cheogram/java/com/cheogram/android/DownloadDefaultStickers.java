@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.Intent;
 import android.database.Cursor;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.IBinder;
@@ -95,6 +96,19 @@ public class DownloadDefaultStickers extends Service {
 			Cid cid = Cid.decode(cids.getString(i));
 			mDatabaseBackend.saveCid(cid, file, sticker.getString("url"));
 		}
+
+		MediaScannerConnection.scanFile(
+			getBaseContext(),
+			new String[] { file.getAbsolutePath() },
+			null,
+			new MediaScannerConnection.MediaScannerConnectionClient() {
+				@Override
+				public void onMediaScannerConnected() {}
+
+				@Override
+				public void onScanCompleted(String path, Uri uri) {}
+			}
+		);
 
 		try {
 			File copyright = new File(mStickerDir.getAbsolutePath() + "/" + sticker.getString("pack") + "/copyright.txt");
