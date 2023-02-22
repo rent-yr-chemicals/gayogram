@@ -1739,10 +1739,6 @@ public class FileBackend {
                 message.getEncryption() == Message.ENCRYPTION_PGP
                         || message.getEncryption() == Message.ENCRYPTION_DECRYPTED;
         final DownloadableFile file = getFile(message);
-        Cid[] cids = new Cid[0];
-        try {
-            cids = calculateCids(new FileInputStream(file));
-        } catch (final IOException e) { }
         final String mime = file.getMimeType();
         final boolean privateMessage = message.isPrivateMessage();
         final boolean image =
@@ -1750,6 +1746,11 @@ public class FileBackend {
                         || (mime != null && mime.startsWith("image/"));
         Message.FileParams fileParams = message.getFileParams();
         if (fileParams == null) fileParams = new Message.FileParams();
+        Cid[] cids = new Cid[0];
+        try {
+            cids = calculateCids(new FileInputStream(file));
+            fileParams.setCids(List.of(cids));
+        } catch (final IOException | NoSuchAlgorithmException e) { }
         if (url == null) {
             for (Cid cid : cids) {
                 url = mXmppConnectionService.getUrlForCid(cid);
@@ -1761,6 +1762,7 @@ public class FileBackend {
         } else {
             fileParams.url = url;
         }
+        fileParams.setName(file.getName());
         if (encrypted && !file.exists()) {
             Log.d(Config.LOGTAG, "skipping updateFileParams because file is encrypted");
             final DownloadableFile encryptedFile = getFile(message, false);

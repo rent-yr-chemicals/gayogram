@@ -1100,6 +1100,9 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             fileParams.sims = this.fileParams.sims;
         }
         this.fileParams = fileParams;
+        if (fileParams != null && getSims().isEmpty()) {
+            addPayload(fileParams.toSims());
+        }
     }
 
     public synchronized FileParams getFileParams() {
@@ -1229,6 +1232,21 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             return file.findChildContent("name", file.getNamespace());
         }
 
+        public void setName(final String name) {
+            if (sims == null) toSims();
+            Element file = getFileElement();
+
+            for (Element child : file.getChildren()) {
+                if (child.getName().equals("name") && child.getNamespace().equals(file.getNamespace())) {
+                    file.removeChild(child);
+                }
+            }
+
+            if (name != null) {
+                file.addChild("name", file.getNamespace()).setContent(name);
+            }
+        }
+
         public Element toSims() {
             if (sims == null) sims = new Element("reference", "urn:xmpp:reference:0");
             sims.setAttribute("type", "data");
@@ -1275,6 +1293,23 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             if (file == null) file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:4");
             if (file == null) file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:3");
             return file;
+        }
+
+        public void setCids(Iterable<Cid> cids) throws NoSuchAlgorithmException {
+            if (sims == null) toSims();
+            Element file = getFileElement();
+
+            for (Element child : file.getChildren()) {
+                if (child.getName().equals("hash") && child.getNamespace().equals("urn:xmpp:hashes:2")) {
+                    file.removeChild(child);
+                }
+            }
+
+            for (Cid cid : cids) {
+                file.addChild("hash", "urn:xmpp:hashes:2")
+                    .setAttribute("algo", CryptoHelper.multihashAlgo(cid.getType()))
+                    .setContent(Base64.encodeToString(cid.getHash(), Base64.NO_WRAP));
+            }
         }
 
         public List<Cid> getCids() {
