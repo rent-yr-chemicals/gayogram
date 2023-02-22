@@ -783,6 +783,17 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         return f;
     }
 
+    public String getUrlForCid(Cid cid) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("cheogram.cids", new String[]{"url"}, "cid=?", new String[]{cid.toString()}, null, null, null);
+        String url = null;
+        if (cursor.moveToNext()) {
+            url = cursor.getString(0);
+        }
+        cursor.close();
+        return url;
+    }
+
     public void saveCid(Cid cid, File file) {
         saveCid(cid, file, null);
     }
