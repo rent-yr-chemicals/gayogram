@@ -1867,6 +1867,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             final SVG icon = getItem(position).getIcon();
                             if (icon != null) {
                                  v.post(() -> {
+                                     if (v.getHeight() == 0) return;
                                      icon.setDocumentPreserveAspectRatio(com.caverock.androidsvg.PreserveAspectRatio.TOP);
                                      Bitmap bitmap = Bitmap.createBitmap(v.getHeight(), v.getHeight(), Bitmap.Config.ARGB_8888);
                                      Canvas bmcanvas = new Canvas(bitmap);
