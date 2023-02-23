@@ -378,11 +378,16 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
 
         final Preference stickerDir = mSettingsFragment.findPreference("sticker_directory");
         if (stickerDir != null) {
-            stickerDir.setOnPreferenceClickListener((p) -> {
-                Intent intent = ((StorageManager) getSystemService(Context.STORAGE_SERVICE)).getPrimaryStorageVolume().createOpenDocumentTreeIntent();
-                startActivityForResult(Intent.createChooser(intent, "Choose sticker location"), 0);
-                return true;
-            });
+            if (Build.VERSION.SDK_INT >= 24) {
+                stickerDir.setOnPreferenceClickListener((p) -> {
+                    Intent intent = ((StorageManager) getSystemService(Context.STORAGE_SERVICE)).getPrimaryStorageVolume().createOpenDocumentTreeIntent();
+                    startActivityForResult(Intent.createChooser(intent, "Choose sticker location"), 0);
+                    return true;
+                });
+            } else {
+                PreferenceCategory expertMedia = (PreferenceCategory) mSettingsFragment.findPreference("expert_media");
+                expertMedia.removePreference(stickerDir);
+            }
         }
 
         final Preference clearBlockedMedia = mSettingsFragment.findPreference("clear_blocked_media");

@@ -2382,9 +2382,16 @@ public class ConversationFragment extends XmppFragment
             intent.putExtra("android.provider.extra.INITIAL_URI", Uri.parse(dir));
         } else {
             new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/" + dir + "/User Pack").mkdirs();
-            Intent tmp = ((StorageManager) activity.getSystemService(Context.STORAGE_SERVICE)).getPrimaryStorageVolume().createOpenDocumentTreeIntent();
-            Uri uri = tmp.getParcelableExtra("android.provider.extra.INITIAL_URI");
-            intent.putExtra("android.provider.extra.INITIAL_URI", Uri.parse(uri.toString().replace("/root/", "/document/") + "%3APictures%2F" + dir));
+            Uri uri;
+            if (Build.VERSION.SDK_INT >= 24) {
+                Intent tmp = ((StorageManager) activity.getSystemService(Context.STORAGE_SERVICE)).getPrimaryStorageVolume().createOpenDocumentTreeIntent();
+                uri = tmp.getParcelableExtra("android.provider.extra.INITIAL_URI");
+                uri = Uri.parse(uri.toString().replace("/root/", "/document/") + "%3APictures%2F" + dir);
+            } else {
+                uri = Uri.parse("content://com.android.externalstorage.documents/document/primary%3APictures%2F" + dir);
+            }
+            intent.putExtra("android.provider.extra.INITIAL_URI", uri);
+            intent.putExtra("android.content.extra.SHOW_ADVANCED", true);
         }
 
         Toast.makeText(activity, "Choose a sticker pack to add this sticker to", Toast.LENGTH_SHORT).show();
