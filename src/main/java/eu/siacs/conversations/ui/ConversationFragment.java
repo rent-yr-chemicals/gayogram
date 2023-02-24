@@ -1505,6 +1505,11 @@ public class ConversationFragment extends XmppFragment
                                     UIHelper.getFileDescriptionString(activity, m)));
                 }
             }
+
+            if (m.getFileParams() != null && !m.getFileParams().getThumbnails().isEmpty()) {
+                // We might be showing a thumbnail worth blocking
+                blockMedia.setVisible(true);
+            }
             if (showError) {
                 showErrorMessage.setVisible(true);
             }
@@ -1577,15 +1582,28 @@ public class ConversationFragment extends XmppFragment
                     .setTitle(R.string.block_media)
                     .setMessage("Do you really want to block this media in all messages?")
                     .setPositiveButton(R.string.yes, (dialog, whichButton) -> {
+                        List<Element> thumbs = selectedMessage.getFileParams() != null ? selectedMessage.getFileParams().getThumbnails() : null;
+                        if (thumbs != null && !thumbs.isEmpty()) {
+                            for (Element thumb : thumbs) {
+                                Uri uri = Uri.parse(thumb.getAttribute("uri"));
+                                if (uri.getScheme().equals("cid")) {
+                                    Cid cid = BobTransfer.cid(uri);
+                                    if (cid == null) continue;
+                                    DownloadableFile f = activity.xmppConnectionService.getFileForCid(cid);
+                                    activity.xmppConnectionService.blockMedia(f);
+                                    activity.xmppConnectionService.evictPreview(f);
+                                    f.delete();
+                                }
+                            }
+                        }
                         File f = activity.xmppConnectionService.getFileBackend().getFile(selectedMessage);
                         activity.xmppConnectionService.blockMedia(f);
-                        if (activity.xmppConnectionService.getFileBackend().deleteFile(selectedMessage)) {
-                            selectedMessage.setDeleted(true);
-                            activity.xmppConnectionService.evictPreview(f);
-                            activity.xmppConnectionService.updateMessage(selectedMessage, false);
-                            activity.onConversationsListItemUpdated();
-                            refresh();
-                        }
+                        activity.xmppConnectionService.getFileBackend().deleteFile(selectedMessage);
+                        selectedMessage.setDeleted(true);
+                        activity.xmppConnectionService.evictPreview(f);
+                        activity.xmppConnectionService.updateMessage(selectedMessage, false);
+                        activity.onConversationsListItemUpdated();
+                        refresh();
                     })
                     .setNegativeButton(R.string.no, null).show();
                 return true;
