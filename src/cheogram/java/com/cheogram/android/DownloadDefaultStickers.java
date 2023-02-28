@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
+import java.util.HashSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.json.JSONArray;
@@ -55,6 +56,7 @@ public class DownloadDefaultStickers extends Service {
 	private NotificationManager notificationManager;
 	private File mStickerDir;
 	private OkHttpClient http = new OkHttpClient();
+	private HashSet<Uri> pendingPacks = new HashSet<Uri>();
 
 	@Override
 	public void onCreate() {
@@ -65,6 +67,9 @@ public class DownloadDefaultStickers extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		synchronized(pendingPacks) {
+			pendingPacks.add(intent.getData() == null ? Uri.parse("https://stickers.cheogram.com/index.json") : intent.getData());
+		}
 		if (RUNNING.compareAndSet(false, true)) {
 			new Thread(() -> {
 				try {
@@ -124,13 +129,22 @@ public class DownloadDefaultStickers extends Service {
 	}
 
 	private void download() throws Exception {
+		Uri jsonUri;
+		synchronized(pendingPacks) {
+			if (pendingPacks.iterator().hasNext()) {
+				jsonUri = pendingPacks.iterator().next();
+			} else {
+				return;
+			}
+		}
+
 		NotificationCompat.Builder mBuilder = new NotificationCompat.Builder(getBaseContext(), "backup");
-		mBuilder.setContentTitle("Downloading Default Stickers")
+		mBuilder.setContentTitle("Downloading Stickers")
 				.setSmallIcon(R.drawable.ic_archive_white_24dp)
 				.setProgress(1, 0, false);
 		startForeground(NOTIFICATION_ID, mBuilder.build());
 
-		Response r = http.newCall(new Request.Builder().url("https://stickers.cheogram.com/index.json").build()).execute();
+		Response r = http.newCall(new Request.Builder().url(jsonUri.toString()).build()).execute();
 		JSONArray stickers = new JSONArray(r.body().string());
 
 		final Progress progress = new Progress(mBuilder, 1, 0);
@@ -140,6 +154,11 @@ public class DownloadDefaultStickers extends Service {
 			final int percentage = i * 100 / stickers.length();
 			notificationManager.notify(NOTIFICATION_ID, progress.build(percentage));
 		}
+
+		synchronized(pendingPacks) {
+			pendingPacks.remove(jsonUri);
+		}
+		download();
 	}
 
 	private File stickerDir() {
