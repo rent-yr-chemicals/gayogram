@@ -802,9 +802,11 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("cid", cid.toString());
-        cv.put("path", file.getAbsolutePath());
-        cv.put("url", url);
-        db.insertWithOnConflict("cheogram.cids", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+        if (file != null) cv.put("path", file.getAbsolutePath());
+        if (url != null) cv.put("url", url);
+        if (db.update("cheogram.cids", cv, "cid=?", new String[]{cid.toString()}) < 1) {
+            db.insertWithOnConflict("cheogram.cids", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+        }
     }
 
     public void blockMedia(Cid cid) {
