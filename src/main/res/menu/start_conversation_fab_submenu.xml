@@ -5,10 +5,6 @@
         android:icon="@drawable/ic_search_white_24dp"
         android:title="@string/discover_channels" />
     <item
-        android:id="@+id/join_public_channel"
-        android:icon="@drawable/ic_input_white_24dp"
-        android:title="@string/join_public_channel" />
-    <item
         android:id="@+id/create_public_channel"
         android:icon="@drawable/ic_public_white_24dp"
         android:title="@string/create_public_channel" />

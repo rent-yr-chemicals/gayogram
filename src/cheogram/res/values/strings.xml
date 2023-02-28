@@ -35,4 +35,5 @@
     <string name="moderate_reason">Moderation Reason</string>
     <string name="unable_to_moderate">Unable to Moderate</string>
     <string name="block_media">Block Media</string>
+    <string name="add_contact">New Contact or Channel</string>
 </resources>

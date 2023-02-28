@@ -57,39 +57,51 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
 
     private static final String TITLE_KEY = "title";
     private static final String POSITIVE_BUTTON_KEY = "positive_button";
+    private static final String SECONDARY_BUTTON_KEY = "secondary_button";
     private static final String PREFILLED_JID_KEY = "prefilled_jid";
     private static final String ACCOUNT_KEY = "account";
     private static final String ALLOW_EDIT_JID_KEY = "allow_edit_jid";
     private static final String ACCOUNTS_LIST_KEY = "activated_accounts_list";
     private static final String SANITY_CHECK_JID = "sanity_check_jid";
+    private static final String SHOW_BOOKMARK_CHECKBOX = "show_bookmark_checkbox";
 
     private KnownHostsAdapter knownHostsAdapter;
     private Collection<String> whitelistedDomains = Collections.emptyList();
 
     private EnterJidDialogBinding binding;
     private AlertDialog dialog;
-    private boolean sanityCheckJid = false;
+    private SanityCheck sanityCheckJid = SanityCheck.NO;
 
     private boolean issuedWarning = false;
     private GatewayListAdapter gatewayListAdapter = new GatewayListAdapter();
+
+    public static enum SanityCheck {
+        NO,
+        YES,
+        ALLOW_MUC
+    }
 
     public static EnterJidDialog newInstance(
             final List<String> activatedAccounts,
             final String title,
             final String positiveButton,
+            final String secondaryButton,
             final String prefilledJid,
             final String account,
             boolean allowEditJid,
-            final boolean sanity_check_jid) {
+            boolean showBookmarkCheckbox,
+            final SanityCheck sanity_check_jid) {
         EnterJidDialog dialog = new EnterJidDialog();
         Bundle bundle = new Bundle();
         bundle.putString(TITLE_KEY, title);
         bundle.putString(POSITIVE_BUTTON_KEY, positiveButton);
+        bundle.putString(SECONDARY_BUTTON_KEY, secondaryButton);
         bundle.putString(PREFILLED_JID_KEY, prefilledJid);
         bundle.putString(ACCOUNT_KEY, account);
         bundle.putBoolean(ALLOW_EDIT_JID_KEY, allowEditJid);
         bundle.putStringArrayList(ACCOUNTS_LIST_KEY, (ArrayList<String>) activatedAccounts);
-        bundle.putBoolean(SANITY_CHECK_JID, sanity_check_jid);
+        bundle.putInt(SANITY_CHECK_JID, sanity_check_jid.ordinal());
+        bundle.putBoolean(SHOW_BOOKMARK_CHECKBOX, showBookmarkCheckbox);
         dialog.setArguments(bundle);
         return dialog;
     }
@@ -131,7 +143,11 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                 binding.jid.setCursorVisible(false);
             }
         }
-        sanityCheckJid = getArguments().getBoolean(SANITY_CHECK_JID, false);
+        sanityCheckJid = SanityCheck.values()[getArguments().getInt(SANITY_CHECK_JID, SanityCheck.NO.ordinal())];
+
+        if (!getArguments().getBoolean(SHOW_BOOKMARK_CHECKBOX, false)) {
+            binding.bookmark.setVisibility(View.GONE);
+        }
 
         DelayedHintHelper.setHint(R.string.account_settings_example_jabber_id, binding.jid);
 
@@ -185,23 +201,26 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         });
 
         builder.setView(binding.getRoot());
-        builder.setNegativeButton(R.string.cancel, null);
         builder.setPositiveButton(getArguments().getString(POSITIVE_BUTTON_KEY), null);
+        if (getArguments().getString(SECONDARY_BUTTON_KEY) == null) {
+            builder.setNegativeButton(R.string.cancel, null);
+        } else {
+            builder.setNegativeButton(getArguments().getString(SECONDARY_BUTTON_KEY), null);
+            builder.setNeutralButton(R.string.cancel, null);
+        }
         this.dialog = builder.create();
-
-        View.OnClickListener dialogOnClick =
-                v -> {
-                    handleEnter(binding, account);
-                };
 
         binding.jid.setOnEditorActionListener(
                 (v, actionId, event) -> {
-                    handleEnter(binding, account);
+                    handleEnter(binding, account, false);
                     return true;
                 });
 
         dialog.show();
-        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(dialogOnClick);
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener((v) -> handleEnter(binding, account, false));
+        if (getArguments().getString(SECONDARY_BUTTON_KEY) != null) {
+            dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener((v) -> handleEnter(binding, account, true));
+        }
         return dialog;
     }
 
@@ -217,7 +236,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         }
     }
 
-    private void handleEnter(EnterJidDialogBinding binding, String account) {
+    private void handleEnter(EnterJidDialogBinding binding, String account, boolean secondary) {
         if (!binding.account.isEnabled() && account == null) {
             return;
         }
@@ -236,7 +255,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                     return;
                 }
 
-                final Jid contactJid;
+                Jid contactJid = null;
                 try {
                     contactJid = Jid.ofEscaped(jidString);
                 } catch (final IllegalArgumentException e) {
@@ -244,14 +263,14 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
                     return;
                 }
 
-                if (!issuedWarning && sanityCheckJid) {
+                if (!issuedWarning && sanityCheckJid != SanityCheck.NO) {
                     if (contactJid.isDomainJid()) {
                         binding.jidLayout.setError(getActivity().getString(R.string.this_looks_like_a_domain));
                         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
                         issuedWarning = true;
                         return;
                     }
-                    if (suspiciousSubDomain(contactJid.getDomain().toEscapedString())) {
+                    if (sanityCheckJid != SanityCheck.ALLOW_MUC && suspiciousSubDomain(contactJid.getDomain().toEscapedString())) {
                         binding.jidLayout.setError(getActivity().getString(R.string.this_looks_like_channel));
                         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setText(R.string.add_anway);
                         issuedWarning = true;
@@ -261,7 +280,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
 
                 if (mListener != null) {
                     try {
-                        if (mListener.onEnterJidDialogPositive(accountJid, contactJid)) {
+                        if (mListener.onEnterJidDialogPositive(accountJid, contactJid, secondary, binding.bookmark.isChecked())) {
                             dialog.dismiss();
                         }
                     } catch (JidError error) {
@@ -335,7 +354,7 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
     }
 
     public interface OnEnterJidDialogPositiveListener {
-        boolean onEnterJidDialogPositive(Jid account, Jid contact) throws EnterJidDialog.JidError;
+        boolean onEnterJidDialogPositive(Jid account, Jid contact, boolean secondary, boolean save) throws EnterJidDialog.JidError;
     }
 
     public static class JidError extends Exception {

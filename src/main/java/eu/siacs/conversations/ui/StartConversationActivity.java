@@ -339,9 +339,6 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
                 case R.id.discover_public_channels:
                     startActivity(new Intent(this, ChannelDiscoveryActivity.class));
                     break;
-                case R.id.join_public_channel:
-                    showJoinConferenceDialog(prefilled);
-                    break;
                 case R.id.create_private_group_chat:
                     showCreatePrivateGroupChatDialog();
                     break;
@@ -531,15 +528,17 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
         ft.addToBackStack(null);
         EnterJidDialog dialog = EnterJidDialog.newInstance(
                 mActivatedAccounts,
-                getString(R.string.add_contact),
-                getString(R.string.add),
+                getString(R.string.start_conversation),
+                getString(R.string.message),
+                "Call",
                 prefilledJid,
                 invite == null ? null : invite.account,
                 invite == null || !invite.hasFingerprints(),
-                true
+                true,
+                EnterJidDialog.SanityCheck.ALLOW_MUC
         );
 
-        dialog.setOnEnterJidDialogPositiveListener((accountJid, contactJid) -> {
+        dialog.setOnEnterJidDialogPositiveListener((accountJid, contactJid, call, save) -> {
             if (!xmppConnectionServiceBound) {
                 return false;
             }
@@ -548,25 +547,55 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
             if (account == null) {
                 return true;
             }
-
             final Contact contact = account.getRoster().getContact(contactJid);
+
             if (invite != null && invite.getName() != null) {
                 contact.setServerName(invite.getName());
             }
-            if (contact.isSelf()) {
-                switchToConversation(contact);
-                return true;
-            } else if (contact.showInRoster()) {
-                throw new EnterJidDialog.JidError(getString(R.string.contact_already_exists));
-            } else {
-                final String preAuth = invite == null ? null : invite.getParameter(XmppUri.PARAMETER_PRE_AUTH);
-                xmppConnectionService.createContact(contact, true, preAuth);
-                if (invite != null && invite.hasFingerprints()) {
-                    xmppConnectionService.verifyFingerprints(contact, invite.getFingerprints());
-                }
-                switchToConversationDoNotAppend(contact, invite == null ? null : invite.getBody());
+
+            if (contact.isSelf() || contact.showInRoster()) {
+                switchToConversationDoNotAppend(contact, invite == null ? null : invite.getBody(), call ? "call" : null);
                 return true;
             }
+
+            xmppConnectionService.checkIfMuc(account, contactJid, (isMuc) -> {
+                if (isMuc) {
+                    if (save) {
+                        Bookmark bookmark = account.getBookmark(contactJid);
+                        if (bookmark != null) {
+                            openConversationsForBookmark(bookmark);
+                        } else {
+                            bookmark = new Bookmark(account, contactJid.asBareJid());
+                            bookmark.setAutojoin(getBooleanPreference("autojoin", R.bool.autojoin));
+                            final String nick = contactJid.getResource();
+                            if (nick != null && !nick.isEmpty() && !nick.equals(MucOptions.defaultNick(account))) {
+                                bookmark.setNick(nick);
+                            }
+                            xmppConnectionService.createBookmark(account, bookmark);
+                            final Conversation conversation = xmppConnectionService
+                                    .findOrCreateConversation(account, contactJid, true, true, true);
+                            bookmark.setConversation(conversation);
+                            switchToConversationDoNotAppend(conversation, invite == null ? null : invite.getBody());
+                        }
+                    } else {
+                        final Conversation conversation = xmppConnectionService.findOrCreateConversation(account, contactJid, true, true, true);
+                        switchToConversationDoNotAppend(conversation, invite == null ? null : invite.getBody());
+                    }
+                } else {
+                    if (save) {
+                        final String preAuth = invite == null ? null : invite.getParameter(XmppUri.PARAMETER_PRE_AUTH);
+                        xmppConnectionService.createContact(contact, true, preAuth);
+                        if (invite != null && invite.hasFingerprints()) {
+                            xmppConnectionService.verifyFingerprints(contact, invite.getFingerprints());
+                        }
+                    }
+                    switchToConversationDoNotAppend(contact, invite == null ? null : invite.getBody(), call ? "call" : null);
+                }
+
+                dialog.dismiss();
+            });
+
+            return false;
         });
         dialog.show(ft, FRAGMENT_TAG_DIALOG);
     }
@@ -636,8 +665,12 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
     }
 
     protected void switchToConversationDoNotAppend(Contact contact, String body) {
+        switchToConversationDoNotAppend(contact, body, null);
+    }
+
+    protected void switchToConversationDoNotAppend(Contact contact, String body, String postInit) {
         Conversation conversation = xmppConnectionService.findOrCreateConversation(contact.getAccount(), contact.getJid(), false, true);
-        switchToConversationDoNotAppend(conversation, body);
+        switchToConversation(conversation, body, false, null, false, true, postInit);
     }
 
     @Override
