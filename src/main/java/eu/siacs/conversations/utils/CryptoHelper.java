@@ -293,7 +293,7 @@ public final class CryptoHelper {
     public static String multihashAlgo(Multihash.Type type) throws NoSuchAlgorithmException {
         switch(type) {
         case sha1:
-            return "sha1";
+            return "sha-1";
         case sha2_256:
             return "sha-256";
         case sha2_512:

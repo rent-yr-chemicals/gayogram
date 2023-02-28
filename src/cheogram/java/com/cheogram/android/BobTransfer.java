@@ -13,6 +13,7 @@ import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 
 import io.ipfs.cid.Cid;
+import io.ipfs.multihash.Multihash;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
@@ -57,7 +58,13 @@ public class BobTransfer implements Transferable {
 	}
 
 	public static URI uri(Cid cid) throws NoSuchAlgorithmException, URISyntaxException {
-		return new URI("cid", CryptoHelper.multihashAlgo(cid.getType()) + "+" + CryptoHelper.bytesToHex(cid.getHash()) + "@bob.xmpp.org", null);
+		return new URI("cid", multihashAlgo(cid.getType()) + "+" + CryptoHelper.bytesToHex(cid.getHash()) + "@bob.xmpp.org", null);
+	}
+
+	private static String multihashAlgo(Multihash.Type type) throws NoSuchAlgorithmException {
+		final String algo = CryptoHelper.multihashAlgo(type);
+		if (algo.equals("sha-1")) return "sha1";
+		return algo;
 	}
 
 	public BobTransfer(URI uri, Account account, Jid to, XmppConnectionService xmppConnectionService) {

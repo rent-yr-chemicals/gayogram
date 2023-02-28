@@ -57,7 +57,10 @@ import androidx.annotation.IdRes;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
+
+import com.cheogram.android.DownloadDefaultStickers;
 
 import org.openintents.openpgp.util.OpenPgpApi;
 
@@ -118,6 +121,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
     public static final int REQUEST_PLAY_PAUSE = 0x5432;
     public static final int REQUEST_MICROPHONE = 0x5432f;
     public static final int DIALLER_INTEGRATION = 0x5432ff;
+    public static final int REQUEST_DOWNLOAD_STICKERS = 0xbf8702;
 
 
     //secondary fragment (when holding the conversation, must be initialized before refreshing the overview fragment
@@ -217,12 +221,10 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
         }
         final Fragment fragment = getFragmentManager().findFragmentById(R.id.main_fragment);
         if (fragment instanceof ConversationsOverviewFragment) {
-            if (ExceptionHelper.checkForCrash(this)) {
-                return;
-            }
-            if (!offerToSetupDiallerIntegration()) {
-                openBatteryOptimizationDialogIfNeeded();
-            }
+            if (ExceptionHelper.checkForCrash(this)) return;
+            if (offerToSetupDiallerIntegration()) return;
+            if (offerToDownloadStickers()) return;
+            openBatteryOptimizationDialogIfNeeded();
         }
     }
 
@@ -257,6 +259,26 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
             dialog.setCanceledOnTouchOutside(false);
             dialog.show();
         }
+    }
+
+    private boolean offerToDownloadStickers() {
+        int offered = getPreferences().getInt("default_stickers_offered", 0);
+        if (offered > 0) return false;
+        getPreferences().edit().putInt("default_stickers_offered", 1).apply();
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Download Stickers?");
+        builder.setMessage("Would you like to download some default sticker packs?");
+        builder.setPositiveButton(R.string.yes, (dialog, which) -> {
+            if (hasStoragePermission(REQUEST_DOWNLOAD_STICKERS)) {
+                downloadStickers();
+            }
+        });
+        builder.setNegativeButton(R.string.no, (dialog, which) -> { });
+        final AlertDialog dialog = builder.create();
+        dialog.setCanceledOnTouchOutside(false);
+        dialog.show();
+        return true;
     }
 
     private boolean offerToSetupDiallerIntegration() {
@@ -353,9 +375,19 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
                             "com.android.server.telecom.settings.EnableAccountPreferenceActivity"));
                         startActivityForResult(intent, DIALLER_INTEGRATION);
                         break;
+                    case REQUEST_DOWNLOAD_STICKERS:
+                        downloadStickers();
+                        break;
                 }
             }
         }
+    }
+
+    private void downloadStickers() {
+        Intent intent = new Intent(this, DownloadDefaultStickers.class);
+        ContextCompat.startForegroundService(this, intent);
+        displayToast("Sticker download started");
+        showDialogsIfMainIsOverview();
     }
 
     @Override

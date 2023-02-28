@@ -283,6 +283,14 @@ public class DatabaseBackend extends SQLiteOpenHelper {
                 db.execSQL("PRAGMA cheogram.user_version = 6");
             }
 
+            if(cheogramVersion < 7) {
+                db.execSQL(
+                    "ALTER TABLE cheogram.cids " +
+                    "ADD COLUMN url TEXT"
+                );
+                db.execSQL("PRAGMA cheogram.user_version = 7");
+            }
+
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
@@ -775,11 +783,27 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         return f;
     }
 
+    public String getUrlForCid(Cid cid) {
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.query("cheogram.cids", new String[]{"url"}, "cid=?", new String[]{cid.toString()}, null, null, null);
+        String url = null;
+        if (cursor.moveToNext()) {
+            url = cursor.getString(0);
+        }
+        cursor.close();
+        return url;
+    }
+
     public void saveCid(Cid cid, File file) {
+        saveCid(cid, file, null);
+    }
+
+    public void saveCid(Cid cid, File file, String url) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues cv = new ContentValues();
         cv.put("cid", cid.toString());
         cv.put("path", file.getAbsolutePath());
+        cv.put("url", url);
         db.insertWithOnConflict("cheogram.cids", null, cv, SQLiteDatabase.CONFLICT_REPLACE);
     }
 

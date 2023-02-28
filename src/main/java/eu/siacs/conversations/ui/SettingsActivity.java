@@ -25,6 +25,8 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 
+import com.cheogram.android.DownloadDefaultStickers;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -69,6 +71,7 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
     public static final String PREVENT_SCREENSHOTS = "prevent_screenshots";
 
     public static final int REQUEST_CREATE_BACKUP = 0xbf8701;
+    public static final int REQUEST_DOWNLOAD_STICKERS = 0xbf8702;
 
     private SettingsFragment mSettingsFragment;
 
@@ -390,6 +393,17 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
             }
         }
 
+        final Preference downloadDefaultStickers = mSettingsFragment.findPreference("download_default_stickers");
+        if (downloadDefaultStickers != null) {
+            downloadDefaultStickers.setOnPreferenceClickListener(
+                    preference -> {
+                        if (hasStoragePermission(REQUEST_DOWNLOAD_STICKERS)) {
+                            downloadStickers();
+                        }
+                        return true;
+                    });
+        }
+
         final Preference clearBlockedMedia = mSettingsFragment.findPreference("clear_blocked_media");
         if (clearBlockedMedia != null) {
             clearBlockedMedia.setOnPreferenceClickListener((p) -> {
@@ -587,6 +601,9 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
                 if (requestCode == REQUEST_CREATE_BACKUP) {
                     createBackup();
                 }
+                if (requestCode == REQUEST_DOWNLOAD_STICKERS) {
+                    downloadStickers();
+                }
             } else {
                 Toast.makeText(
                                 this,
@@ -618,6 +635,12 @@ public class SettingsActivity extends XmppActivity implements OnSharedPreference
         builder.setMessage(R.string.backup_started_message);
         builder.setPositiveButton(R.string.ok, null);
         builder.create().show();
+    }
+
+    private void downloadStickers() {
+        Intent intent = new Intent(this, DownloadDefaultStickers.class);
+        ContextCompat.startForegroundService(this, intent);
+        displayToast("Sticker download started");
     }
 
     private void displayToast(final String msg) {
