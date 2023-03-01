@@ -156,16 +156,22 @@ public class HttpConnectionManager extends AbstractConnectionManager {
         }
     }
 
+    public static OkHttpClient.Builder newBuilder(final boolean tor) {
+        final OkHttpClient.Builder builder = OK_HTTP_CLIENT.newBuilder();
+        builder.writeTimeout(30, TimeUnit.SECONDS);
+        builder.readTimeout(30, TimeUnit.SECONDS);
+        if (tor) {
+            builder.proxy(HttpConnectionManager.getProxy()).build();
+        }
+        return builder;
+    }
+
     public static InputStream open(final String url, final boolean tor) throws IOException {
         return open(HttpUrl.get(url), tor);
     }
 
     public static InputStream open(final HttpUrl httpUrl, final boolean tor) throws IOException {
-        final OkHttpClient.Builder builder = OK_HTTP_CLIENT.newBuilder();
-        if (tor) {
-            builder.proxy(HttpConnectionManager.getProxy()).build();
-        }
-        final OkHttpClient client = builder.build();
+        final OkHttpClient client = newBuilder(tor).build();
         final Request request = new Request.Builder().get().url(httpUrl).build();
         final ResponseBody body = client.newCall(request).execute().body();
         if (body == null) {
