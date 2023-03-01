@@ -131,13 +131,9 @@ public class HttpConnectionManager extends AbstractConnectionManager {
     OkHttpClient buildHttpClient(final HttpUrl url, final Account account, int readTimeout, boolean interactive) {
         final String slotHostname = url.host();
         final boolean onionSlot = slotHostname.endsWith(".onion");
-        final OkHttpClient.Builder builder = OK_HTTP_CLIENT.newBuilder();
-        builder.writeTimeout(30, TimeUnit.SECONDS);
+        final OkHttpClient.Builder builder = newBuilder(mXmppConnectionService.useTorToConnect() || account.isOnion() || onionSlot);
         builder.readTimeout(readTimeout, TimeUnit.SECONDS);
         setupTrustManager(builder, interactive);
-        if (mXmppConnectionService.useTorToConnect() || account.isOnion() || onionSlot) {
-            builder.proxy(HttpConnectionManager.getProxy()).build();
-        }
         return builder.build();
     }
 

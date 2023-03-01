@@ -42,6 +42,7 @@ import eu.siacs.conversations.crypto.axolotl.SQLiteAxolotlStore;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Message;
+import eu.siacs.conversations.http.HttpConnectionManager;
 import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.utils.Compatibility;
@@ -55,7 +56,7 @@ public class DownloadDefaultStickers extends Service {
 	private DatabaseBackend mDatabaseBackend;
 	private NotificationManager notificationManager;
 	private File mStickerDir;
-	private OkHttpClient http = new OkHttpClient();
+	private OkHttpClient http = null;
 	private HashSet<Uri> pendingPacks = new HashSet<Uri>();
 
 	@Override
@@ -67,6 +68,9 @@ public class DownloadDefaultStickers extends Service {
 
 	@Override
 	public int onStartCommand(Intent intent, int flags, int startId) {
+		if (http == null) {
+			http = HttpConnectionManager.newBuilder(intent.getBooleanExtra("tor", getResources().getBoolean(R.bool.use_tor))).build();
+		}
 		synchronized(pendingPacks) {
 			pendingPacks.add(intent.getData() == null ? Uri.parse("https://stickers.cheogram.com/index.json") : intent.getData());
 		}
