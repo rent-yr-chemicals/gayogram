@@ -2328,7 +2328,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 boolean actionsCleared = false;
                 Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
                 if (iq.getType() == IqPacket.TYPE.RESULT && command != null) {
-                    if (mNode.equals("jabber:iq:register") && command.getAttribute("status").equals("completed")) {
+                    if (mNode.equals("jabber:iq:register") && command.getAttribute("status") != null && command.getAttribute("status").equals("completed")) {
                         xmppConnectionService.createContact(getAccount().getRoster().getContact(iq.getFrom()), true);
                     }
 
