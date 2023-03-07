@@ -740,10 +740,10 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
             final Conversation conversation = ((ConversationFragment) mainFragment).getConversation();
             if (conversation != null) {
                 actionBar.setTitle(conversation.getName());
-                actionBar.setDisplayHomeAsUpEnabled(true);
+                actionBar.setDisplayHomeAsUpEnabled(!xmppConnectionService.isOnboarding());
                 ActionBarUtil.setActionBarOnClickListener(
                         binding.toolbar,
-                        (v) -> openConversationDetails(conversation)
+                        (v) -> { if(!xmppConnectionService.isOnboarding()) openConversationDetails(conversation); }
                 );
                 return;
             }

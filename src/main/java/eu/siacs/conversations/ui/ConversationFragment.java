@@ -1202,6 +1202,8 @@ public class ConversationFragment extends XmppFragment
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
+        if (activity.xmppConnectionService.isOnboarding()) return;
+
         menuInflater.inflate(R.menu.fragment_conversation, menu);
         final MenuItem menuMucDetails = menu.findItem(R.id.action_muc_details);
         final MenuItem menuContactDetails = menu.findItem(R.id.action_contact_details);
@@ -2997,6 +2999,7 @@ public class ConversationFragment extends XmppFragment
                 }
                 if (node != null && commandJid != null) {
                     conversation.startCommand(commandFor(commandJid, node), activity.xmppConnectionService);
+                    if (activity.xmppConnectionService.isOnboarding()) binding.tabLayout.setVisibility(View.GONE);
                 }
             });
             return;

@@ -48,6 +48,7 @@ public final class Config {
     public static final String DOMAIN_LOCK = null; //only allow account creation for this domain
     public static final String MAGIC_CREATE_DOMAIN = "chatterboxtown.us";
     public static final Jid QUICKSY_DOMAIN = Jid.of("cheogram.com");
+    public static final Jid ONBOARDING_DOMAIN = Jid.of("onboarding.cheogram.com");
 
     public static final String CHANNEL_DISCOVERY = "https://search.jabber.network";
 

@@ -17,15 +17,18 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.List;
 import java.util.HashSet;
+import java.util.UUID;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.ActivityWelcomeBinding;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.services.XmppConnectionService;
+import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.InstallReferrerUtils;
 import eu.siacs.conversations.utils.SignupUtils;
@@ -35,11 +38,12 @@ import eu.siacs.conversations.xmpp.Jid;
 import static eu.siacs.conversations.utils.PermissionUtils.allGranted;
 import static eu.siacs.conversations.utils.PermissionUtils.writeGranted;
 
-public class WelcomeActivity extends XmppActivity implements XmppConnectionService.OnAccountCreated, KeyChainAliasCallback {
+public class WelcomeActivity extends XmppActivity implements XmppConnectionService.OnAccountCreated, XmppConnectionService.OnAccountUpdate, KeyChainAliasCallback {
 
     private static final int REQUEST_IMPORT_BACKUP = 0x63fb;
 
     private XmppUri inviteUri;
+    private Account onboardingAccount = null;
 
     public static void launch(AppCompatActivity activity) {
         Intent intent = new Intent(activity, WelcomeActivity.class);
@@ -82,8 +86,21 @@ public class WelcomeActivity extends XmppActivity implements XmppConnectionServi
     }
 
     @Override
-    protected void refreshUiReal() {
+    protected synchronized void refreshUiReal() {
+        if (onboardingAccount == null) return;
+        if (onboardingAccount.getStatus() != Account.State.ONLINE) return;
 
+        Intent intent = new Intent(this, StartConversationActivity.class);
+        intent.putExtra("init", true);
+        intent.putExtra(EXTRA_ACCOUNT, onboardingAccount.getJid().asBareJid().toEscapedString());
+        onboardingAccount = null;
+        startActivity(intent);
+        finish();
+    }
+
+    @Override
+    public void onAccountUpdate() {
+        refreshUi();
     }
 
     @Override
@@ -124,9 +141,18 @@ public class WelcomeActivity extends XmppActivity implements XmppConnectionServi
         setSupportActionBar(binding.toolbar);
         configureActionBar(getSupportActionBar(), false);
         binding.registerNewAccount.setOnClickListener(v -> {
-            final Intent intent = new Intent(this, MagicCreateActivity.class);
-            addInviteUri(intent);
-            startActivity(intent);
+            if (hasInviteUri()) {
+                final Intent intent = new Intent(this, MagicCreateActivity.class);
+                addInviteUri(intent);
+                startActivity(intent);
+            } else {
+                binding.registerNewAccount.setText("Working...");
+                binding.registerNewAccount.setEnabled(false);
+                onboardingAccount = new Account(Jid.ofLocalAndDomain(UUID.randomUUID().toString(), Config.ONBOARDING_DOMAIN.toEscapedString()), CryptoHelper.createPassword(new SecureRandom()));
+                onboardingAccount.setOption(Account.OPTION_REGISTER, true);
+                onboardingAccount.setOption(Account.OPTION_FIXED_USERNAME, true);
+                xmppConnectionService.createAccount(onboardingAccount);
+            }
         });
         binding.useExisting.setOnClickListener(v -> {
             final List<Account> accounts = xmppConnectionService.getAccounts();
@@ -233,6 +259,12 @@ public class WelcomeActivity extends XmppActivity implements XmppConnectionServi
                 xmppConnectionService.restartFileObserver();
             }
         }
+    }
+
+    protected boolean hasInviteUri() {
+        final Intent from = getIntent();
+        if (from != null && from.hasExtra(StartConversationActivity.EXTRA_INVITE_URI)) return true;
+        return this.inviteUri != null;
     }
 
     public void addInviteUri(Intent to) {

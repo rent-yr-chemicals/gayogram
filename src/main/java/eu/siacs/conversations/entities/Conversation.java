@@ -797,7 +797,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
         } else if ((QuickConversationsService.isConversations() || !Config.QUICKSY_DOMAIN.equals(contactJid.getDomain())) && isWithStranger()) {
-            return contactJid;
+            return contactJid.equals(Jid.of("cheogram.com")) ? "Cheogram" : contactJid;
         } else {
             return this.getContact().getDisplayName();
         }
@@ -2400,7 +2400,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             public void updateWithResponse(final IqPacket iq) {
-                if (getView().isAttachedToWindow()) {
+                if (getView() != null && getView().isAttachedToWindow()) {
                     getView().post(() -> updateWithResponseUiThread(iq));
                 } else {
                     pendingResponsePacket = iq;
@@ -2706,6 +2706,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             public View getView() {
+                if (mBinding == null) return null;
                 return mBinding.getRoot();
             }
 
@@ -2874,8 +2875,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 actionsAdapter.notifyDataSetChanged();
 
                 if (pendingResponsePacket != null) {
-                    updateWithResponseUiThread(pendingResponsePacket);
+                    final IqPacket pending = pendingResponsePacket;
                     pendingResponsePacket = null;
+                    updateWithResponseUiThread(pending);
                 }
             }
 
