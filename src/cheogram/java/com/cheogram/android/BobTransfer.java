@@ -38,12 +38,12 @@ public class BobTransfer implements Transferable {
 	protected XmppConnectionService xmppConnectionService;
 
 	public static Cid cid(Uri uri) {
-		if (!uri.getScheme().equals("cid")) return null;
+		if (uri == null || uri.getScheme() == null || !uri.getScheme().equals("cid")) return null;
 		return cid(uri.getSchemeSpecificPart());
 	}
 
 	public static Cid cid(URI uri) {
-		if (!uri.getScheme().equals("cid")) return null;
+		if (uri == null || uri.getScheme() == null || !uri.getScheme().equals("cid")) return null;
 		return cid(uri.getSchemeSpecificPart());
 	}
 
