@@ -2498,6 +2498,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     }
 
                     if (responseElement == null && command.getAttribute("status") != null && (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled"))) {
+                        if (mNode.equals("jabber:iq:register") && command.getAttribute("status").equals("canceled")) {
+                            if (xmppConnectionService.isOnboarding()) {
+                                xmppConnectionService.getPreferences().edit().putBoolean("onboarding_canceled", true).commit();
+                                xmppConnectionService.deleteAccount(getAccount());
+                            }
+                            xmppConnectionService.archiveConversation(Conversation.this);
+                        }
+
                         removeSession(this);
                         return;
                     }

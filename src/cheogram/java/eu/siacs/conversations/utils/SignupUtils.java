@@ -62,7 +62,7 @@ public class SignupUtils {
                 if (Config.X509_VERIFICATION) {
                     intent = new Intent(activity, ManageAccountActivity.class);
                 } else if (Config.MAGIC_CREATE_DOMAIN != null) {
-                    intent = getSignUpIntent(activity);
+                    intent = activity.xmppConnectionService.getPreferences().getBoolean("onboarding_canceled", false) ? new Intent(activity, MagicCreateActivity.class) : getSignUpIntent(activity);
                 } else {
                     intent = new Intent(activity, EditAccountActivity.class);
                 }
@@ -70,7 +70,6 @@ public class SignupUtils {
                 intent = new Intent(activity, StartConversationActivity.class);
             }
         }
-        intent.putExtra("init", true);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         return intent;
     }
