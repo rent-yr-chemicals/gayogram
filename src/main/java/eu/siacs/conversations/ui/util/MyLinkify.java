@@ -39,6 +39,7 @@ import com.google.common.collect.Collections2;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
+import java.lang.IndexOutOfBoundsException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -139,12 +140,12 @@ public class MyLinkify {
         for (final URLSpan urlspan : body.getSpans(0, body.length() - 1, URLSpan.class)) {
             Uri uri = Uri.parse(urlspan.getURL());
             if ("xmpp".equals(uri.getScheme())) {
-                if (!body.subSequence(body.getSpanStart(urlspan), body.getSpanEnd(urlspan)).toString().startsWith("xmpp:")) {
-                    // Already customized
-                    continue;
-                }
-
                 try {
+                    if (!body.subSequence(body.getSpanStart(urlspan), body.getSpanEnd(urlspan)).toString().startsWith("xmpp:")) {
+                        // Already customized
+                        continue;
+                    }
+
                     XmppUri xmppUri = new XmppUri(uri);
                     Jid jid = xmppUri.getJid();
                     String display = xmppUri.toString();
@@ -162,7 +163,7 @@ public class MyLinkify {
                         body.getSpanEnd(urlspan),
                         display
                     );
-                } catch (final IllegalArgumentException e) { /* bad JID */ }
+                } catch (final IllegalArgumentException | IndexOutOfBoundsException e) { /* bad JID or span gone */ }
             }
         }
     }
