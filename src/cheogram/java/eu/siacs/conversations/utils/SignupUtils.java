@@ -62,7 +62,7 @@ public class SignupUtils {
                 if (Config.X509_VERIFICATION) {
                     intent = new Intent(activity, ManageAccountActivity.class);
                 } else if (Config.MAGIC_CREATE_DOMAIN != null) {
-                    intent = activity.xmppConnectionService.getPreferences().getBoolean("onboarding_canceled", false) ? new Intent(activity, MagicCreateActivity.class) : getSignUpIntent(activity);
+                    intent = activity.xmppConnectionService.getPreferences().contains("onboarding_action") ? new Intent(activity, MagicCreateActivity.class) : getSignUpIntent(activity);
                 } else {
                     intent = new Intent(activity, EditAccountActivity.class);
                 }

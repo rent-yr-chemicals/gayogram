@@ -2500,7 +2500,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     if (responseElement == null && command.getAttribute("status") != null && (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled"))) {
                         if (mNode.equals("jabber:iq:register") && command.getAttribute("status").equals("canceled")) {
                             if (xmppConnectionService.isOnboarding()) {
-                                xmppConnectionService.getPreferences().edit().putBoolean("onboarding_canceled", true).commit();
+                                if (!xmppConnectionService.getPreferences().contains("onboarding_action")) {
+                                    xmppConnectionService.getPreferences().edit().putString("onboarding_action", "cancel").commit();
+                                }
                                 xmppConnectionService.deleteAccount(getAccount());
                             }
                             xmppConnectionService.archiveConversation(Conversation.this);
@@ -2529,6 +2531,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     actionsAdapter.add(Pair.create("close", "close"));
                 }
 
+                Data dataForm = null;
+                if (responseElement != null && responseElement.getName().equals("x") && responseElement.getNamespace().equals("jabber:x:data")) dataForm = Data.parse(responseElement);
+                if (mNode.equals("jabber:iq:register") &&
+                    xmppConnectionService.getPreferences().contains("onboarding_action") &&
+                    dataForm != null && dataForm.getFieldByName("gateway-jid") != null) {
+
+
+                    dataForm.put("gateway-jid", xmppConnectionService.getPreferences().getString("onboarding_action", ""));
+                    execute();
+                }
+                xmppConnectionService.getPreferences().edit().remove("onboarding_action").commit();
                 notifyDataSetChanged();
             }
 
@@ -2770,6 +2783,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     if (actionList != null) {
                         actionList.setValue(action);
                         c.setAttribute("action", "execute");
+                    }
+
+                    if (mNode.equals("jabber:iq:register") && xmppConnectionService.isOnboarding() && form.getValue("gateway-jid") != null) {
+                        xmppConnectionService.getPreferences().edit().putString("onboarding_action", form.getValue("gateway-jid")).commit();
                     }
 
                     responseElement.setAttribute("type", "submit");

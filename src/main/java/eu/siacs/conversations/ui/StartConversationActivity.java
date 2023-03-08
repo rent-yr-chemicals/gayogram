@@ -917,7 +917,10 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
         configureHomeButton();
         Intent intent = pendingViewIntent.pop();
 
-        if (intent != null && intent.getBooleanExtra("init", false) && !xmppConnectionService.getPreferences().getBoolean("onboarding_canceled", false)) {
+        final boolean onboardingCancel = xmppConnectionService.getPreferences().getString("onboarding_action", "").equals("cancel");
+        if (onboardingCancel) xmppConnectionService.getPreferences().edit().remove("onboarding_action").commit();
+
+        if (intent != null && intent.getBooleanExtra("init", false) && !onboardingCancel) {
             Account selectedAccount = xmppConnectionService.getAccounts().get(0);
             final String accountJid = intent.getStringExtra(EXTRA_ACCOUNT);
             intent = null;
@@ -1032,8 +1035,6 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
                 }
             }
         }
-
-        xmppConnectionService.getPreferences().edit().remove("onboarding_canceled").commit();
 
         if (intent != null && processViewIntent(intent)) {
             filter(null);
