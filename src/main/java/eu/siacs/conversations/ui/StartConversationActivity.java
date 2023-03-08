@@ -1207,7 +1207,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 
         final boolean sopranicaDeleted = getPreferences().getBoolean("cheogram_sopranica_bookmark_deleted", false);
 
-        if (!sopranicaDeleted && !foundSopranica && (needle == null || needle.equals(""))) {
+        if (!sopranicaDeleted && !foundSopranica && (needle == null || needle.equals("")) && xmppConnectionService.getAccounts().size() > 0) {
             Bookmark bookmark = new Bookmark(
                 xmppConnectionService.getAccounts().get(0),
                 Jid.of("discuss@conference.soprani.ca")
