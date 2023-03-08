@@ -14,7 +14,7 @@ public class Option {
     public static List<Option> forField(Element field) {
         List<Option> options = new ArrayList<>();
         for (Element el : field.getChildren()) {
-            if (!el.getNamespace().equals("jabber:x:data")) continue;
+            if (el.getNamespace() == null || !el.getNamespace().equals("jabber:x:data")) continue;
             if (!el.getName().equals("option")) continue;
             options.add(new Option(el));
         }
