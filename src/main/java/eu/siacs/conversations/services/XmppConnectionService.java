@@ -1029,8 +1029,12 @@ public class XmppConnectionService extends Service {
 
     private void directReply(final Conversation conversation, final String body, final String lastMessageUuid, final boolean dismissAfterReply) {
         final Message inReplyTo = lastMessageUuid == null ? null : conversation.findMessageWithUuid(lastMessageUuid);
-        final Message message = new Message(conversation, body, conversation.getNextEncryption());
-        if (inReplyTo != null) message.setThread(inReplyTo.getThread());
+        Message message = new Message(conversation, body, conversation.getNextEncryption());
+        if (inReplyTo != null) {
+            message = inReplyTo.reply();
+            message.appendBody(body);
+            message.setEncryption(conversation.getNextEncryption());
+        }
         if (inReplyTo != null && inReplyTo.isPrivateMessage()) {
             Message.configurePrivateMessage(message, inReplyTo.getCounterpart());
         }
