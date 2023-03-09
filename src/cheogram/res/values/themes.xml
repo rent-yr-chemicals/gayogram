@@ -108,7 +108,7 @@
         <item name="icon_save" type="reference">@drawable/ic_save_black_24dp</item>
         <item name="icon_group" type="reference">@drawable/ic_group_white_24dp</item>
         <item name="icon_new" type="reference">@drawable/ic_add_white_24dp</item>
-        <item name="icon_quote" type="reference">@drawable/ic_reply_white_24dp</item>
+        <item name="icon_quote" type="reference">@drawable/ic_reply_black</item>
         <item name="icon_refresh" type="reference">@drawable/ic_refresh_black_24dp</item>
         <item name="icon_new_attachment" type="reference">@drawable/ic_attach_file_white_24dp</item>
         <item name="icon_not_secure" type="reference">@drawable/ic_lock_open_white_24dp</item>

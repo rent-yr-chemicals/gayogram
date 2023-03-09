@@ -415,7 +415,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
      * Applies QuoteSpan to group of lines which starts with > or » characters.
      * Appends likebreaks and applies DividerSpan to them to show a padding between quote and text.
      */
-    private boolean handleTextQuotes(SpannableStringBuilder body, boolean darkBackground) {
+    public boolean handleTextQuotes(SpannableStringBuilder body, boolean darkBackground) {
         boolean startsWithQuote = false;
         int quoteDepth = 1;
         while (QuoteHelper.bodyContainsQuoteStart(body) && quoteDepth <= Config.QUOTE_MAX_DEPTH) {
