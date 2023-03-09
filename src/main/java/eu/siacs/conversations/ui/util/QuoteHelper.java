@@ -103,4 +103,15 @@ public class QuoteHelper {
         }
         return text;
     }
+
+    public static String quote(String text) {
+        text = replaceAltQuoteCharsInText(text);
+        return text
+                // first replace all '>' at the beginning of the line with nice and tidy '>>'
+                // for nested quoting
+                .replaceAll("(^|\n)(" + QUOTE_CHAR + ")", "$1$2$2")
+                // then find all other lines and have them start with a '> '
+                .replaceAll("(^|\n)(?!" + QUOTE_CHAR + ")(.*)", "$1> $2")
+        ;
+    }
 }
