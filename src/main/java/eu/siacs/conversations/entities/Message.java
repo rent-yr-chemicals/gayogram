@@ -47,6 +47,7 @@ import eu.siacs.conversations.crypto.axolotl.FingerprintStatus;
 import eu.siacs.conversations.http.URL;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.ui.util.PresenceSelector;
+import eu.siacs.conversations.ui.util.QuoteHelper;
 import eu.siacs.conversations.utils.CryptoHelper;
 import eu.siacs.conversations.utils.Emoticons;
 import eu.siacs.conversations.utils.GeoHelper;
@@ -379,6 +380,22 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         return values;
     }
 
+    public Message reply() {
+        Message m = new Message(conversation, QuoteHelper.quote(getBody()) + "\n", ENCRYPTION_NONE);
+        m.setThread(getThread());
+        m.addPayload(
+            new Element("reply", "urn:xmpp:reply:0")
+                .setAttribute("to", getCounterpart())
+                .setAttribute("id", conversation.getMode() == Conversation.MODE_MULTI ? getServerMsgId() : getRemoteMsgId())
+        );
+        final Element fallback = new Element("fallback", "urn:xmpp:fallback:0").setAttribute("for", "urn:xmpp:reply:0");
+        fallback.addChild("body", "urn:xmpp:fallback:0")
+                .setAttribute("start", "0")
+                .setAttribute("end", "" + m.body.length());
+        m.addPayload(fallback);
+        return m;
+    }
+
     public String getConversationUuid() {
         return conversationUuid;
     }
@@ -445,6 +462,13 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             throw new Error("You should not set the message body to null");
         }
         this.body = body;
+        this.isGeoUri = null;
+        this.isEmojisOnly = null;
+        this.treatAsDownloadable = null;
+    }
+
+    public synchronized void appendBody(String append) {
+        this.body += append;
         this.isGeoUri = null;
         this.isEmojisOnly = null;
         this.treatAsDownloadable = null;

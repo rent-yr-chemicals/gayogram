@@ -30,6 +30,7 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.text.Editable;
+import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -893,7 +894,13 @@ public class ConversationFragment extends XmppFragment
         }
         final Message message;
         if (conversation.getCorrectingMessage() == null) {
-            message = new Message(conversation, body, conversation.getNextEncryption());
+            if (conversation.getReplyTo() != null) {
+                message = conversation.getReplyTo().reply();
+                message.appendBody(body);
+                message.setEncryption(conversation.getNextEncryption());
+            } else {
+                message = new Message(conversation, body, conversation.getNextEncryption());
+            }
             message.setThread(conversation.getThread());
             Message.configurePrivateMessage(message);
         } else {
@@ -910,6 +917,7 @@ public class ConversationFragment extends XmppFragment
             default:
                 sendMessage(message);
         }
+        setupReply(null);
     }
 
     private boolean trustKeysIfNeeded(final Conversation conversation, final int requestCode) {
@@ -1118,6 +1126,7 @@ public class ConversationFragment extends XmppFragment
         } else {
             activity.selectPresence(conversation, callback);
         }
+        setupReply(null);
     }
 
     private static boolean anyNeedsExternalStoragePermission(
@@ -1269,6 +1278,7 @@ public class ConversationFragment extends XmppFragment
         binding.textinput.setRichContentListener(new String[] {"image/*"}, mEditorContentListener);
 
         binding.textSendButton.setOnClickListener(this.mSendButtonListener);
+        binding.contextPreviewCancel.setOnClickListener((v) -> setupReply(null));
 
         binding.scrollToBottomButton.setOnClickListener(this.mScrollButtonListener);
         binding.messagesView.setOnScrollListener(mOnScrollListener);
@@ -1358,7 +1368,21 @@ public class ConversationFragment extends XmppFragment
     private void quoteMessage(Message message) {
         setThread(message.getThread());
         conversation.setUserSelectedThread(true);
-        quoteText(MessageUtils.prepareQuote(message));
+        if (message.getThread() == null) newThread();
+        setupReply(message);
+    }
+
+    private void setupReply(Message message) {
+        conversation.setReplyTo(message);
+        if (message == null) {
+            binding.contextPreview.setVisibility(View.GONE);
+            return;
+        }
+
+        SpannableStringBuilder body = message.getSpannableBody(null, null);
+        messageListAdapter.handleTextQuotes(body, activity.isDarkTheme());
+        binding.contextPreviewText.setText(body);
+        binding.contextPreview.setVisibility(View.VISIBLE);
     }
 
     private void setThread(Element thread) {
@@ -2721,6 +2745,7 @@ public class ConversationFragment extends XmppFragment
         }
 
         setThread(conversation.getThread());
+        setupReply(conversation.getReplyTo());
 
         stopScrolling();
         Log.d(Config.LOGTAG, "reInit(hasExtras=" + hasExtras + ")");
