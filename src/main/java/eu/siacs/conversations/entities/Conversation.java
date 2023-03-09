@@ -170,6 +170,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
     protected Element thread = null;
     protected boolean lockThread = false;
     protected boolean userSelectedThread = false;
+    protected Message replyTo = null;
 
     public Conversation(final String name, final Account account, final Jid contactJid,
                         final int mode) {
@@ -669,6 +670,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
     public boolean getUserSelectedThread() {
         return this.userSelectedThread;
+    }
+
+    public void setReplyTo(Message m) {
+        this.replyTo = m;
+    }
+
+    public Message getReplyTo() {
+        return this.replyTo;
     }
 
     public boolean isRead() {

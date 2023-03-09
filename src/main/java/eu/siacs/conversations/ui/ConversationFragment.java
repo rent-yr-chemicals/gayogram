@@ -893,7 +893,13 @@ public class ConversationFragment extends XmppFragment
         }
         final Message message;
         if (conversation.getCorrectingMessage() == null) {
-            message = new Message(conversation, body, conversation.getNextEncryption());
+            if (conversation.getReplyTo() != null) {
+                message = conversation.getReplyTo().reply();
+                message.appendBody(body);
+                message.setEncryption(conversation.getNextEncryption());
+            } else {
+                message = new Message(conversation, body, conversation.getNextEncryption());
+            }
             message.setThread(conversation.getThread());
             Message.configurePrivateMessage(message);
         } else {
@@ -1358,7 +1364,7 @@ public class ConversationFragment extends XmppFragment
     private void quoteMessage(Message message) {
         setThread(message.getThread());
         conversation.setUserSelectedThread(true);
-        quoteText(MessageUtils.prepareQuote(message));
+        conversation.setReplyTo(message);
     }
 
     private void setThread(Element thread) {
