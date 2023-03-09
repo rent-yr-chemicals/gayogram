@@ -41,6 +41,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 
 import com.cheogram.android.BobTransfer;
+import com.cheogram.android.SwipeDetector;
 
 import com.google.common.base.Strings;
 
@@ -112,6 +113,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     private final DisplayMetrics metrics;
     private OnContactPictureClicked mOnContactPictureClickedListener;
     private OnContactPictureClicked mOnMessageBoxClickedListener;
+    private OnContactPictureClicked mOnMessageBoxSwipedListener;
     private OnContactPictureLongClicked mOnContactPictureLongClickedListener;
     private OnInlineImageLongClicked mOnInlineImageLongClickedListener;
     private boolean mUseGreenBackground = false;
@@ -154,6 +156,10 @@ public class MessageAdapter extends ArrayAdapter<Message> {
 
     public void setOnMessageBoxClicked(OnContactPictureClicked listener) {
         this.mOnMessageBoxClickedListener = listener;
+    }
+
+    public void setOnMessageBoxSwiped(OnContactPictureClicked listener) {
+        this.mOnMessageBoxSwipedListener = listener;
     }
 
     public Activity getActivity() {
@@ -927,6 +933,16 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                         .onContactPictureClicked(message);
             }
         });
+        viewHolder.message_box.setOnTouchListener(new SwipeDetector((action) -> {
+            if (action == SwipeDetector.Action.LR && MessageAdapter.this.mOnMessageBoxSwipedListener != null) {
+                MessageAdapter.this.mOnMessageBoxSwipedListener.onContactPictureClicked(message);
+            }
+        }));
+        viewHolder.messageBody.setOnTouchListener(new SwipeDetector((action) -> {
+            if (action == SwipeDetector.Action.LR && MessageAdapter.this.mOnMessageBoxSwipedListener != null) {
+                MessageAdapter.this.mOnMessageBoxSwipedListener.onContactPictureClicked(message);
+            }
+        }));
         viewHolder.messageBody.setOnClickListener(v -> {
             if (MessageAdapter.this.mOnMessageBoxClickedListener != null) {
                 MessageAdapter.this.mOnMessageBoxClickedListener

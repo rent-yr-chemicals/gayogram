@@ -1303,6 +1303,10 @@ public class ConversationFragment extends XmppFragment
             conversation.setUserSelectedThread(true);
         });
 
+        messageListAdapter.setOnMessageBoxSwiped(message -> {
+            setupReply(message);
+        });
+
         binding.threadIdenticonLayout.setOnClickListener(v -> {
             boolean wasLocked = conversation.getLockThread();
             conversation.setLockThread(false);
