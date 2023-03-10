@@ -933,16 +933,15 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                         .onContactPictureClicked(message);
             }
         });
-        viewHolder.message_box.setOnTouchListener(new SwipeDetector((action) -> {
+        SwipeDetector swipeDetector = new SwipeDetector((action) -> {
             if (action == SwipeDetector.Action.LR && MessageAdapter.this.mOnMessageBoxSwipedListener != null) {
                 MessageAdapter.this.mOnMessageBoxSwipedListener.onContactPictureClicked(message);
             }
-        }));
-        viewHolder.messageBody.setOnTouchListener(new SwipeDetector((action) -> {
-            if (action == SwipeDetector.Action.LR && MessageAdapter.this.mOnMessageBoxSwipedListener != null) {
-                MessageAdapter.this.mOnMessageBoxSwipedListener.onContactPictureClicked(message);
-            }
-        }));
+        });
+        viewHolder.message_box.setOnTouchListener(swipeDetector);
+        viewHolder.messageBody.setOnTouchListener(swipeDetector);
+        viewHolder.image.setOnTouchListener(swipeDetector);
+        viewHolder.time.setOnTouchListener(swipeDetector);
         viewHolder.messageBody.setOnClickListener(v -> {
             if (MessageAdapter.this.mOnMessageBoxClickedListener != null) {
                 MessageAdapter.this.mOnMessageBoxClickedListener
