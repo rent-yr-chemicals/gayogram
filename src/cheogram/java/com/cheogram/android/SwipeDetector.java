@@ -27,7 +27,7 @@ public class SwipeDetector implements View.OnTouchListener {
     }
 
     private static final String logTag = "Swipe";
-    private static final int MIN_DISTANCE = 35;
+    private static final int MIN_DISTANCE = 100;
     private float downX, downY, upX, upY;
     private Action mSwipeDetected = Action.None;
 
@@ -54,18 +54,10 @@ public class SwipeDetector implements View.OnTouchListener {
 
                 float deltaX = downX - upX;
                 float deltaY = downY - upY;
-                Log.i(logTag,String.valueOf(deltaX));
-                Log.i(logTag,String.valueOf(deltaY));
 
-                if (deltaY>0 && deltaY<10 && deltaX<0 || deltaY==0 && deltaX>-15 && deltaX<0){
-                    Log.i(logTag,"to right");
-                }if (deltaY>=0 && deltaY<10 && deltaX>0 || deltaY<0 && deltaX>15 && deltaX<40){
-                Log.i(logTag,"to left");
-            }
-
-
-
-
+                if (deltaY>0 && deltaY<10 && deltaX<0 || deltaY==0 && deltaX>-15 && deltaX<0) {
+                    v.getParent().requestDisallowInterceptTouchEvent(true);
+                }
 
                 if (Math.abs(deltaX) > MIN_DISTANCE) {
                     // left or right
@@ -74,26 +66,20 @@ public class SwipeDetector implements View.OnTouchListener {
                         return false;
                     }
                     if (deltaX > 0) {
-
-
                         cb.accept(mSwipeDetected = Action.RL);
                         return false;
                     }
                 } else if (Math.abs(deltaY) > MIN_DISTANCE) {
-
-
                     if (deltaY < 0) {
-                        Log.i(logTag,"to bottom");
                         cb.accept(mSwipeDetected = Action.TB);
                         return false;
                     }
                     if (deltaY > 0) {
-                        Log.i(logTag,"to up");
                         cb.accept(mSwipeDetected = Action.BT);
                         return false;
                     }
                 }
-                return true;
+                return false;
         }
         return false;
     }
