@@ -1384,6 +1384,7 @@ public class ConversationFragment extends XmppFragment
         }
 
         SpannableStringBuilder body = message.getSpannableBody(null, null);
+        if (message.isFileOrImage() || message.isOOb()) body.append(" 🖼️");
         messageListAdapter.handleTextQuotes(body, activity.isDarkTheme());
         binding.contextPreviewText.setText(body);
         binding.contextPreview.setVisibility(View.VISIBLE);
@@ -1471,8 +1472,8 @@ public class ConversationFragment extends XmppFragment
                             && !Message.ERROR_MESSAGE_CANCELLED.equals(m.getErrorMessage());
             if (!encrypted && !m.getBody().equals("")) {
                 copyMessage.setVisible(true);
-                quoteMessage.setVisible(!showError && MessageUtils.prepareQuote(m).length() > 0);
             }
+            quoteMessage.setVisible(!encrypted && !showError);
             if (m.getEncryption() == Message.ENCRYPTION_DECRYPTION_FAILED && !deleted) {
                 retryDecryption.setVisible(true);
             }
