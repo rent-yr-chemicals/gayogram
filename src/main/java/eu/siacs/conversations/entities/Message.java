@@ -381,7 +381,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     }
 
     public Message reply() {
-        Message m = new Message(conversation, QuoteHelper.quote(getBody()) + "\n", ENCRYPTION_NONE);
+        Message m = new Message(conversation, QuoteHelper.quote(MessageUtils.prepareQuote(this)) + "\n", ENCRYPTION_NONE);
         m.setThread(getThread());
         m.addPayload(
             new Element("reply", "urn:xmpp:reply:0")
@@ -428,6 +428,10 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                         .getContactFromContactList(this.trueCounterpart);
             }
         }
+    }
+
+    public String getQuoteableBody() {
+        return this.body;
     }
 
     public String getBody() {

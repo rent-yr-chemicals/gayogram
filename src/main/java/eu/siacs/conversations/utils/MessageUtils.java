@@ -61,9 +61,9 @@ public class MessageUtils {
             } else {
                 nick = UIHelper.getMessageDisplayName(message);
             }
-            body = nick + " " + message.getBody().substring(Message.ME_COMMAND.length());
+            body = nick + " " + message.getQuoteableBody().substring(Message.ME_COMMAND.length());
         } else {
-            body = message.getMergedBody().toString();
+            body = message.getQuoteableBody();
         }
         for (String line : body.split("\n")) {
             if (!(line.length() <= 0) && QuoteHelper.isNestedTooDeeply(line)) {
