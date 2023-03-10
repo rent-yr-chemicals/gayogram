@@ -1304,7 +1304,7 @@ public class ConversationFragment extends XmppFragment
         });
 
         messageListAdapter.setOnMessageBoxSwiped(message -> {
-            setupReply(message);
+            quoteMessage(message);
         });
 
         binding.threadIdenticonLayout.setOnClickListener(v -> {
