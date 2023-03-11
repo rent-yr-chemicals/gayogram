@@ -14,7 +14,7 @@ public class LocalizedContent {
     public final String language;
     public final int count;
 
-    private LocalizedContent(String content, String language, int count) {
+    public LocalizedContent(String content, String language, int count) {
         this.content = content;
         this.language = language;
         this.count = count;

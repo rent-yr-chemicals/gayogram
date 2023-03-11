@@ -1490,6 +1490,10 @@ public class ConversationFragment extends XmppFragment
                 correctMessage.setVisible(true);
                 if (!relevantForCorrection.getBody().equals("") && !relevantForCorrection.getBody().equals(" ")) retractMessage.setVisible(true);
             }
+            if (relevantForCorrection.getReactions() != null) {
+                correctMessage.setVisible(false);
+                retractMessage.setVisible(true);
+            }
             if (conversation.getMode() == Conversation.MODE_MULTI && m.getServerMsgId() != null && m.getModerated() == null && conversation.getMucOptions().getSelf().getRole().ranks(MucOptions.Role.MODERATOR) && conversation.getMucOptions().hasFeature("urn:xmpp:message-moderate:0")) {
                 moderateMessage.setVisible(true);
             }
@@ -1575,10 +1579,17 @@ public class ConversationFragment extends XmppFragment
                         }
                         Element reactions = message.getReactions();
                         if (reactions != null) {
+                            final Message previousReaction = conversation.findMessageReactingTo(reactions.getAttribute("id"), null);
+                            if (previousReaction != null) reactions = previousReaction.getReactions();
                             for (Element el : reactions.getChildren()) {
                                 if (message.getQuoteableBody().endsWith(el.getContent())) {
                                     reactions.removeChild(el);
                                 }
+                            }
+                            message.setReactions(reactions);
+                            if (previousReaction != null) {
+                                previousReaction.setReactions(reactions);
+                                activity.xmppConnectionService.updateMessage(previousReaction);
                             }
                         }
                         message.setBody(" ");

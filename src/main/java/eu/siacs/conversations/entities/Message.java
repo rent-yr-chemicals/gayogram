@@ -403,7 +403,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 
     public Message react(String emoji) {
         Set<String> emojis = new HashSet<>();
-        if (conversation instanceof Conversation) emojis = ((Conversation) conversation).findOwnReactionsTo(replyId());
+        if (conversation instanceof Conversation) emojis = ((Conversation) conversation).findReactionsTo(replyId(), null);
         emojis.add(emoji);
         final Message m = reply();
         m.appendBody(emoji);
@@ -416,6 +416,13 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         }
         m.addPayload(reactions);
         return m;
+    }
+
+    public void setReactions(Element reactions) {
+        if (this.payloads != null) {
+            this.payloads.remove(getReactions());
+        }
+        addPayload(reactions);
     }
 
     public Element getReactions() {
