@@ -56,9 +56,10 @@
                     android:layout_above="@+id/textsend"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
+                    android:minHeight="40dp"
                     android:paddingTop="8dp"
                     android:paddingLeft="8dp"
-                    android:paddingRight="20dp"
+                    android:paddingRight="14dp"
                     android:orientation="horizontal"
                     android:background="?attr/color_background_primary">
 
