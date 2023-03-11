@@ -33,6 +33,7 @@ import java.time.Duration;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -380,13 +381,17 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         return values;
     }
 
+    public String replyId() {
+        return conversation.getMode() == Conversation.MODE_MULTI ? getServerMsgId() : getRemoteMsgId();
+	 }
+
     public Message reply() {
         Message m = new Message(conversation, QuoteHelper.quote(MessageUtils.prepareQuote(this)) + "\n", ENCRYPTION_NONE);
         m.setThread(getThread());
         m.addPayload(
             new Element("reply", "urn:xmpp:reply:0")
                 .setAttribute("to", getCounterpart())
-                .setAttribute("id", conversation.getMode() == Conversation.MODE_MULTI ? getServerMsgId() : getRemoteMsgId())
+                .setAttribute("id", replyId())
         );
         final Element fallback = new Element("fallback", "urn:xmpp:fallback:0").setAttribute("for", "urn:xmpp:reply:0");
         fallback.addChild("body", "urn:xmpp:fallback:0")
@@ -394,6 +399,35 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                 .setAttribute("end", "" + m.body.length());
         m.addPayload(fallback);
         return m;
+    }
+
+    public Message react(String emoji) {
+        Set<String> emojis = new HashSet<>();
+        if (conversation instanceof Conversation) emojis = ((Conversation) conversation).findOwnReactionsTo(replyId());
+        emojis.add(emoji);
+        final Message m = reply();
+        m.appendBody(emoji);
+        final Element fallback = new Element("fallback", "urn:xmpp:fallback:0").setAttribute("for", "urn:xmpp:reactions:0");
+        fallback.addChild("body", "urn:xmpp:fallback:0");
+        m.addPayload(fallback);
+        final Element reactions = new Element("reactions", "urn:xmpp:reactions:0").setAttribute("id", replyId());
+        for (String oneEmoji : emojis) {
+            reactions.addChild("reaction", "urn:xmpp:reactions:0").setContent(oneEmoji);
+        }
+        m.addPayload(reactions);
+        return m;
+    }
+
+    public Element getReactions() {
+        if (this.payloads == null) return null;
+
+        for (Element el : this.payloads) {
+            if (el.getName().equals("reactions") && el.getNamespace().equals("urn:xmpp:reactions:0")) {
+                return el;
+            }
+        }
+
+        return null;
     }
 
     public String getConversationUuid() {

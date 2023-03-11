@@ -69,10 +69,12 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -539,6 +541,29 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
         }
         return false;
+    }
+
+    public Set<String> findOwnReactionsTo(String id) {
+        Set<String> reactionEmoji = new HashSet<>();
+        Element reactions = null;
+        synchronized (this.messages) {
+            for (Message message : this.messages) {
+                if (message.getStatus() < Message.STATUS_SEND) continue;
+
+                final Element r = message.getReactions();
+                if (r != null && r.getAttribute("id") != null && id.equals(r.getAttribute("id"))) {
+                    reactions = r;
+                }
+            }
+        }
+        if (reactions != null) {
+            for (Element el : reactions.getChildren()) {
+                if (el.getName().equals("reaction") && el.getNamespace().equals("urn:xmpp:reactions:0")) {
+                    reactionEmoji.add(el.getContent());
+                }
+            }
+        }
+        return reactionEmoji;
     }
 
     public void populateWithMessages(final List<Message> messages) {

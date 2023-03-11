@@ -137,6 +137,7 @@ import eu.siacs.conversations.ui.util.ViewUtil;
 import eu.siacs.conversations.ui.widget.EditMessage;
 import eu.siacs.conversations.utils.AccountUtils;
 import eu.siacs.conversations.utils.Compatibility;
+import eu.siacs.conversations.utils.Emoticons;
 import eu.siacs.conversations.utils.GeoHelper;
 import eu.siacs.conversations.utils.MessageUtils;
 import eu.siacs.conversations.utils.MimeUtils;
@@ -895,8 +896,12 @@ public class ConversationFragment extends XmppFragment
         final Message message;
         if (conversation.getCorrectingMessage() == null) {
             if (conversation.getReplyTo() != null) {
-                message = conversation.getReplyTo().reply();
-                message.appendBody(body);
+                if (Emoticons.isEmoji(body)) {
+                    message = conversation.getReplyTo().react(body);
+                } else {
+                    message = conversation.getReplyTo().reply();
+                    message.appendBody(body);
+                }
                 message.setEncryption(conversation.getNextEncryption());
             } else {
                 message = new Message(conversation, body, conversation.getNextEncryption());
@@ -1567,6 +1572,14 @@ public class ConversationFragment extends XmppFragment
                         Message message = selectedMessage;
                         while (message.mergeable(message.next())) {
                             message = message.next();
+                        }
+                        Element reactions = message.getReactions();
+                        if (reactions != null) {
+                            for (Element el : reactions.getChildren()) {
+                                if (message.getQuoteableBody().endsWith(el.getContent())) {
+                                    reactions.removeChild(el);
+                                }
+                            }
                         }
                         message.setBody(" ");
                         message.putEdited(message.getUuid(), message.getServerMsgId());
