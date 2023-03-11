@@ -109,6 +109,7 @@ public class MessageGenerator extends AbstractGenerator {
             packet.addChild("x", Namespace.OOB).addChild("url").setContent(content);
             packet.addChild("fallback", "urn:xmpp:fallback:0").setAttribute("for", Namespace.OOB)
                   .addChild("body", "urn:xmpp:fallback:0");
+            message.setBody(content);
         } else {
             content = message.getBody();
         }
