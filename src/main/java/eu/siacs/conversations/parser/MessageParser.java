@@ -515,7 +515,6 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                         }
                         body = new LocalizedContent(bodyS, "en", 1);
                         final Message previousReaction = conversation.findMessageReactingTo(reactions.getAttribute("id"), counterpart);
-Log.d("WUT", "" + previousReaction + "    " + counterpart);
                         if (previousReaction != null) replacementId = previousReaction.replyId();
                     }
                 }
