@@ -1283,7 +1283,10 @@ public class ConversationFragment extends XmppFragment
         binding.textinput.setRichContentListener(new String[] {"image/*"}, mEditorContentListener);
 
         binding.textSendButton.setOnClickListener(this.mSendButtonListener);
-        binding.contextPreviewCancel.setOnClickListener((v) -> setupReply(null));
+        binding.contextPreviewCancel.setOnClickListener((v) -> {
+            conversation.setUserSelectedThread(false);
+            setupReply(null);
+        });
 
         binding.scrollToBottomButton.setOnClickListener(this.mScrollButtonListener);
         binding.messagesView.setOnScrollListener(mOnScrollListener);
