@@ -807,7 +807,10 @@ public class ConversationFragment extends XmppFragment
 
                     @Override
                     public void success(Message message) {
-                        runOnUiThread(() -> activity.hideToast());
+                        runOnUiThread(() -> {
+                            activity.hideToast();
+                            setupReply(null);
+                        });
                         hidePrepareFileToast(prepareFileToast);
                     }
 
@@ -852,6 +855,7 @@ public class ConversationFragment extends XmppFragment
                     @Override
                     public void success(Message message) {
                         hidePrepareFileToast(prepareFileToast);
+                        runOnUiThread(() -> setupReply(null));
                     }
 
                     @Override
@@ -1125,7 +1129,6 @@ public class ConversationFragment extends XmppFragment
         } else {
             activity.selectPresence(conversation, callback);
         }
-        setupReply(null);
     }
 
     private static boolean anyNeedsExternalStoragePermission(
