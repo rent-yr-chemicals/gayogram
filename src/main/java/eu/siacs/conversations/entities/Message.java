@@ -437,6 +437,18 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         return null;
     }
 
+    public Element getReply() {
+        if (this.payloads == null) return null;
+
+        for (Element el : this.payloads) {
+            if (el.getName().equals("reply") && el.getNamespace().equals("urn:xmpp:reply:0")) {
+                return el;
+            }
+        }
+
+        return null;
+    }
+
     public String getConversationUuid() {
         return conversationUuid;
     }

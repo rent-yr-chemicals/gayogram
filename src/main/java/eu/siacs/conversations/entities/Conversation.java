@@ -573,15 +573,32 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         return reactionEmoji;
     }
 
+    public long loadMoreTimestamp() {
+        if (messages.size() < 1) return 0;
+        if (getLockThread() && messages.size() > 5000) return 0;
+
+        if (messages.get(0).getType() == Message.TYPE_STATUS && messages.size() >= 2) {
+            return messages.get(1).getTimeSent();
+        } else {
+            return messages.get(0).getTimeSent();
+        }
+    }
+
     public void populateWithMessages(final List<Message> messages) {
         synchronized (this.messages) {
             messages.clear();
             messages.addAll(this.messages);
         }
-        for (Iterator<Message> iterator = messages.iterator(); iterator.hasNext(); ) {
-            Message m = iterator.next();
-            if (m.wasMergedIntoPrevious() || (getLockThread() && (m.getThread() == null || !m.getThread().getContent().equals(getThread().getContent())))) {
+        Set<String> extraIds = new HashSet<>();
+        for (ListIterator<Message> iterator = messages.listIterator(messages.size()); iterator.hasPrevious(); ) {
+            Message m = iterator.previous();
+            if (m.wasMergedIntoPrevious() || (getLockThread() && !extraIds.contains(m.replyId()) && (m.getThread() == null || !m.getThread().getContent().equals(getThread().getContent())))) {
                 iterator.remove();
+            } else if (getLockThread() && m.getThread() != null) {
+                Element reply = m.getReply();
+                if (reply != null && reply.getAttribute("id") != null) extraIds.add(reply.getAttribute("id"));
+                Element reactions = m.getReactions();
+                if (reactions != null && reactions.getAttribute("id") != null) extraIds.add(reactions.getAttribute("id"));
             }
         }
     }
