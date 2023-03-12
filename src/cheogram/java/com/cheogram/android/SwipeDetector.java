@@ -55,7 +55,7 @@ public class SwipeDetector implements View.OnTouchListener {
                 float deltaX = downX - upX;
                 float deltaY = downY - upY;
 
-                if (deltaY>0 && deltaY<10 && deltaX<0 || deltaY==0 && deltaX>-15 && deltaX<0) {
+                if (Math.abs(deltaY) < 15 && deltaX < -15) {
                     v.getParent().requestDisallowInterceptTouchEvent(true);
                 }
 
