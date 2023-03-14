@@ -25,6 +25,7 @@
                     android:layout_height="56dp"
                     android:layout_alignParentLeft="true"
                     android:scaleType="centerCrop"
+                    app:strokeColor="@color/custom_theme_accent"
                     app:shapeAppearance="@style/ShapeAppearanceOverlay.Photo" />
 
                 <RelativeLayout

@@ -33,6 +33,7 @@
             android:layout_alignParentLeft="true"
             android:src="@drawable/ic_call_white_48dp"
             android:background="@color/yeller"
+            app:strokeColor="@color/custom_theme_accent"
             app:shapeAppearance="@style/ShapeAppearanceOverlay.Photo" />
 
         <LinearLayout
@@ -66,6 +67,7 @@
             android:layout_centerVertical="true"
             android:paddingRight="16dp"
             android:src="?attr/icon_settings"
+            app:strokeColor="@null"
             app:shapeAppearance="@style/ShapeAppearanceOverlay.Photo" />
     </RelativeLayout>
 

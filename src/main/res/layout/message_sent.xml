@@ -28,6 +28,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:scaleType="fitXY"
+                app:strokeColor="@color/custom_theme_accent"
                 app:shapeAppearance="@style/ShapeAppearanceOverlay.Photo" />
 
             <View

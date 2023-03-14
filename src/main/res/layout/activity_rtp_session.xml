@@ -104,6 +104,7 @@
                 android:layout_width="@dimen/publish_avatar_size"
                 android:layout_height="@dimen/publish_avatar_size"
                 android:layout_centerInParent="true"
+                app:strokeColor="@color/custom_theme_accent"
                 app:shapeAppearance="@style/ShapeAppearanceOverlay.IncomingCall" />
 
         </RelativeLayout>
