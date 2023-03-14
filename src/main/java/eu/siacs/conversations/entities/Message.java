@@ -514,6 +514,10 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         }
     }
 
+    public synchronized void clearFallbacks() {
+        this.payloads.removeAll(getFallbacks());
+    }
+
     public synchronized void setBody(String body) {
         if (body == null) {
             throw new Error("You should not set the message body to null");

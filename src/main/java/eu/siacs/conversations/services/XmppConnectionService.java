@@ -139,6 +139,7 @@ import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.Consumer;
 import eu.siacs.conversations.utils.ConversationsFileObserver;
 import eu.siacs.conversations.utils.CryptoHelper;
+import eu.siacs.conversations.utils.Emoticons;
 import eu.siacs.conversations.utils.EasyOnboardingInvite;
 import eu.siacs.conversations.utils.ExceptionHelper;
 import eu.siacs.conversations.utils.MimeUtils;
@@ -1040,8 +1041,13 @@ public class XmppConnectionService extends Service {
         final Message inReplyTo = lastMessageUuid == null ? null : conversation.findMessageWithUuid(lastMessageUuid);
         Message message = new Message(conversation, body, conversation.getNextEncryption());
         if (inReplyTo != null) {
-            message = inReplyTo.reply();
-            message.appendBody(body);
+            if (Emoticons.isEmoji(body)) {
+                message = inReplyTo.react(body);
+            } else {
+                message = inReplyTo.reply();
+            }
+            message.clearFallbacks();
+            message.setBody(body);
             message.setEncryption(conversation.getNextEncryption());
         }
         if (inReplyTo != null && inReplyTo.isPrivateMessage()) {
