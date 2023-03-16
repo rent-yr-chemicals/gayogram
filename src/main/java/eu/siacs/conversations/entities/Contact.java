@@ -151,7 +151,7 @@ public class Contact implements ListItem, Blockable {
     }
 
     public String getDisplayName() {
-        if (isSelf()) {
+        if (isSelf() && TextUtils.isEmpty(this.systemName)) {
             final String displayName = account.getDisplayName();
             if (!Strings.isNullOrEmpty(displayName)) {
                 return displayName;

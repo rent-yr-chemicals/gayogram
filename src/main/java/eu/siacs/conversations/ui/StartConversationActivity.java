@@ -1080,6 +1080,12 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
                     }
                 }
 
+                final Contact self = account.getSelfContact();
+                if (self.match(this, needle)) {
+                    self.setSystemName("Note to Self");
+                    this.contacts.add(self);
+                }
+
                 for (Bookmark bookmark : account.getBookmarks()) {
                     if (bookmark.match(this, needle)) {
                         if (bookmark.getJid().toString().equals("discuss@conference.soprani.ca")) {
