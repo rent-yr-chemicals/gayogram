@@ -544,6 +544,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
     }
 
     public Message findMessageReactingTo(String id, Jid reactor) {
+        if (id == null) return null;
+
         synchronized (this.messages) {
             for (int i = this.messages.size() - 1; i >= 0; --i) {
                 final Message message = messages.get(i);
