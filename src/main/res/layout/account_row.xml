@@ -16,6 +16,7 @@
             android:layout_height="48dp"
             android:layout_alignParentLeft="true"
             android:contentDescription="@string/account_image_description"
+            app:strokeColor="@color/custom_theme_accent"
             app:shapeAppearance="@style/ShapeAppearanceOverlay.Photo" />
 
         <LinearLayout

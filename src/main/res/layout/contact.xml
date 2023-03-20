@@ -14,6 +14,7 @@
             android:layout_height="48dp"
             android:layout_alignParentLeft="true"
             android:scaleType="centerCrop"
+            app:strokeColor="@color/custom_theme_accent"
             app:shapeAppearance="@style/ShapeAppearanceOverlay.Photo" />
 
         <LinearLayout
