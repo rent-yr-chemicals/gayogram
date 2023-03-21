@@ -369,6 +369,12 @@ public class Contact implements ListItem, Blockable {
         return groups;
     }
 
+    public void copySystemTagsToGroups() {
+        for (String tag : getSystemTags(true)) {
+            this.groups.put(tag);
+        }
+    }
+
     private Collection<String> getSystemTags(final boolean unique) {
         final Collection<String> tags = unique ? new HashSet<>() : new ArrayList<>();
         for (int i = 0; i < this.systemTags.length(); ++i) {
@@ -490,6 +496,8 @@ public class Contact implements ListItem, Blockable {
         item.setAttribute("jid", this.jid);
         if (this.serverName != null) {
             item.setAttribute("name", this.serverName);
+        } else {
+            item.setAttribute("name", getDisplayName());
         }
         for (String group : getGroups(false)) {
             item.addChild("group").setContent(group);
