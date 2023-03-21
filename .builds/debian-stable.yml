@@ -12,6 +12,7 @@ packages:
 secrets:
 - 7eed327c-05c7-49b4-baed-a4d8785588d5
 - 9c6cc176-db6c-4158-9abb-2cb1662d5ca9
+- 6b782fde-a43b-4988-b102-38fa541bb788
 environment:
   ANDROID_SDK_ROOT: /home/build/android
 tasks:
@@ -37,9 +38,9 @@ tasks:
     mkdir -p src/playstore/res/values/
     mv ~/push.xml src/playstore/res/values/
     ./gradlew assembleCheogramPlaystoreDebug
-    echo keystore=$HOME/.android/debug.keystore > signing.properties
-    echo keystore.password=android >> signing.properties
-    echo keystore.alias=androiddebugkey >> signing.properties
+    echo keystore=$HOME/.android/cheogram.keystore > signing.properties
+    echo keystore.password=cheogram >> signing.properties
+    echo keystore.alias=cheogram >> signing.properties
     ./gradlew bundleCheogramPlaystoreRelease
 - assets: |
     mv cheogram-android/build/outputs/apk/cheogramFree/debug/*.apk cheogram.apk
