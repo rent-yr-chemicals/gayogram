@@ -37,6 +37,9 @@ tasks:
     mkdir -p src/playstore/res/values/
     mv ~/push.xml src/playstore/res/values/
     ./gradlew assembleCheogramPlaystoreDebug
+    echo keystore=$HOME/.android/debug.keystore > signing.properties
+    echo keystore.password=android >> signing.properties
+    echo keystore.alias=androiddebugkey >> signing.properties
     ./gradlew bundleCheogramPlaystoreRelease
 - assets: |
     mv cheogram-android/build/outputs/apk/cheogramFree/debug/*.apk cheogram.apk
