@@ -4,6 +4,7 @@ sources:
 artifacts:
 - cheogram.apk
 - cheogram_google_play.apk
+- cheogram_google_play.aab
 packages:
 - wget
 - unzip
@@ -36,6 +37,8 @@ tasks:
     mkdir -p src/playstore/res/values/
     mv ~/push.xml src/playstore/res/values/
     ./gradlew assembleCheogramPlaystoreDebug
+    ./gradlew bundleCheogramPlaystoreRelease
 - assets: |
     mv cheogram-android/build/outputs/apk/cheogramFree/debug/*.apk cheogram.apk
     mv cheogram-android/build/outputs/apk/cheogramPlaystore/debug/*.apk cheogram_google_play.apk
+    mv cheogram-android/build/outputs/bundle/cheogramPlaystoreRelease/*.aab cheogram_google_play.aab
