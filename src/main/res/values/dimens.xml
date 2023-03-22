@@ -51,4 +51,5 @@
     <dimen name="activity_margin">16dp</dimen>
     <dimen name="small_margin">4dp</dimen>
     <dimen name="actionbar_text_size">20sp</dimen>
+    <dimen name="material_input_text_to_prefix_suffix_padding">0dp</dimen>
 </resources>

@@ -2059,6 +2059,18 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     binding.textinputLayout.setErrorEnabled(field.error != null);
                     if (field.error != null) binding.textinputLayout.setError(field.error);
 
+                    binding.textinput.setTextAlignment(View.TEXT_ALIGNMENT_GRAVITY);
+                    String suffixLabel = field.el.findChildContent("x", "https://ns.cheogram.com/suffix-label");
+                    if (suffixLabel != null) {
+                        binding.textinputLayout.setSuffixText(suffixLabel);
+                        binding.textinput.setTextAlignment(View.TEXT_ALIGNMENT_TEXT_END);
+                    }
+
+                    String prefixLabel = field.el.findChildContent("x", "https://ns.cheogram.com/prefix-label");
+                    if (prefixLabel != null) {
+                        binding.textinputLayout.setPrefixText(prefixLabel);
+                    }
+
                     mValue = field.getValue();
                     binding.textinput.setText(mValue.getContent());
                     setupInputType(field.el, binding.textinput, binding.textinputLayout);
