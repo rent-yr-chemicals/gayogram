@@ -2427,7 +2427,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                             String fillableFieldType = null;
                             String fillableFieldValue = null;
                             for (eu.siacs.conversations.xmpp.forms.Field field : form.getFields()) {
-                                if (field.getType() != null && !field.getType().equals("hidden") && !field.getType().equals("fixed") && !field.getFieldName().equals("http://jabber.org/protocol/commands#actions")) {
+                                if ((field.getType() == null || (!field.getType().equals("hidden") && !field.getType().equals("fixed"))) && !field.getFieldName().equals("http://jabber.org/protocol/commands#actions")) {
                                     fillableFieldType = field.getType();
                                     fillableFieldValue = field.getValue();
                                     fillableFieldCount++;
