@@ -353,7 +353,7 @@
     <string name="no_application_found_to_open_link">No app found to open link</string>
     <string name="no_application_found_to_view_contact">No app found to view contact</string>
     <string name="pref_show_dynamic_tags">Dynamic Tags</string>
-    <string name="pref_show_dynamic_tags_summary">Display read-only tags underneath contacts</string>
+    <string name="pref_show_dynamic_tags_summary">Allow organizing with tags</string>
     <string name="enable_notifications">Enable notifications</string>
     <string name="no_conference_server_found">No group chat server found</string>
     <string name="conference_creation_failed">Could not create group chat</string>
