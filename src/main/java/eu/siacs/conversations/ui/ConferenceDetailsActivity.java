@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.text.Editable;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
@@ -76,6 +78,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
     private String uuid = null;
 
     private boolean mAdvancedMode = false;
+    private boolean showDynamicTags = true;
 
     private final UiCallback<Conversation> renameCallback = new UiCallback<Conversation>() {
         @Override
@@ -178,6 +181,8 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.binding = DataBindingUtil.setContentView(this, R.layout.activity_muc_details);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        showDynamicTags = preferences.getBoolean(SettingsActivity.SHOW_DYNAMIC_TAGS, getResources().getBoolean(R.bool.show_dynamic_tags));
         this.binding.changeConferenceButton.setOnClickListener(this.mChangeConferenceSettings);
         setSupportActionBar(binding.toolbar);
         configureActionBar(getSupportActionBar());
@@ -315,7 +320,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
             }
 
             final Bookmark bookmark = mConversation.getBookmark();
-            if (bookmark != null && mConversation.getAccount().getXmppConnection().getFeatures().bookmarks2()) {
+            if (bookmark != null && mConversation.getAccount().getXmppConnection().getFeatures().bookmarks2() && showDynamicTags) {
                 for (final ListItem.Tag group : bookmark.getGroupTags()) {
                     binding.editTags.addObjectSync(group);
                 }
@@ -634,7 +639,7 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         }
 
         List<ListItem.Tag> tagList = bookmark.getTags(this);
-        if (tagList.size() == 0) {
+        if (tagList.size() == 0 || !showDynamicTags) {
             binding.tags.setVisibility(View.GONE);
         } else {
             final LayoutInflater inflater = getLayoutInflater();

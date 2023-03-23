@@ -356,7 +356,7 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
                        .map(e -> e.getKey()).collect(Collectors.toList())
                     );
                     binding.editTags.setAdapter(adapter);
-                    binding.editTags.setVisibility(View.VISIBLE);
+                    if (showDynamicTags) binding.editTags.setVisibility(View.VISIBLE);
                     if (save != null) save.setVisible(true);
                 } else {
                     menuItem.collapseActionView();
