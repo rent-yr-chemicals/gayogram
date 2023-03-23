@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <attr name="icon_email" format="reference" />
+    <attr name="icon_link" format="reference" />
+    <attr name="icon_org" format="reference" />
+    <attr name="icon_chat" format="reference" />
+</resources>

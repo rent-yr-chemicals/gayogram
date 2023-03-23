@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,11 +17,13 @@ import android.provider.ContactsContract.Intents;
 import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -31,6 +34,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.databinding.DataBindingUtil;
+
+import com.cheogram.android.Util;
 
 import org.openintents.openpgp.util.OpenPgpUtils;
 
@@ -48,6 +53,7 @@ import eu.siacs.conversations.crypto.axolotl.AxolotlService;
 import eu.siacs.conversations.crypto.axolotl.FingerprintStatus;
 import eu.siacs.conversations.crypto.axolotl.XmppAxolotlSession;
 import eu.siacs.conversations.databinding.ActivityContactDetailsBinding;
+import eu.siacs.conversations.databinding.CommandRowBinding;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Bookmark;
 import eu.siacs.conversations.entities.Contact;
@@ -62,6 +68,7 @@ import eu.siacs.conversations.ui.util.AvatarWorkerTask;
 import eu.siacs.conversations.ui.util.GridManager;
 import eu.siacs.conversations.ui.util.JidDialog;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
+import eu.siacs.conversations.ui.util.ShareUtil;
 import eu.siacs.conversations.utils.AccountUtils;
 import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.Emoticons;
@@ -69,6 +76,7 @@ import eu.siacs.conversations.utils.IrregularUnicodeDetector;
 import eu.siacs.conversations.utils.PhoneNumberUtilWrapper;
 import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.utils.XmppUri;
+import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.OnKeyStatusUpdated;
@@ -622,6 +630,47 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
                 xmppConnectionService.getAttachments(account, contact.getJid().asBareJid(), limit, this);
                 this.binding.showMedia.setOnClickListener((v) -> MediaBrowserActivity.launch(this, contact));
             }
+
+            final VcardAdapter items = new VcardAdapter();
+            binding.profileItems.setAdapter(items);
+            binding.profileItems.setOnItemClickListener((a0, v, pos, a3) -> {
+                final Uri uri = items.getUri(pos);
+                if (uri == null) return;
+
+                if (uri.getScheme().equals("xmpp")) {
+                    switchToConversation(xmppConnectionService.findOrCreateConversation(account, Jid.of(uri.getSchemeSpecificPart()), false, true));
+                } else {
+                    Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                    startActivity(intent);
+                }
+            });
+            binding.profileItems.setOnItemLongClickListener((a0, v, pos, a3) -> {
+                String toCopy = null;
+                final Uri uri = items.getUri(pos);
+                if (uri != null) toCopy = uri.toString();
+                if (toCopy == null) {
+                    toCopy = items.getItem(pos).findChildContent("text", Namespace.VCARD4);
+                }
+
+                if (toCopy == null) return false;
+                if (ShareUtil.copyTextToClipboard(ContactDetailsActivity.this, toCopy, R.string.message)) {
+                    Toast.makeText(ContactDetailsActivity.this, R.string.message_copied_to_clipboard, Toast.LENGTH_SHORT).show();
+                }
+                return true;
+            });
+            xmppConnectionService.fetchVcard4(account, contact, (vcard4) -> {
+                if (vcard4 == null) return;
+
+                runOnUiThread(() -> {
+                    for (Element el : vcard4.getChildren()) {
+                        if (el.findChildEnsureSingle("uri", Namespace.VCARD4) != null || el.findChildEnsureSingle("text", Namespace.VCARD4) != null) {
+                            items.add(el);
+                        }
+                    }
+                    Util.justifyListViewHeightBasedOnChildren(binding.profileItems);
+                });
+            });
+
             populateView();
         }
     }
@@ -650,5 +699,68 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
             binding.mediaWrapper.setVisibility(attachments.size() > 0 ? View.VISIBLE : View.GONE);
         });
 
+    }
+
+    class VcardAdapter extends ArrayAdapter<Element> {
+        VcardAdapter() { super(ContactDetailsActivity.this, 0); }
+
+        private Drawable getDrawable(int attr) {
+            final TypedValue typedvalueattr = new TypedValue();
+            getTheme().resolveAttribute(attr, typedvalueattr, true);
+            return getResources().getDrawable(typedvalueattr.resourceId);
+        }
+
+        @Override
+        public View getView(int position, View view, @NonNull ViewGroup parent) {
+            final CommandRowBinding binding = DataBindingUtil.inflate(LayoutInflater.from(parent.getContext()), R.layout.command_row, parent, false);
+            final Element item = getItem(position);
+
+            if (item.getName().equals("org")) {
+                binding.command.setCompoundDrawablesRelativeWithIntrinsicBounds(getDrawable(R.attr.icon_org), null, null, null);
+                binding.command.setCompoundDrawablePadding(20);
+            } else if (item.getName().equals("impp")) {
+                binding.command.setCompoundDrawablesRelativeWithIntrinsicBounds(getDrawable(R.attr.icon_chat), null, null, null);
+                binding.command.setCompoundDrawablePadding(20);
+            } else if (item.getName().equals("url")) {
+                binding.command.setCompoundDrawablesRelativeWithIntrinsicBounds(getDrawable(R.attr.icon_link), null, null, null);
+                binding.command.setCompoundDrawablePadding(20);
+            }
+
+            final Uri uri = getUri(position);
+            if (uri != null) {
+                if (uri.getScheme().equals("xmpp")) {
+                    binding.command.setText(uri.getSchemeSpecificPart());
+                    binding.command.setCompoundDrawablesRelativeWithIntrinsicBounds(getResources().getDrawable(R.drawable.jabber), null, null, null);
+                    binding.command.setCompoundDrawablePadding(20);
+                } else if (uri.getScheme().equals("tel")) {
+                    binding.command.setText(uri.getSchemeSpecificPart());
+                    binding.command.setCompoundDrawablesRelativeWithIntrinsicBounds(getDrawable(R.attr.ic_make_audio_call), null, null, null);
+                    binding.command.setCompoundDrawablePadding(20);
+                } else if (uri.getScheme().equals("mailto")) {
+                    binding.command.setText(uri.getSchemeSpecificPart());
+                    binding.command.setCompoundDrawablesRelativeWithIntrinsicBounds(getDrawable(R.attr.icon_email), null, null, null);
+                    binding.command.setCompoundDrawablePadding(20);
+                } else if (uri.getScheme().equals("http") || uri.getScheme().equals("https")) {
+                    binding.command.setText(uri.toString());
+                    binding.command.setCompoundDrawablesRelativeWithIntrinsicBounds(getDrawable(R.attr.icon_link), null, null, null);
+                    binding.command.setCompoundDrawablePadding(20);
+                } else {
+                    binding.command.setText(uri.toString());
+                }
+            } else {
+                final String text = item.findChildContent("text", Namespace.VCARD4);
+                binding.command.setText(text);
+            }
+
+            return binding.getRoot();
+        }
+
+        public Uri getUri(int pos) {
+            final Element item = getItem(pos);
+            final String uriS = item.findChildContent("uri", Namespace.VCARD4);
+            if (uriS != null) return Uri.parse(uriS).normalizeScheme();
+            if (item.getName().equals("email")) return Uri.parse("mailto:" + item.findChildContent("text", Namespace.VCARD4));
+            return null;
+        }
     }
 }

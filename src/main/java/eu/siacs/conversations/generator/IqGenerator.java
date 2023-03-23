@@ -135,6 +135,12 @@ public class IqGenerator extends AbstractGenerator {
         return packet;
     }
 
+    public IqPacket retrieveVcard4(final Jid jid) {
+        final IqPacket packet = retrieve("urn:xmpp:vcard4", null);
+        packet.setTo(jid);
+        return packet;
+    }
+
     public IqPacket retrieveBookmarks() {
         return retrieve(Namespace.BOOKMARKS2, null);
     }

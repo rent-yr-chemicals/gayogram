@@ -4152,6 +4152,35 @@ public class XmppConnectionService extends Service {
         }
     }
 
+    public void fetchVcard4(Account account, final Contact contact, final Consumer<Element> callback) {
+        IqPacket packet = this.mIqGenerator.retrieveVcard4(contact.getJid());
+        sendIqPacket(account, packet, (a, result) -> {
+            if (result.getType() == IqPacket.TYPE.RESULT) {
+                final Element item = mIqParser.getItem(result);
+                if (item != null) {
+                    final Element vcard4 = item.findChild("vcard", Namespace.VCARD4);
+                    if (vcard4 != null) {
+                        if (callback != null) {
+                            callback.accept(vcard4);
+                        }
+                        return;
+                    }
+                }
+            } else {
+                Element error = result.findChild("error");
+                if (error == null) {
+                    Log.d(Config.LOGTAG, "fetchVcard4 (server error)");
+                } else {
+                    Log.d(Config.LOGTAG, "fetchVcard4 " + error.toString());
+                }
+            }
+            if (callback != null) {
+                callback.accept(null);
+            }
+
+        });
+    }
+
     public void deleteContactOnServer(Contact contact) {
         contact.resetOption(Contact.Options.PREEMPTIVE_GRANT);
         contact.resetOption(Contact.Options.DIRTY_PUSH);
