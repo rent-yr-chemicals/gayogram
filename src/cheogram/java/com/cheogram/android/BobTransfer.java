@@ -4,6 +4,8 @@ import android.net.Uri;
 import android.util.Base64;
 import android.util.Log;
 
+import java.util.Map;
+import java.util.HashMap;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -36,6 +38,7 @@ public class BobTransfer implements Transferable {
 	protected Account account;
 	protected Jid to;
 	protected XmppConnectionService xmppConnectionService;
+	protected static Map<URI, Long> attempts = new HashMap<>();
 
 	public static Cid cid(Uri uri) {
 		if (uri == null || uri.getScheme() == null || !uri.getScheme().equals("cid")) return null;
@@ -84,7 +87,8 @@ public class BobTransfer implements Transferable {
 			return true;
 		}
 
-		if (xmppConnectionService.hasInternetConnection()) {
+		if (xmppConnectionService.hasInternetConnection() && attempts.getOrDefault(uri, 0L) + 10000L < System.currentTimeMillis()) {
+         attempts.put(uri, System.currentTimeMillis());
 			changeStatus(Transferable.STATUS_DOWNLOADING);
 
 			IqPacket request = new IqPacket(IqPacket.TYPE.GET);
@@ -113,14 +117,19 @@ public class BobTransfer implements Transferable {
 						}
 
 						final OutputStream outputStream = AbstractConnectionManager.createOutputStream(new DownloadableFile(file.getAbsolutePath()), false, false);
-						outputStream.write(bytes);
-						outputStream.flush();
-						outputStream.close();
 
-						finish(file);
+						if (outputStream != null && bytes != null) {
+							outputStream.write(bytes);
+							outputStream.flush();
+							outputStream.close();
+							finish(file);
+						} else {
+							Log.w(Config.LOGTAG, "Could not write BobTransfer, null outputStream");
+							finish(null);
+						}
 					} catch (final IOException | XmppConnectionService.BlockedMediaException e) {
+						Log.w(Config.LOGTAG, "Could not write BobTransfer: " + e);
 						finish(null);
-						xmppConnectionService.showErrorToastInUi(R.string.download_failed_could_not_write_file);
 					}
 				}
 			});
