@@ -3001,9 +3001,7 @@ public class ConversationFragment extends XmppFragment
                     if (discoJid != null) commandJid = discoJid;
                 }
                 if (node != null && commandJid != null) {
-                    if (!conversation.switchToSession(node)) {
-                        conversation.startCommand(commandFor(commandJid, node), activity.xmppConnectionService);
-                    }
+                    conversation.startCommand(commandFor(commandJid, node), activity.xmppConnectionService);
                 }
             });
             return;

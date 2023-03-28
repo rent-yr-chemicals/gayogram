@@ -200,11 +200,6 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
             return false;
         }
 
-        if (xmppConnectionService.isOnboarding() && xmppConnectionService.getConversations().size() < 2 && mRedirectInProcess.compareAndSet(false, true)) {
-            startCommand(xmppConnectionService.getAccounts().get(0), Jid.of("cheogram.com/CHEOGRAM%jabber:iq:register"), "jabber:iq:register");
-            return mRedirectInProcess.get();
-        }
-
         boolean isConversationsListEmpty = xmppConnectionService.isConversationsListEmpty(ignore);
         if (isConversationsListEmpty && mRedirectInProcess.compareAndSet(false, true)) {
             final Intent intent = SignupUtils.getRedirectionIntent(this);
