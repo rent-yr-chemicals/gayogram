@@ -797,7 +797,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 }
             }
         } else if ((QuickConversationsService.isConversations() || !Config.QUICKSY_DOMAIN.equals(contactJid.getDomain())) && isWithStranger()) {
-            return contactJid.equals(Jid.of("cheogram.com")) ? "Cheogram" : contactJid;
+            return contactJid;
         } else {
             return this.getContact().getDisplayName();
         }
