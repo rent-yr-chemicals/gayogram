@@ -2552,7 +2552,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     if (!actionsAdapter.isEmpty() || fillableFieldCount > 0) {
                         if (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled")) {
                             actionsAdapter.add(Pair.create("close", "close"));
-                        } else if (actionsAdapter.getPosition("cancel") < 0) {
+                        } else if (actionsAdapter.getPosition("cancel") < 0 && !xmppConnectionService.isOnboarding()) {
                             actionsAdapter.insert(Pair.create("cancel", "cancel"), 0);
                         }
                     }
@@ -2561,6 +2561,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 if (actionsAdapter.isEmpty()) {
                     actionsAdapter.add(Pair.create("close", "close"));
                 }
+
+                actionsAdapter.sort((x, y) -> {
+                    if (x.first.equals("cancel")) return -1;
+                    if (y.first.equals("cancel")) return 1;
+                    if (x.first.equals("prev") && xmppConnectionService.isOnboarding()) return -1;
+                    if (y.first.equals("prev") && xmppConnectionService.isOnboarding()) return 1;
+                    return 0;
+                });
 
                 Data dataForm = null;
                 if (responseElement != null && responseElement.getName().equals("x") && responseElement.getNamespace().equals("jabber:x:data")) dataForm = Data.parse(responseElement);
