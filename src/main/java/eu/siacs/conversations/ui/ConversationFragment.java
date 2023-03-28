@@ -2864,6 +2864,9 @@ public class ConversationFragment extends XmppFragment
         if (commandAdapter == null) return;
 
         Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
+        if (commandJid == null && conversation.getJid().isDomainJid()) {
+            commandJid = conversation.getJid();
+        }
         if (commandJid == null) {
             conversation.hideViewPager();
         } else {
