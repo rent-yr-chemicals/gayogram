@@ -1307,8 +1307,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         return pagerAdapter.switchToSession(node);
     }
 
-    public void setupViewPager(ViewPager pager, TabLayout tabs) {
-        pagerAdapter.setupViewPager(pager, tabs);
+    public void setupViewPager(ViewPager pager, TabLayout tabs, boolean onboarding) {
+        pagerAdapter.setupViewPager(pager, tabs, onboarding);
     }
 
     public void showViewPager() {
@@ -1347,10 +1347,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         ArrayList<CommandSession> sessions = null;
         protected View page1 = null;
         protected View page2 = null;
+        protected boolean mOnboarding = false;
 
-        public void setupViewPager(ViewPager pager, TabLayout tabs) {
+        public void setupViewPager(ViewPager pager, TabLayout tabs, boolean onboarding) {
             mPager = pager;
             mTabs = tabs;
+            mOnboarding = onboarding;
 
             if (mPager == null) return;
             if (sessions != null) show();
@@ -1376,7 +1378,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 sessions = new ArrayList<>();
                 notifyDataSetChanged();
             }
-            if (mTabs != null) mTabs.setVisibility(View.VISIBLE);
+            if (!mOnboarding && mTabs != null) mTabs.setVisibility(View.VISIBLE);
         }
 
         public void hide() {

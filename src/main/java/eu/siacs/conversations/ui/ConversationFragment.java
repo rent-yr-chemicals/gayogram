@@ -1359,7 +1359,7 @@ public class ConversationFragment extends XmppFragment
         messageListAdapter.setOnContactPictureClicked(null);
         messageListAdapter.setOnContactPictureLongClicked(null);
         messageListAdapter.setOnInlineImageLongClicked(null);
-        if (conversation != null) conversation.setupViewPager(null, null);
+        if (conversation != null) conversation.setupViewPager(null, null, false);
     }
 
     private void quoteText(String text) {
@@ -2838,12 +2838,12 @@ public class ConversationFragment extends XmppFragment
                 .setOpenConversation(this.conversation);
 
         if (commandAdapter != null && conversation != originalConversation) {
-            originalConversation.setupViewPager(null, null);
-            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout);
+            originalConversation.setupViewPager(null, null, false);
+            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout, activity.xmppConnectionService.isOnboarding());
             refreshCommands(false);
         }
         if (commandAdapter == null && conversation != null) {
-            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout);
+            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout, activity.xmppConnectionService.isOnboarding());
             commandAdapter = new CommandAdapter((XmppActivity) getActivity());
             binding.commandsView.setAdapter(commandAdapter);
             binding.commandsView.setOnItemClickListener((parent, view, position, id) -> {
@@ -3001,7 +3001,6 @@ public class ConversationFragment extends XmppFragment
                     if (!conversation.switchToSession(node)) {
                         conversation.startCommand(commandFor(commandJid, node), activity.xmppConnectionService);
                     }
-                    if (activity.xmppConnectionService.isOnboarding()) binding.tabLayout.setVisibility(View.GONE);
                 }
             });
             return;
