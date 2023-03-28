@@ -582,7 +582,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
             final Conversation conversation = xmppConnectionService.findUniqueConversationByJid(xmppUri);
             if (conversation != null) {
                 if (xmppUri.isAction("command")) {
-                    startCommand(conversation.getAccount(), conversation.getJid(), xmppUri.getParameter("node"));
+                    startCommand(conversation.getAccount(), xmppUri.getJid(), xmppUri.getParameter("node"));
                 } else {
                     Bundle extras = new Bundle();
                     extras.putString(Intent.EXTRA_TEXT, xmppUri.getBody());
