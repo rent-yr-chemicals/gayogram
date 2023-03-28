@@ -1397,6 +1397,20 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             c.setAttribute("node", command.getAttribute("node"));
             c.setAttribute("action", "execute");
 
+            final TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    if (getAccount().getStatus() != Account.State.ONLINE) {
+                        new Timer().schedule(this, 1000);
+                    } else {
+                        xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
+                            session.updateWithResponse(iq);
+                        });
+                    }
+                }
+            };
+            task.run();
+
             if (command.getAttribute("node").equals("jabber:iq:register") && packet.getTo().asBareJid().equals(Jid.of("cheogram.com"))) {
                 new com.cheogram.android.CheogramLicenseChecker(mPager.getContext(), (signedData, signature) -> {
                     if (signedData != null && signature != null) {
@@ -1404,14 +1418,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         c.addChild("licenseSignature", "https://ns.cheogram.com/google-play").setContent(signature);
                     }
 
-                    xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
-                        session.updateWithResponse(iq);
-                    });
+                    task.run();
                 }).checkLicense();
             } else {
-                xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
-                    session.updateWithResponse(iq);
-                });
+                task.run();
             }
 
             sessions.add(session);
