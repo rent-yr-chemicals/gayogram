@@ -2998,7 +2998,9 @@ public class ConversationFragment extends XmppFragment
                     if (discoJid != null) commandJid = discoJid;
                 }
                 if (node != null && commandJid != null) {
-                    conversation.startCommand(commandFor(commandJid, node), activity.xmppConnectionService);
+                    if (!conversation.switchToSession(node)) {
+                        conversation.startCommand(commandFor(commandJid, node), activity.xmppConnectionService);
+                    }
                     if (activity.xmppConnectionService.isOnboarding()) binding.tabLayout.setVisibility(View.GONE);
                 }
             });

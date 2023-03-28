@@ -1303,6 +1303,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         pagerAdapter.startCommand(command, xmppConnectionService);
     }
 
+    public boolean switchToSession(final String node) {
+        return pagerAdapter.switchToSession(node);
+    }
+
     public void setupViewPager(ViewPager pager, TabLayout tabs) {
         pagerAdapter.setupViewPager(pager, tabs);
     }
@@ -1418,6 +1422,21 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         public void removeSession(CommandSession session) {
             sessions.remove(session);
             notifyDataSetChanged();
+        }
+
+        public boolean switchToSession(final String node) {
+            if (sessions == null) return false;
+
+            int i = 0;
+            for (CommandSession session : sessions) {
+                if (session.mNode.equals(node)) {
+                    if (mPager != null) mPager.setCurrentItem(i + 2);
+                    return true;
+                }
+                i++;
+            }
+
+            return false;
         }
 
         @NonNull
