@@ -222,7 +222,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
     }
 
     private void showDialogsIfMainIsOverview() {
-        if (xmppConnectionService == null) {
+        if (xmppConnectionService == null || xmppConnectionService.isOnboarding()) {
             return;
         }
         final Fragment fragment = getFragmentManager().findFragmentById(R.id.main_fragment);
