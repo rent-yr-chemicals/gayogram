@@ -55,6 +55,7 @@ dependencies {
         exclude group: 'com.google.firebase', module: 'firebase-measurement-connector'
     }
     cheogramPlaystoreImplementation("com.android.installreferrer:installreferrer:2.2")
+    cheogramPlaystoreImplementation 'com.github.singpolyma:play-licensing:1c637ea03c'
     conversationsPlaystoreImplementation("com.android.installreferrer:installreferrer:2.2")
     quicksyPlaystoreImplementation 'com.google.android.gms:play-services-auth-api-phone:18.0.1'
     implementation 'org.sufficientlysecure:openpgp-api:10.0'

@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="applicationId">com.cheogram.android.playstore</string>
+    <string name="licensePublicKey">MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAlcl4jV0uqcCD9EX8RS2FuxtkZIrAyQhBHFWWaYXH+Fdh2KO6bykD0sabYxAtKDquSagkQKgiDsj7lKdk01tI+3prGI1D96ml7bzRmGt82PltR1e7sE9FTfhzn2+6zWOcsabZEgCZRBBIY2TUZtWlagJE7aJncS/sERjdaiRkDqDnCqsBjLvRcfEEnc3KJjhQicv4GTau5wJnXWQcgz5FPe2j0sIQjbzHrSHn0omKV9ObwxDYn5JPfBV/0nePLUFrkONrRsNy7311aVJOj4Hqd4y74vRjdBV9hI+PLJ9R+y4p1nhV1F3Ih/VAsw5pDECpe/sKput/lpIsxnn/W3DKvQIDAQAB</string>
 </resources>
