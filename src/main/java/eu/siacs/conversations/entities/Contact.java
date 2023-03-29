@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
+import eu.siacs.conversations.BuildConfig;
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.android.AbstractPhoneContact;
@@ -641,7 +642,7 @@ public class Contact implements ListItem, Blockable {
 
     public PhoneAccountHandle phoneAccountHandle() {
         ComponentName componentName = new ComponentName(
-            "com.cheogram.android",
+            BuildConfig.APPLICATION_ID,
             "com.cheogram.android.ConnectionService"
         );
         return new PhoneAccountHandle(componentName, phoneAccountLabel());
