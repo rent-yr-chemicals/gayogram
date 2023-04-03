@@ -1202,6 +1202,8 @@ public class ConversationFragment extends XmppFragment
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
+        if (activity.xmppConnectionService.isOnboarding()) return;
+
         menuInflater.inflate(R.menu.fragment_conversation, menu);
         final MenuItem menuMucDetails = menu.findItem(R.id.action_muc_details);
         final MenuItem menuContactDetails = menu.findItem(R.id.action_contact_details);
@@ -1357,7 +1359,7 @@ public class ConversationFragment extends XmppFragment
         messageListAdapter.setOnContactPictureClicked(null);
         messageListAdapter.setOnContactPictureLongClicked(null);
         messageListAdapter.setOnInlineImageLongClicked(null);
-        if (conversation != null) conversation.setupViewPager(null, null);
+        if (conversation != null) conversation.setupViewPager(null, null, false);
     }
 
     private void quoteText(String text) {
@@ -2836,12 +2838,12 @@ public class ConversationFragment extends XmppFragment
                 .setOpenConversation(this.conversation);
 
         if (commandAdapter != null && conversation != originalConversation) {
-            originalConversation.setupViewPager(null, null);
-            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout);
+            originalConversation.setupViewPager(null, null, false);
+            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout, activity.xmppConnectionService.isOnboarding());
             refreshCommands(false);
         }
         if (commandAdapter == null && conversation != null) {
-            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout);
+            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout, activity.xmppConnectionService.isOnboarding());
             commandAdapter = new CommandAdapter((XmppActivity) getActivity());
             binding.commandsView.setAdapter(commandAdapter);
             binding.commandsView.setOnItemClickListener((parent, view, position, id) -> {
@@ -2862,6 +2864,9 @@ public class ConversationFragment extends XmppFragment
         if (commandAdapter == null) return;
 
         Jid commandJid = conversation.getContact().resourceWhichSupport(Namespace.COMMANDS);
+        if (commandJid == null && conversation.getJid().isDomainJid()) {
+            commandJid = conversation.getJid();
+        }
         if (commandJid == null) {
             conversation.hideViewPager();
         } else {
@@ -3005,6 +3010,11 @@ public class ConversationFragment extends XmppFragment
                 downloadUuid == null ? null : conversation.findMessageWithFileAndUuid(downloadUuid);
         if (message != null) {
             startDownloadable(message);
+        }
+        if (activity.xmppConnectionService.isOnboarding() && conversation.getJid().equals(Jid.of("cheogram.com"))) {
+            if (!conversation.switchToSession("jabber:iq:register")) {
+                conversation.startCommand(commandFor(Jid.of("cheogram.com/CHEOGRAM%jabber:iq:register"), "jabber:iq:register"), activity.xmppConnectionService);
+            }
         }
     }
 

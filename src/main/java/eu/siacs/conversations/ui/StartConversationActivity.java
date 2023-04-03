@@ -95,9 +95,13 @@ import eu.siacs.conversations.ui.widget.SwipeRefreshListFragment;
 import eu.siacs.conversations.utils.AccountUtils;
 import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.utils.XmppUri;
+import eu.siacs.conversations.xml.Element;
+import eu.siacs.conversations.xml.Namespace;
 import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.OnUpdateBlocklist;
 import eu.siacs.conversations.xmpp.XmppConnection;
+import eu.siacs.conversations.xmpp.forms.Data;
+import eu.siacs.conversations.xmpp.stanzas.IqPacket;
 
 public class StartConversationActivity extends XmppActivity implements XmppConnectionService.OnConversationUpdate, OnRosterUpdate, OnUpdateBlocklist, CreatePrivateGroupChatDialog.CreateConferenceDialogListener, JoinConferenceDialog.JoinConferenceDialogListener, SwipeRefreshLayout.OnRefreshListener, CreatePublicChannelDialog.CreatePublicChannelDialogListener {
 
@@ -913,13 +917,19 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
         configureHomeButton();
         Intent intent = pendingViewIntent.pop();
 
-        if (intent != null && intent.getBooleanExtra("init", false)) {
+        final boolean onboardingCancel = xmppConnectionService.getPreferences().getString("onboarding_action", "").equals("cancel");
+        if (onboardingCancel) xmppConnectionService.getPreferences().edit().remove("onboarding_action").commit();
+
+        if (intent != null && intent.getBooleanExtra("init", false) && !onboardingCancel) {
             Account selectedAccount = xmppConnectionService.getAccounts().get(0);
             final String accountJid = intent.getStringExtra(EXTRA_ACCOUNT);
             intent = null;
             boolean hasPstnOrSms = false;
+            Account onboardingAccount = null;
             outer:
             for (Account account : xmppConnectionService.getAccounts()) {
+                if (onboardingAccount == null && account.getJid().getDomain().equals(Config.ONBOARDING_DOMAIN)) onboardingAccount = account;
+
                 if (accountJid != null) {
                     if(account.getJid().asBareJid().toEscapedString().equals(accountJid)) {
                         selectedAccount = account;
@@ -941,9 +951,88 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
             }
 
             if (!hasPstnOrSms) {
-                startCommand(selectedAccount, Jid.of("cheogram.com/CHEOGRAM%jabber:iq:register"), "jabber:iq:register");
-                finish();
-                return;
+                if (onboardingAccount != null && !selectedAccount.getJid().equals(onboardingAccount.getJid())) {
+                    final Account onboardAccount = onboardingAccount;
+                    final Account newAccount = selectedAccount;
+                    final IqPacket packet = new IqPacket(IqPacket.TYPE.SET);
+                    packet.setTo(Jid.of("cheogram.com"));
+                    final Element c = packet.addChild("command", Namespace.COMMANDS);
+                    c.setAttribute("node", "change jabber id");
+                    c.setAttribute("action", "execute");
+
+                    xmppConnectionService.sendIqPacket(onboardingAccount, packet, (a, iq) -> {
+                        Element command = iq.findChild("command", "http://jabber.org/protocol/commands");
+                        if (command == null) {
+                            Log.e(Config.LOGTAG, "Did not get expected data form from cheogram, got: " + iq);
+                            return;
+                        }
+
+                        Element form = command.findChild("x", "jabber:x:data");
+                        Data dataForm = form == null ? null : Data.parse(form);
+                        if (dataForm == null || dataForm.getFieldByName("new-jid") == null) {
+                            Log.e(Config.LOGTAG, "Did not get expected data form from cheogram, got: " + iq);
+                            return;
+                        }
+
+                        dataForm.put("new-jid", newAccount.getJid().toEscapedString());
+                        dataForm.submit();
+                        command.setAttribute("action", "execute");
+                        iq.setTo(iq.getFrom());
+                        iq.setAttribute("type", "set");
+                        iq.removeAttribute("from");
+                        iq.removeAttribute("id");
+                        xmppConnectionService.sendIqPacket(a, iq, (a2, iq2) -> {
+                            Element command2 = iq2.findChild("command", "http://jabber.org/protocol/commands");
+                            if (command2 != null && command2.getAttribute("status") != null && command2.getAttribute("status").equals("completed")) {
+                                final IqPacket regPacket = new IqPacket(IqPacket.TYPE.SET);
+                                regPacket.setTo(Jid.of("cheogram.com/CHEOGRAM%jabber:iq:register"));
+                                final Element c2 = regPacket.addChild("command", Namespace.COMMANDS);
+                                c2.setAttribute("node", "jabber:iq:register");
+                                c2.setAttribute("action", "execute");
+                                xmppConnectionService.sendIqPacket(newAccount, regPacket, (a3, iq3) -> {
+                                    Element command3 = iq3.findChild("command", "http://jabber.org/protocol/commands");
+                                    if (command3 == null) {
+                                        Log.e(Config.LOGTAG, "Did not get expected data form from cheogram, got: " + iq3);
+                                        return;
+                                    }
+
+                                    Element form3 = command3.findChild("x", "jabber:x:data");
+                                    Data dataForm3 = form3 == null ? null : Data.parse(form3);
+                                    if (dataForm3 == null || dataForm3.getFieldByName("confirm") == null) {
+                                        Log.e(Config.LOGTAG, "Did not get expected data form from cheogram, got: " + iq3);
+                                        return;
+                                    }
+
+                                    dataForm3.put("confirm", "true");
+                                    dataForm3.submit();
+                                    command3.setAttribute("action", "execute");
+                                    iq3.setTo(iq3.getFrom());
+                                    iq3.setAttribute("type", "set");
+                                    iq3.removeAttribute("from");
+                                    iq3.removeAttribute("id");
+                                    xmppConnectionService.sendIqPacket(newAccount, iq3, (a4, iq4) -> {
+                                        Element command4 = iq2.findChild("command", "http://jabber.org/protocol/commands");
+                                        if (command4 != null && command4.getAttribute("status") != null && command4.getAttribute("status").equals("completed")) {
+                                            xmppConnectionService.createContact(newAccount.getRoster().getContact(iq4.getFrom().asBareJid()), true);
+                                            Conversation withCheogram = xmppConnectionService.findOrCreateConversation(newAccount, iq4.getFrom().asBareJid(), true, true, true);
+                                            xmppConnectionService.markRead(withCheogram);
+                                            xmppConnectionService.clearConversationHistory(withCheogram);
+                                            xmppConnectionService.deleteAccount(onboardAccount);
+                                        } else {
+                                            Log.e(Config.LOGTAG, "Error confirming jid switch, got: " + iq4);
+                                        }
+                                    });
+                                });
+                            } else {
+                                Log.e(Config.LOGTAG, "Error during jid switch, got: " + iq2);
+                            }
+                        });
+                    });
+                } else {
+                    startCommand(selectedAccount, Jid.of("cheogram.com/CHEOGRAM%jabber:iq:register"), "jabber:iq:register");
+                    finish();
+                    return;
+                }
             }
         }
 
@@ -1119,7 +1208,7 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
 
         final boolean sopranicaDeleted = getPreferences().getBoolean("cheogram_sopranica_bookmark_deleted", false);
 
-        if (!sopranicaDeleted && !foundSopranica && (needle == null || needle.equals(""))) {
+        if (!sopranicaDeleted && !foundSopranica && (needle == null || needle.equals("")) && xmppConnectionService.getAccounts().size() > 0) {
             Bookmark bookmark = new Bookmark(
                 xmppConnectionService.getAccounts().get(0),
                 Jid.of("discuss@conference.soprani.ca")

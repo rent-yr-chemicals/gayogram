@@ -3,6 +3,7 @@ package eu.siacs.conversations.entities;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.DataSetObserver;
 import android.graphics.drawable.BitmapDrawable;
@@ -102,6 +103,7 @@ import eu.siacs.conversations.persistance.DatabaseBackend;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.services.XmppConnectionService;
+import eu.siacs.conversations.ui.UriHandlerActivity;
 import eu.siacs.conversations.ui.text.FixedURLSpan;
 import eu.siacs.conversations.ui.util.ShareUtil;
 import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
@@ -1301,8 +1303,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         pagerAdapter.startCommand(command, xmppConnectionService);
     }
 
-    public void setupViewPager(ViewPager pager, TabLayout tabs) {
-        pagerAdapter.setupViewPager(pager, tabs);
+    public boolean switchToSession(final String node) {
+        return pagerAdapter.switchToSession(node);
+    }
+
+    public void setupViewPager(ViewPager pager, TabLayout tabs, boolean onboarding) {
+        pagerAdapter.setupViewPager(pager, tabs, onboarding);
     }
 
     public void showViewPager() {
@@ -1341,10 +1347,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         ArrayList<CommandSession> sessions = null;
         protected View page1 = null;
         protected View page2 = null;
+        protected boolean mOnboarding = false;
 
-        public void setupViewPager(ViewPager pager, TabLayout tabs) {
+        public void setupViewPager(ViewPager pager, TabLayout tabs, boolean onboarding) {
             mPager = pager;
             mTabs = tabs;
+            mOnboarding = onboarding;
 
             if (mPager == null) return;
             if (sessions != null) show();
@@ -1370,7 +1378,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 sessions = new ArrayList<>();
                 notifyDataSetChanged();
             }
-            if (mTabs != null) mTabs.setVisibility(View.VISIBLE);
+            if (!mOnboarding && mTabs != null) mTabs.setVisibility(View.VISIBLE);
         }
 
         public void hide() {
@@ -1390,27 +1398,32 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final Element c = packet.addChild("command", Namespace.COMMANDS);
             c.setAttribute("node", command.getAttribute("node"));
             c.setAttribute("action", "execute");
-            View v = mPager;
+
+            final TimerTask task = new TimerTask() {
+                @Override
+                public void run() {
+                    if (getAccount().getStatus() != Account.State.ONLINE) {
+                        new Timer().schedule(this, 1000);
+                    } else {
+                        xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
+                            session.updateWithResponse(iq);
+                        });
+                    }
+                }
+            };
+            task.run();
 
             if (command.getAttribute("node").equals("jabber:iq:register") && packet.getTo().asBareJid().equals(Jid.of("cheogram.com"))) {
-                new com.cheogram.android.CheogramLicenseChecker(v.getContext(), (signedData, signature) -> {
+                new com.cheogram.android.CheogramLicenseChecker(mPager.getContext(), (signedData, signature) -> {
                     if (signedData != null && signature != null) {
                         c.addChild("license", "https://ns.cheogram.com/google-play").setContent(signedData);
                         c.addChild("licenseSignature", "https://ns.cheogram.com/google-play").setContent(signature);
                     }
 
-                    xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
-                        v.post(() -> {
-                            session.updateWithResponse(iq);
-                        });
-                    });
+                    task.run();
                 }).checkLicense();
             } else {
-                xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
-                    v.post(() -> {
-                        session.updateWithResponse(iq);
-                    });
-                });
+                task.run();
             }
 
             sessions.add(session);
@@ -1421,6 +1434,21 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         public void removeSession(CommandSession session) {
             sessions.remove(session);
             notifyDataSetChanged();
+        }
+
+        public boolean switchToSession(final String node) {
+            if (sessions == null) return false;
+
+            int i = 0;
+            for (CommandSession session : sessions) {
+                if (session.mNode.equals(node)) {
+                    if (mPager != null) mPager.setCurrentItem(i + 2);
+                    return true;
+                }
+                i++;
+            }
+
+            return false;
         }
 
         @NonNull
@@ -2376,6 +2404,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected GridLayoutManager layoutManager;
             protected WebView actionToWebview = null;
             protected int fillableFieldCount = 0;
+            protected IqPacket pendingResponsePacket = null;
 
             CommandSession(String title, String node, XmppConnectionService xmppConnectionService) {
                 loading();
@@ -2401,7 +2430,15 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return mTitle;
             }
 
-            public void updateWithResponse(IqPacket iq) {
+            public void updateWithResponse(final IqPacket iq) {
+                if (getView() != null && getView().isAttachedToWindow()) {
+                    getView().post(() -> updateWithResponseUiThread(iq));
+                } else {
+                    pendingResponsePacket = iq;
+                }
+            }
+
+            protected void updateWithResponseUiThread(final IqPacket iq) {
                 this.loadingTimer.cancel();
                 this.loadingTimer = new Timer();
                 this.loading = false;
@@ -2476,6 +2513,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                     this.responseElement = el;
                                     break;
                                 }
+                                if (scheme.equals("xmpp")) {
+                                    final Intent intent = new Intent(getView().getContext(), UriHandlerActivity.class);
+                                    intent.setAction(Intent.ACTION_VIEW);
+                                    intent.setData(Uri.parse(url));
+                                    getView().getContext().startActivity(intent);
+                                    break;
+                                }
                             }
                         }
                         if (el.getName().equals("note") && el.getNamespace().equals("http://jabber.org/protocol/commands")) {
@@ -2485,6 +2529,16 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     }
 
                     if (responseElement == null && command.getAttribute("status") != null && (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled"))) {
+                        if (mNode.equals("jabber:iq:register") && command.getAttribute("status").equals("canceled")) {
+                            if (xmppConnectionService.isOnboarding()) {
+                                if (!xmppConnectionService.getPreferences().contains("onboarding_action")) {
+                                    xmppConnectionService.getPreferences().edit().putString("onboarding_action", "cancel").commit();
+                                }
+                                xmppConnectionService.deleteAccount(getAccount());
+                            }
+                            xmppConnectionService.archiveConversation(Conversation.this);
+                        }
+
                         removeSession(this);
                         return;
                     }
@@ -2498,7 +2552,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     if (!actionsAdapter.isEmpty() || fillableFieldCount > 0) {
                         if (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled")) {
                             actionsAdapter.add(Pair.create("close", "close"));
-                        } else if (actionsAdapter.getPosition("cancel") < 0) {
+                        } else if (actionsAdapter.getPosition("cancel") < 0 && !xmppConnectionService.isOnboarding()) {
                             actionsAdapter.insert(Pair.create("cancel", "cancel"), 0);
                         }
                     }
@@ -2508,6 +2562,25 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     actionsAdapter.add(Pair.create("close", "close"));
                 }
 
+                actionsAdapter.sort((x, y) -> {
+                    if (x.first.equals("cancel")) return -1;
+                    if (y.first.equals("cancel")) return 1;
+                    if (x.first.equals("prev") && xmppConnectionService.isOnboarding()) return -1;
+                    if (y.first.equals("prev") && xmppConnectionService.isOnboarding()) return 1;
+                    return 0;
+                });
+
+                Data dataForm = null;
+                if (responseElement != null && responseElement.getName().equals("x") && responseElement.getNamespace().equals("jabber:x:data")) dataForm = Data.parse(responseElement);
+                if (mNode.equals("jabber:iq:register") &&
+                    xmppConnectionService.getPreferences().contains("onboarding_action") &&
+                    dataForm != null && dataForm.getFieldByName("gateway-jid") != null) {
+
+
+                    dataForm.put("gateway-jid", xmppConnectionService.getPreferences().getString("onboarding_action", ""));
+                    execute();
+                }
+                xmppConnectionService.getPreferences().edit().remove("onboarding_action").commit();
                 notifyDataSetChanged();
             }
 
@@ -2693,6 +2766,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             public View getView() {
+                if (mBinding == null) return null;
                 return mBinding.getRoot();
             }
 
@@ -2750,6 +2824,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         c.setAttribute("action", "execute");
                     }
 
+                    if (mNode.equals("jabber:iq:register") && xmppConnectionService.isOnboarding() && form.getValue("gateway-jid") != null) {
+                        xmppConnectionService.getPreferences().edit().putString("onboarding_action", form.getValue("gateway-jid")).commit();
+                    }
+
                     responseElement.setAttribute("type", "submit");
                     Element rsm = responseElement.findChild("set", "http://jabber.org/protocol/rsm");
                     if (rsm != null) {
@@ -2764,9 +2842,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 if (c.getAttribute("action") == null) c.setAttribute("action", action);
 
                 xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
-                    getView().post(() -> {
-                        updateWithResponse(iq);
-                    });
+                    updateWithResponse(iq);
                 });
 
                 loading();
@@ -2861,6 +2937,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 });
 
                 actionsAdapter.notifyDataSetChanged();
+
+                if (pendingResponsePacket != null) {
+                    final IqPacket pending = pendingResponsePacket;
+                    pendingResponsePacket = null;
+                    updateWithResponseUiThread(pending);
+                }
             }
 
             // https://stackoverflow.com/a/36037991/8611

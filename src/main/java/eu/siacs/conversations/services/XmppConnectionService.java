@@ -1805,6 +1805,10 @@ public class XmppConnectionService extends Service {
         sendMessage(message, true, delay);
     }
 
+    public boolean isOnboarding() {
+        return getAccounts().size() == 1 && getAccounts().get(0).getJid().getDomain().equals(Config.ONBOARDING_DOMAIN);
+    }
+
     public void requestEasyOnboardingInvite(final Account account, final EasyOnboardingInvite.OnInviteRequested callback) {
         final XmppConnection connection = account.getXmppConnection();
         final Jid jid = connection == null ? null : connection.getJidForCommand(Namespace.EASY_ONBOARDING_INVITE);

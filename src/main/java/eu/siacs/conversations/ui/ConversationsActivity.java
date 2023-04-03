@@ -199,6 +199,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
         if (xmppConnectionService == null) {
             return false;
         }
+
         boolean isConversationsListEmpty = xmppConnectionService.isConversationsListEmpty(ignore);
         if (isConversationsListEmpty && mRedirectInProcess.compareAndSet(false, true)) {
             final Intent intent = SignupUtils.getRedirectionIntent(this);
@@ -216,7 +217,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
     }
 
     private void showDialogsIfMainIsOverview() {
-        if (xmppConnectionService == null) {
+        if (xmppConnectionService == null || xmppConnectionService.isOnboarding()) {
             return;
         }
         final Fragment fragment = getFragmentManager().findFragmentById(R.id.main_fragment);
@@ -486,7 +487,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
         getMenuInflater().inflate(R.menu.activity_conversations, menu);
         final MenuItem qrCodeScanMenuItem = menu.findItem(R.id.action_scan_qr_code);
         if (qrCodeScanMenuItem != null) {
-            if (isCameraFeatureAvailable()) {
+            if (isCameraFeatureAvailable() && (xmppConnectionService == null || !xmppConnectionService.isOnboarding())) {
                 Fragment fragment = getFragmentManager().findFragmentById(R.id.main_fragment);
                 boolean visible = getResources().getBoolean(R.bool.show_qr_code_scan)
                         && fragment instanceof ConversationsOverviewFragment;
@@ -576,7 +577,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
             final Conversation conversation = xmppConnectionService.findUniqueConversationByJid(xmppUri);
             if (conversation != null) {
                 if (xmppUri.isAction("command")) {
-                    startCommand(conversation.getAccount(), conversation.getJid(), xmppUri.getParameter("node"));
+                    startCommand(conversation.getAccount(), xmppUri.getJid(), xmppUri.getParameter("node"));
                 } else {
                     Bundle extras = new Bundle();
                     extras.putString(Intent.EXTRA_TEXT, xmppUri.getBody());
@@ -740,10 +741,10 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
             final Conversation conversation = ((ConversationFragment) mainFragment).getConversation();
             if (conversation != null) {
                 actionBar.setTitle(conversation.getName());
-                actionBar.setDisplayHomeAsUpEnabled(true);
+                actionBar.setDisplayHomeAsUpEnabled(!xmppConnectionService.isOnboarding());
                 ActionBarUtil.setActionBarOnClickListener(
                         binding.toolbar,
-                        (v) -> openConversationDetails(conversation)
+                        (v) -> { if(!xmppConnectionService.isOnboarding()) openConversationDetails(conversation); }
                 );
                 return;
             }
