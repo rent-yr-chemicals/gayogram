@@ -11,11 +11,15 @@ import android.security.KeyChainAliasCallback;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.databinding.DataBindingUtil;
+import androidx.viewpager.widget.PagerAdapter;
+import androidx.viewpager.widget.ViewPager;
 
 import java.security.SecureRandom;
 import java.util.Arrays;
@@ -138,6 +142,19 @@ public class WelcomeActivity extends XmppActivity implements XmppConnectionServi
         super.onCreate(savedInstanceState);
         getPreferences().edit().putStringSet("pstn_gateways", new HashSet<>()).apply();
         ActivityWelcomeBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_welcome);
+        binding.slideshowPager.setAdapter(new WelcomePagerAdapter(binding.slideshowPager));
+        binding.dotsIndicator.setViewPager(binding.slideshowPager);
+        binding.slideshowPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
+            public void onPageScrollStateChanged(int state) { }
+            public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) { }
+
+            public void onPageSelected(int position) {
+                binding.buttonNext.setVisibility(position > 1 ? View.GONE : View.VISIBLE);
+            }
+        });
+        binding.buttonNext.setOnClickListener((v) ->
+            binding.slideshowPager.setCurrentItem(binding.slideshowPager.getCurrentItem() + 1)
+        );
         setSupportActionBar(binding.toolbar);
         configureActionBar(getSupportActionBar(), false);
         binding.registerNewAccount.setOnClickListener(v -> {
@@ -278,4 +295,37 @@ public class WelcomeActivity extends XmppActivity implements XmppConnectionServi
         }
     }
 
+    class WelcomePagerAdapter extends PagerAdapter {
+        protected View[] pages;
+
+        public WelcomePagerAdapter(ViewPager p) {
+            super();
+            pages = new View[]{ p.getChildAt(0), p.getChildAt(1), p.getChildAt(2) };
+            for (View v : pages) {
+                p.removeView(v);
+            }
+        }
+
+        @Override
+        public int getCount() {
+            return 3;
+        }
+
+        @NonNull
+        @Override
+        public Object instantiateItem(@NonNull ViewGroup container, int position) {
+            container.addView(pages[position]);
+            return pages[position];
+        }
+
+        @Override
+        public boolean isViewFromObject(@NonNull View view, @NonNull Object o) {
+            return view == o;
+        }
+
+        @Override
+        public void destroyItem(@NonNull ViewGroup container, int position, Object o) {
+            container.removeView(pages[position]);
+        }
+    }
 }
