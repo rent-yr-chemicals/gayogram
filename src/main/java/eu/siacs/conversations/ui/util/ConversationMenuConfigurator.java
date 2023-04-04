@@ -109,15 +109,15 @@ public class ConversationMenuConfigurator {
 		axolotl.setVisible(Config.supportOmemo());
 		switch (conversation.getNextEncryption()) {
 			case Message.ENCRYPTION_PGP:
-				menuSecure.setTitle(R.string.encrypted_with_openpgp);
+				//menuSecure.setTitle(R.string.encrypted_with_openpgp);
 				pgp.setChecked(true);
 				break;
 			case Message.ENCRYPTION_AXOLOTL:
-				menuSecure.setTitle(R.string.encrypted_with_omemo);
+				//menuSecure.setTitle(R.string.encrypted_with_omemo);
 				axolotl.setChecked(true);
 				break;
 			default:
-				menuSecure.setTitle(R.string.not_encrypted);
+				//menuSecure.setTitle(R.string.not_encrypted);
 				none.setChecked(true);
 				break;
 		}

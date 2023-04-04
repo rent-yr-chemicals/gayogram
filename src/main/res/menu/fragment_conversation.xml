@@ -25,26 +25,6 @@
         </menu>
     </item>
     <item
-        android:id="@+id/action_security"
-        android:icon="?attr/icon_not_secure"
-        android:orderInCategory="20"
-        android:title="@string/encrypted_with_omemo"
-        app:showAsAction="always">
-        <menu>
-            <group android:checkableBehavior="single">
-                <item
-                    android:id="@+id/encryption_choice_none"
-                    android:title="@string/encryption_choice_unencrypted" />
-                <item
-                    android:id="@+id/encryption_choice_axolotl"
-                    android:title="@string/encryption_choice_omemo" />
-                <item
-                    android:id="@+id/encryption_choice_pgp"
-                    android:title="@string/encryption_choice_pgp" />
-            </group>
-        </menu>
-    </item>
-    <item
         android:id="@+id/action_attach_file"
         android:icon="?attr/icon_new_attachment"
         android:orderInCategory="30"
@@ -106,15 +86,30 @@
         android:visible="@bool/show_individual_search_options"
         app:showAsAction="never" />
     <item
-        android:id="@+id/action_clear_history"
-        android:orderInCategory="50"
-        android:title="@string/action_clear_history"
-        app:showAsAction="never" />
-    <item
         android:id="@+id/action_archive"
         android:orderInCategory="60"
         android:title="@string/action_end_conversation"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_security"
+        android:icon="?attr/icon_not_secure"
+        android:orderInCategory="65"
+        android:title="Encyption"
+        app:showAsAction="never">
+        <menu>
+            <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/encryption_choice_none"
+                    android:title="@string/encryption_choice_unencrypted" />
+                <item
+                    android:id="@+id/encryption_choice_axolotl"
+                    android:title="@string/encryption_choice_omemo" />
+                <item
+                    android:id="@+id/encryption_choice_pgp"
+                    android:title="@string/encryption_choice_pgp" />
+            </group>
+        </menu>
+    </item>
     <item
         android:orderInCategory="70"
         android:title="@string/more_options">
@@ -137,12 +132,16 @@
                 app:showAsAction="never" />
 
             <item
-                android:id="@+id/action_refresh_feature_discovery"
+                android:id="@+id/action_clear_history"
                 android:orderInCategory="74"
+                android:title="@string/action_clear_history"
+                app:showAsAction="never" />
+
+            <item
+                android:id="@+id/action_refresh_feature_discovery"
+                android:orderInCategory="75"
                 android:title="Refresh Feature Discovery"
                 app:showAsAction="never" />
         </menu>
     </item>
-
-
 </menu>
