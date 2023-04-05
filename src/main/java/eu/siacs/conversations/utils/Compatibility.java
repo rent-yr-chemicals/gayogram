@@ -159,7 +159,7 @@ public class Compatibility {
         try {
             if (Compatibility.runsAndTargetsTwentySix(context)) {
                 intent.putExtra(EXTRA_NEEDS_FOREGROUND_SERVICE, true);
-                ContextCompat.startForegroundService(context, intent);
+                context.startForegroundService(intent);
             } else {
                 context.startService(intent);
             }
