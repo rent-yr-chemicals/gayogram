@@ -150,10 +150,14 @@ public class WelcomeActivity extends XmppActivity implements XmppConnectionServi
 
             public void onPageSelected(int position) {
                 binding.buttonNext.setVisibility(position > 1 ? View.GONE : View.VISIBLE);
+                binding.buttonPrivacy.setVisibility(position < 2 ? View.GONE : View.VISIBLE);
             }
         });
         binding.buttonNext.setOnClickListener((v) ->
             binding.slideshowPager.setCurrentItem(binding.slideshowPager.getCurrentItem() + 1)
+        );
+        binding.buttonPrivacy.setOnClickListener((v) ->
+            startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("https://cheogram.com/android-privacy.html")))
         );
         setSupportActionBar(binding.toolbar);
         configureActionBar(getSupportActionBar(), false);
