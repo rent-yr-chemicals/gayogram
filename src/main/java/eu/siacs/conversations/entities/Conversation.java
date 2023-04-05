@@ -1411,7 +1411,6 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     }
                 }
             };
-            task.run();
 
             if (command.getAttribute("node").equals("jabber:iq:register") && packet.getTo().asBareJid().equals(Jid.of("cheogram.com"))) {
                 new com.cheogram.android.CheogramLicenseChecker(mPager.getContext(), (signedData, signature) -> {
