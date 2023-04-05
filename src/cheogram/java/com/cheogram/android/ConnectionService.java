@@ -282,12 +282,16 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			switch(selectedAudioDevice) {
 				case SPEAKER_PHONE:
 					setAudioRoute(CallAudioState.ROUTE_SPEAKER);
+					break;
 				case WIRED_HEADSET:
 					setAudioRoute(CallAudioState.ROUTE_WIRED_HEADSET);
+					break;
 				case EARPIECE:
 					setAudioRoute(CallAudioState.ROUTE_EARPIECE);
+					break;
 				case BLUETOOTH:
 					setAudioRoute(CallAudioState.ROUTE_BLUETOOTH);
+					break;
 				default:
 					setAudioRoute(CallAudioState.ROUTE_WIRED_OR_EARPIECE);
 			}
@@ -299,6 +303,23 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			if (rtpConnection == null || rtpConnection.get() == null) {
 				pendingState = state;
 				return;
+			}
+
+			switch(state.getRoute()) {
+				case CallAudioState.ROUTE_SPEAKER:
+					rtpConnection.get().getAudioManager().setDefaultAudioDevice(AppRTCAudioManager.AudioDevice.SPEAKER_PHONE);
+					break;
+				case CallAudioState.ROUTE_WIRED_HEADSET:
+					rtpConnection.get().getAudioManager().setDefaultAudioDevice(AppRTCAudioManager.AudioDevice.WIRED_HEADSET);
+					break;
+				case CallAudioState.ROUTE_EARPIECE:
+					rtpConnection.get().getAudioManager().setDefaultAudioDevice(AppRTCAudioManager.AudioDevice.EARPIECE);
+					break;
+				case CallAudioState.ROUTE_BLUETOOTH:
+					rtpConnection.get().getAudioManager().setDefaultAudioDevice(AppRTCAudioManager.AudioDevice.BLUETOOTH);
+					break;
+				default:
+					rtpConnection.get().getAudioManager().setDefaultAudioDevice(AppRTCAudioManager.AudioDevice.NONE);
 			}
 
 			try {
