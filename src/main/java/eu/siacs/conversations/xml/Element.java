@@ -231,7 +231,7 @@ public class Element implements Node {
 			Tag startTag = Tag.start(name);
 			startTag.setAttributes(this.attributes);
 			elementOutput.append(startTag);
-			for (Node child : childNodes) {
+			for (Node child : ImmutableList.copyOf(childNodes)) {
 				elementOutput.append(child.toString());
 			}
 			Tag endTag = Tag.end(name);
