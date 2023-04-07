@@ -72,6 +72,7 @@ import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Conversational;
 import eu.siacs.conversations.entities.Message;
+import eu.siacs.conversations.entities.MucOptions;
 import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.ui.ConversationsActivity;
 import eu.siacs.conversations.ui.EditAccountActivity;
@@ -1744,6 +1745,11 @@ public class NotificationService {
     private boolean wasHighlightedOrPrivate(final Message message) {
         if (message.getConversation() instanceof Conversation) {
             Conversation conversation = (Conversation) message.getConversation();
+            final MucOptions.User sender = conversation.getMucOptions().findUserByFullJid(message.getCounterpart());
+            if (sender != null && sender.getAffiliation().ranks(MucOptions.Affiliation.MEMBER) && message.isAttention()) {
+                return true;
+            }
+
             final String nick = conversation.getMucOptions().getActualNick();
             final Pattern highlight = generateNickHighlightPattern(nick);
             if (message.getBody() == null || nick == null) {

@@ -671,6 +671,9 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                 if (el.getName().equals("reply") && el.getNamespace() != null && el.getNamespace().equals("urn:xmpp:reply:0")) {
                     message.addPayload(el);
                 }
+                if (el.getName().equals("attention") && el.getNamespace() != null && el.getNamespace().equals("urn:xmpp:attention:0")) {
+                    message.addPayload(el);
+                }
             }
             if (conversationMultiMode) {
                 message.setMucUser(conversation.getMucOptions().findUserByFullJid(counterpart));
