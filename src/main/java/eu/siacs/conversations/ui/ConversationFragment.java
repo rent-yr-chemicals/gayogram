@@ -883,7 +883,7 @@ public class ConversationFragment extends XmppFragment
             return;
         }
         final Editable text = this.binding.textinput.getText();
-        final String body = text == null ? "" : text.toString();
+        String body = text == null ? "" : text.toString();
         final Conversation conversation = this.conversation;
         if (body.length() == 0 || conversation == null) {
             return;
@@ -893,6 +893,11 @@ public class ConversationFragment extends XmppFragment
         }
         final Message message;
         if (conversation.getCorrectingMessage() == null) {
+            boolean attention = false;
+            if (body.matches("\\A@here\\s.*")) {
+                attention = true;
+                body = body.replaceFirst("\\A@here\\s+", "");
+            }
             if (conversation.getReplyTo() != null) {
                 if (Emoticons.isEmoji(body)) {
                     message = conversation.getReplyTo().react(body);
@@ -905,6 +910,9 @@ public class ConversationFragment extends XmppFragment
                 message = new Message(conversation, body, conversation.getNextEncryption());
             }
             message.setThread(conversation.getThread());
+            if (attention) {
+                message.addPayload(new Element("attention", "urn:xmpp:attention:0"));
+            }
             Message.configurePrivateMessage(message);
         } else {
             message = conversation.getCorrectingMessage();
