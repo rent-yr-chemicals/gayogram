@@ -1210,7 +1210,7 @@ public class ConversationFragment extends XmppFragment
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater menuInflater) {
-        if (activity.xmppConnectionService.isOnboarding()) return;
+        if (activity != null && activity.xmppConnectionService != null && activity.xmppConnectionService.isOnboarding()) return;
 
         menuInflater.inflate(R.menu.fragment_conversation, menu);
         final MenuItem menuMucDetails = menu.findItem(R.id.action_muc_details);
