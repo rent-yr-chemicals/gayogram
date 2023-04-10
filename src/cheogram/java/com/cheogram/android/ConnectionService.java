@@ -277,7 +277,13 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		public void onAudioDeviceChanged(AppRTCAudioManager.AudioDevice selectedAudioDevice, Set<AppRTCAudioManager.AudioDevice> availableAudioDevices) {
 			if (Build.VERSION.SDK_INT < 26) return;
 
-			if (pendingState != null) onCallAudioStateChanged(pendingState);
+			if (pendingState != null) {
+				Log.d("com.cheogram.android.CheogramConnection", "Try with pendingState: " + pendingState);
+				onCallAudioStateChanged(pendingState);
+				return;
+			}
+
+			Log.d("com.cheogram.android.CheogramConnection", "onAudioDeviceChanged: " + selectedAudioDevice);
 
 			switch(selectedAudioDevice) {
 				case SPEAKER_PHONE:
@@ -304,6 +310,8 @@ public class ConnectionService extends android.telecom.ConnectionService {
 				pendingState = state;
 				return;
 			}
+
+			Log.d("com.cheogram.android.CheogramConnection", "onCallAudioStateChanged: " + state);
 
 			switch(state.getRoute()) {
 				case CallAudioState.ROUTE_SPEAKER:
