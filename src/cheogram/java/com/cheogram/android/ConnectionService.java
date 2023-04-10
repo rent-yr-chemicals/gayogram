@@ -300,7 +300,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		@Override
 		public void onCallAudioStateChanged(CallAudioState state) {
 			pendingState = null;
-			if (rtpConnection == null || rtpConnection.get() == null) {
+			if (rtpConnection == null || rtpConnection.get() == null || rtpConnection.get().getAudioManager() == null) {
 				pendingState = state;
 				return;
 			}
