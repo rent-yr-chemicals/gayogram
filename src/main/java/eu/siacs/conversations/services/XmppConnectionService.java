@@ -1249,7 +1249,7 @@ public class XmppConnectionService extends Service {
         Resolver.init(this);
         updateMemorizingTrustmanager();
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
-        final int cacheSize = maxMemory / 9;
+        final int cacheSize = maxMemory / 10;
         this.mBitmapCache = new LruCache<String, Bitmap>(cacheSize) {
             @Override
             protected int sizeOf(final String key, final Bitmap bitmap) {
