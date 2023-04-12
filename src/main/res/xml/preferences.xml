@@ -430,6 +430,11 @@
         </PreferenceScreen>
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/category_about">
+        <Preference android:title="View Privacy Policy" android:summary="Details about how your data is used by the app">
+            <intent
+                android:action="android.intent.action.VIEW"
+                android:data="https://cheogram.com/android-privacy.html" />
+        </Preference>
         <eu.siacs.conversations.ui.AboutPreference />
     </PreferenceCategory>
 </PreferenceScreen>
