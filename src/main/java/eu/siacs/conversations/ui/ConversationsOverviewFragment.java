@@ -387,11 +387,6 @@ public class ConversationsOverviewFragment extends XmppFragment {
 	@Override
 	public void onBackendConnected() {
 		refresh();
-		if (activity.xmppConnectionService.isOnboarding()) {
-			binding.fab.setVisibility(View.GONE);
-		} else {
-			binding.fab.setVisibility(View.VISIBLE);
-		}
 	}
 
 	@Override
@@ -490,6 +485,12 @@ public class ConversationsOverviewFragment extends XmppFragment {
 		ScrollState scrollState = pendingScrollState.pop();
 		if (scrollState != null) {
 			setScrollPosition(scrollState);
+		}
+
+		if (activity.xmppConnectionService != null && activity.xmppConnectionService.isOnboarding()) {
+			binding.fab.setVisibility(View.GONE);
+		} else {
+			binding.fab.setVisibility(View.VISIBLE);
 		}
 	}
 
