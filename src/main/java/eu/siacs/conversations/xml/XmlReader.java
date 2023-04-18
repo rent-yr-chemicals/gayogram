@@ -96,7 +96,7 @@ public class XmlReader implements Closeable {
 		}
 		while (!nextTag.isEnd(element.getName())) {
 			if (nextTag.isNo()) {
-				element.addChild(new TextNode(nextTag.getName()));
+				if (nextTag.getName() != null) element.addChild(new TextNode(nextTag.getName()));
 			} else {
 				Element child = this.readElement(nextTag);
 				element.addChild(child);
