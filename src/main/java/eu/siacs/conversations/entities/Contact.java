@@ -13,6 +13,7 @@ import android.telecom.PhoneAccount;
 import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 
@@ -687,7 +688,12 @@ public class Contact implements ListItem, Blockable {
         }
 
         TelecomManager telecomManager = ctx.getSystemService(TelecomManager.class);
-        telecomManager.unregisterPhoneAccount(phoneAccountHandle());
+
+        try {
+            telecomManager.unregisterPhoneAccount(phoneAccountHandle());
+        } catch (final SecurityException e) {
+            Log.w(Config.LOGTAG, "Could not unregister " + getJid() + " as phone account: " + e);
+        }
     }
 
     public static int getOption(Class<? extends AbstractPhoneContact> clazz) {
