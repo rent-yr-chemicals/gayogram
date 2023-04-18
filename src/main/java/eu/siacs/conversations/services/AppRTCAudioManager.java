@@ -300,7 +300,11 @@ public class AppRTCAudioManager {
         // Restore previously stored audio states.
         setSpeakerphoneOn(savedIsSpeakerPhoneOn);
         setMicrophoneMute(savedIsMicrophoneMute);
-        audioManager.setMode(AudioManager.MODE_NORMAL);
+        try {
+            audioManager.setMode(AudioManager.MODE_NORMAL);
+        } catch (final SecurityException e) {
+            Log.e(Config.LOGTAG, "Could not set mode on audio manager: " + audioManager);
+        }
         // Abandon audio focus. Gives the previous focus owner, if any, focus.
         audioManager.abandonAudioFocus(audioFocusChangeListener);
         audioFocusChangeListener = null;
