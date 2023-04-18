@@ -1357,8 +1357,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             if (mPager == null) return;
             if (sessions != null) show();
 
-            page1 = pager.getChildAt(0) == null ? page1 : pager.getChildAt(0);
-            page2 = pager.getChildAt(1) == null ? page2 : pager.getChildAt(1);
+            if (pager.getChildAt(0) != null) page1 = pager.getChildAt(0);
+            if (pager.getChildAt(1) != null) page2 = pager.getChildAt(1);
+            pager.removeView(page1);
+            pager.removeView(page2);
             pager.setAdapter(this);
             tabs.setupWithViewPager(mPager);
             pager.post(() -> pager.setCurrentItem(getCurrentTab()));
@@ -1454,11 +1456,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         @Override
         public Object instantiateItem(@NonNull ViewGroup container, int position) {
             if (position == 0) {
-                if (page1.getParent() == null) container.addView(page1);
+                container.addView(page1);
                 return page1;
             }
             if (position == 1) {
-                if (page2.getParent() == null) container.addView(page2);
+                container.addView(page2);
                 return page2;
             }
 
@@ -1471,7 +1473,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
         @Override
         public void destroyItem(@NonNull ViewGroup container, int position, Object o) {
-            if (position < 2) return;
+            if (position < 2) {
+                container.removeView((View) o);
+                return;
+            }
 
             container.removeView(((CommandSession) o).getView());
         }
