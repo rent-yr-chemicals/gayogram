@@ -252,9 +252,11 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 break;
             case Message.STATUS_SEND_RECEIVED:
             case Message.STATUS_SEND_DISPLAYED:
-                viewHolder.indicatorReceived.setImageResource(darkBackground ? R.drawable.ic_done_white_18dp : R.drawable.ic_done_black_18dp);
-                viewHolder.indicatorReceived.setAlpha(darkBackground ? 0.7f : 0.57f);
-                viewHolder.indicatorReceived.setVisibility(View.VISIBLE);
+                if (viewHolder.indicatorReceived != null) {
+                    viewHolder.indicatorReceived.setImageResource(darkBackground ? R.drawable.ic_done_white_18dp : R.drawable.ic_done_black_18dp);
+                    viewHolder.indicatorReceived.setAlpha(darkBackground ? 0.7f : 0.57f);
+                    viewHolder.indicatorReceived.setVisibility(View.VISIBLE);
+                }
                 break;
             case Message.STATUS_SEND_FAILED:
                 final String errorMessage = message.getErrorMessage();
