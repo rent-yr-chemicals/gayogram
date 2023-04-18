@@ -727,7 +727,7 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
             }
 
             final Uri uri = getUri(position);
-            if (uri != null) {
+            if (uri != null && uri.getScheme() != null) {
                 if (uri.getScheme().equals("xmpp")) {
                     binding.command.setText(uri.getSchemeSpecificPart());
                     binding.command.setCompoundDrawablesRelativeWithIntrinsicBounds(getResources().getDrawable(R.drawable.jabber), null, null, null);
