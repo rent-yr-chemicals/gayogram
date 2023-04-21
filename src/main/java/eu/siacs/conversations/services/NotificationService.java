@@ -83,6 +83,7 @@ import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.GeoHelper;
 import eu.siacs.conversations.utils.TorServiceUtils;
 import eu.siacs.conversations.utils.UIHelper;
+import eu.siacs.conversations.xmpp.Jid;
 import eu.siacs.conversations.xmpp.XmppConnection;
 import eu.siacs.conversations.xmpp.jingle.AbstractJingleConnection;
 import eu.siacs.conversations.xmpp.jingle.Media;
@@ -1407,6 +1408,14 @@ public class NotificationService {
             builder.setName(UIHelper.getMessageDisplayName(message));
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            final Jid jid = contact == null ? message.getCounterpart() : contact.getJid();
+            builder.setKey(jid.toString());
+            for (Conversation c : mXmppConnectionService.getConversations()) {
+                if (c.getAccount().equals(message.getConversation().getAccount()) && c.getJid().asBareJid().equals(jid)) {
+                    builder.setImportant(c.getBooleanAttribute(Conversation.ATTRIBUTE_PINNED_ON_TOP, false));
+                    break;
+                }
+            }
             builder.setIcon(
                     IconCompat.createWithBitmap(
                             mXmppConnectionService
