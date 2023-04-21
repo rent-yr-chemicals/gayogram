@@ -11,6 +11,8 @@ import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.core.content.pm.ShortcutInfoCompat;
+import androidx.core.graphics.drawable.IconCompat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -88,13 +90,18 @@ public class ShortcutService {
         }
     }
 
-    @TargetApi(Build.VERSION_CODES.N_MR1)
-    private ShortcutInfo getShortcutInfo(Contact contact) {
-        return new ShortcutInfo.Builder(xmppConnectionService, getShortcutId(contact))
+    public ShortcutInfoCompat getShortcutInfoCompat(Contact contact) {
+        return new ShortcutInfoCompat.Builder(xmppConnectionService, getShortcutId(contact))
                         .setShortLabel(contact.getDisplayName())
                         .setIntent(getShortcutIntent(contact))
-                        .setIcon(Icon.createWithBitmap(xmppConnectionService.getAvatarService().getRoundedShortcut(contact)))
+                        .setIcon(IconCompat.createFromIcon(Icon.createWithBitmap(xmppConnectionService.getAvatarService().getRoundedShortcut(contact))))
+                        .setIsConversation()
                         .build();
+    }
+
+    @TargetApi(Build.VERSION_CODES.N_MR1)
+    private ShortcutInfo getShortcutInfo(Contact contact) {
+        return getShortcutInfoCompat(contact).toShortcutInfo();
     }
 
     private static boolean contactsChanged(List<Contact> needles, List<ShortcutInfo> haystack) {

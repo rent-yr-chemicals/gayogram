@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.pm.ShortcutManager;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
@@ -40,6 +41,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.Person;
 import androidx.core.app.RemoteInput;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.graphics.drawable.IconCompat;
 
 import com.google.common.base.Joiner;
@@ -1362,6 +1364,12 @@ public class NotificationService {
             mBuilder.setSmallIcon(R.drawable.ic_notification);
             mBuilder.setDeleteIntent(createDeleteIntent(conversation));
             mBuilder.setContentIntent(createContentIntent(conversation));
+
+            ShortcutInfoCompat info = mXmppConnectionService.getShortcutService().getShortcutInfoCompat(conversation.getContact());
+            mBuilder.setShortcutInfo(info);
+            if (Build.VERSION.SDK_INT >= 30) {
+                mXmppConnectionService.getSystemService(ShortcutManager.class).pushDynamicShortcut(info.toShortcutInfo());
+            }
         }
         return mBuilder;
     }
