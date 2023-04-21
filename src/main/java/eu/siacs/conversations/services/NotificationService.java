@@ -1369,6 +1369,7 @@ public class NotificationService {
             mBuilder.setShortcutInfo(info);
             if (Build.VERSION.SDK_INT >= 30) {
                 mXmppConnectionService.getSystemService(ShortcutManager.class).pushDynamicShortcut(info.toShortcutInfo());
+                // mBuilder.setBubbleMetadata(new NotificationCompat.BubbleMetadata.Builder(info.getId()).build());
             }
         }
         return mBuilder;
@@ -1418,11 +1419,9 @@ public class NotificationService {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             final Jid jid = contact == null ? message.getCounterpart() : contact.getJid();
             builder.setKey(jid.toString());
-            for (Conversation c : mXmppConnectionService.getConversations()) {
-                if (c.getAccount().equals(message.getConversation().getAccount()) && c.getJid().asBareJid().equals(jid)) {
-                    builder.setImportant(c.getBooleanAttribute(Conversation.ATTRIBUTE_PINNED_ON_TOP, false));
-                    break;
-                }
+            final Conversation c = mXmppConnectionService.find(message.getConversation().getAccount(), jid);
+            if (c != null) {
+                builder.setImportant(c.getBooleanAttribute(Conversation.ATTRIBUTE_PINNED_ON_TOP, false));
             }
             builder.setIcon(
                     IconCompat.createWithBitmap(

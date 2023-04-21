@@ -21,7 +21,9 @@ import java.util.List;
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.entities.Contact;
+import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.ui.StartConversationActivity;
+import eu.siacs.conversations.ui.ConversationsActivity;
 import eu.siacs.conversations.utils.ReplacingSerialSingleThreadExecutor;
 import eu.siacs.conversations.xmpp.Jid;
 
@@ -128,6 +130,16 @@ public class ShortcutService {
     }
 
     private Intent getShortcutIntent(Contact contact) {
+        final Conversation conversation = xmppConnectionService.find(contact.getAccount(), contact.getJid());
+
+        if (conversation != null) {
+            Intent intent = new Intent(xmppConnectionService, ConversationsActivity.class);
+            intent.setAction(ConversationsActivity.ACTION_VIEW_CONVERSATION);
+            intent.putExtra(ConversationsActivity.EXTRA_CONVERSATION, conversation.getUuid());
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP| Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            return intent;
+        }
+
         Intent intent = new Intent(xmppConnectionService, StartConversationActivity.class);
         intent.setAction(Intent.ACTION_VIEW);
         intent.setData(Uri.parse("xmpp:"+contact.getJid().asBareJid().toEscapedString()));
