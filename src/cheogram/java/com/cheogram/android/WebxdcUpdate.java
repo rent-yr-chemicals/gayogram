@@ -14,6 +14,7 @@ public class WebxdcUpdate {
 	protected final Long serial;
 	protected final Long maxSerial;
 	protected final String conversationId;
+	protected final String messageId;
 	protected final Jid sender;
 	protected final String thread;
 	protected final String threadParent;
@@ -22,10 +23,11 @@ public class WebxdcUpdate {
 	protected final String summary;
 	protected final String payload;
 
-	public WebxdcUpdate(final Conversation conversation, final Jid sender, final Element thread, final String info, final String document, final String summary, final String payload) {
+	public WebxdcUpdate(final Conversation conversation, final String messageId, final Jid sender, final Element thread, final String info, final String document, final String summary, final String payload) {
 		this.serial = null;
 		this.maxSerial = null;
 		this.conversationId = conversation.getUuid();
+		this.messageId = messageId;
 		this.sender = sender;
 		this.thread = thread.getContent();
 		this.threadParent = thread.getAttribute("parent");
@@ -39,6 +41,7 @@ public class WebxdcUpdate {
 		this.maxSerial = maxSerial;
 		this.serial = cursor.getLong(cursor.getColumnIndex("serial"));
 		this.conversationId = cursor.getString(cursor.getColumnIndex(Message.CONVERSATION));
+		this.messageId = cursor.getString(cursor.getColumnIndex("message_id"));
 		this.sender = Jid.of(cursor.getString(cursor.getColumnIndex("sender")));
 		this.thread = cursor.getString(cursor.getColumnIndex("thread"));
 		this.threadParent = cursor.getString(cursor.getColumnIndex("threadParent"));
@@ -55,6 +58,7 @@ public class WebxdcUpdate {
 	public ContentValues getContentValues() {
 		ContentValues cv = new ContentValues();
 		cv.put(Message.CONVERSATION, conversationId);
+		cv.put("message_id", messageId);
 		cv.put("sender", sender.toEscapedString());
 		cv.put("thread", thread);
 		cv.put("threadParent", threadParent);

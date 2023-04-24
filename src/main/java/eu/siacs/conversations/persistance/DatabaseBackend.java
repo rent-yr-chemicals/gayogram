@@ -311,6 +311,15 @@ public class DatabaseBackend extends SQLiteOpenHelper {
                 db.execSQL("PRAGMA cheogram.user_version = 8");
 				}
 
+            if(cheogramVersion < 9) {
+                db.execSQL(
+                    "ALTER TABLE cheogram.webxdc_updates " +
+                    "ADD COLUMN message_id TEXT"
+                );
+                db.execSQL("CREATE UNIQUE INDEX cheogram.webxdc_message_id_index ON webxdc_updates (" + Message.CONVERSATION + ", message_id)");
+                db.execSQL("PRAGMA cheogram.user_version = 9");
+            }
+
             db.setTransactionSuccessful();
         } finally {
             db.endTransaction();
@@ -854,7 +863,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
 
     public void insertWebxdcUpdate(final WebxdcUpdate update) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.insert("cheogram.webxdc_updates", null, update.getContentValues());
+        db.insertWithOnConflict("cheogram.webxdc_updates", null, update.getContentValues(), SQLiteDatabase.CONFLICT_IGNORE);
     }
 
     public WebxdcUpdate findLastWebxdcUpdate(Message message) {

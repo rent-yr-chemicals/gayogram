@@ -294,6 +294,7 @@ public class WebxdcPage implements ConversationPage {
 			xmppConnectionService.sendMessage(message);
 			xmppConnectionService.insertWebxdcUpdate(new WebxdcUpdate(
 				(Conversation) message.getConversation(),
+				message.getUuid(),
 				selfJid(),
 				message.getThread(),
 				params.optString("info", null),
