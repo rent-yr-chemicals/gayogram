@@ -1344,6 +1344,28 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             }
         }
 
+        public String getMediaType() {
+            Element file = getFileElement();
+            if (file == null) return null;
+
+            return file.findChildContent("media-type", file.getNamespace());
+        }
+
+        public void setMediaType(final String mime) {
+            if (sims == null) toSims();
+            Element file = getFileElement();
+
+            for (Element child : file.getChildren()) {
+                if (child.getName().equals("media-type") && child.getNamespace().equals(file.getNamespace())) {
+                    file.removeChild(child);
+                }
+            }
+
+            if (mime != null) {
+                file.addChild("media-type", file.getNamespace()).setContent(mime);
+            }
+        }
+
         public Element toSims() {
             if (sims == null) sims = new Element("reference", "urn:xmpp:reference:0");
             sims.setAttribute("type", "data");

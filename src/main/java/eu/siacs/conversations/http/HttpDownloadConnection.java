@@ -94,7 +94,10 @@ public class HttpDownloadConnection implements Transferable {
                     && message.getEncryption() != Message.ENCRYPTION_AXOLOTL) {
                 this.message.setEncryption(Message.ENCRYPTION_NONE);
             }
-            final String ext = extension.getExtension();
+            String ext = extension.getExtension();
+            if (ext == null && fileParams.getMediaType() != null) {
+                ext = MimeUtils.guessExtensionFromMimeType(fileParams.getMediaType());
+            }
             final String filename = Strings.isNullOrEmpty(ext) ? message.getUuid() : String.format("%s.%s", message.getUuid(), ext);
             mXmppConnectionService.getFileBackend().setupRelativeFilePath(message, filename);
             setupFile();

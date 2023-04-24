@@ -1763,6 +1763,7 @@ public class FileBackend {
             fileParams.url = url;
         }
         fileParams.setName(file.getName());
+        fileParams.setMediaType(mime);
         if (encrypted && !file.exists()) {
             Log.d(Config.LOGTAG, "skipping updateFileParams because file is encrypted");
             final DownloadableFile encryptedFile = getFile(message, false);
