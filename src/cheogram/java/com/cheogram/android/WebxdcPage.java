@@ -244,7 +244,7 @@ public class WebxdcPage implements ConversationPage {
 	}
 
 	protected Jid selfJid() {
-		Conversation conversation = (Conversation) source.getConversation();
+		final Conversation conversation = (Conversation) source.getConversation();
 		if (conversation.getMode() == Conversation.MODE_MULTI && !conversation.getMucOptions().nonanonymous()) {
 			return conversation.getMucOptions().getSelf().getFullJid();
 		} else {
@@ -260,7 +260,12 @@ public class WebxdcPage implements ConversationPage {
 
 		@JavascriptInterface
 		public String selfName() {
-			return source.getConversation().getAccount().getDisplayName();
+			final Conversation conversation = (Conversation) source.getConversation();
+			if (conversation.getMode() == Conversation.MODE_MULTI) {
+				return conversation.getMucOptions().getActualNick();
+			} else {
+				return conversation.getAccount().getDisplayName();
+			}
 		}
 
 		@JavascriptInterface
