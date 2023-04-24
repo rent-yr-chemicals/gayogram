@@ -4,6 +4,7 @@ import android.util.Log;
 import android.util.Pair;
 
 import com.cheogram.android.BobTransfer;
+import com.cheogram.android.WebxdcUpdate;
 
 import java.io.File;
 import java.net.URISyntaxException;
@@ -519,6 +520,30 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                     }
                 }
             }
+        }
+
+        final Element webxdc = packet.findChild("x", "urn:xmpp:webxdc:0");
+        if (webxdc != null) {
+            final Conversation conversation = mXmppConnectionService.find(account, counterpart.asBareJid());
+            Jid webxdcSender = counterpart.asBareJid();
+            if (conversation.getMode() == Conversation.MODE_MULTI) {
+                if(conversation.getMucOptions().nonanonymous()) {
+                    webxdcSender = conversation.getMucOptions().getTrueCounterpart(counterpart);
+                } else {
+                    webxdcSender = counterpart;
+                }
+            }
+            mXmppConnectionService.insertWebxdcUpdate(new WebxdcUpdate(
+                conversation,
+                counterpart,
+                packet.findChild("thread"),
+                body == null ? null : body.content,
+                webxdc.findChildContent("document", "urn:xmpp:webxdc:0"),
+                webxdc.findChildContent("summary", "urn:xmpp:webxdc:0"),
+                webxdc.findChildContent("json", "urn:xmpp:json:0")
+            ));
+
+            mXmppConnectionService.updateConversationUi();
         }
 
         if ((body != null || pgpEncrypted != null || (axolotlEncrypted != null && axolotlEncrypted.hasChild("payload")) || !attachments.isEmpty() || html != null) && !isMucStatusMessage) {

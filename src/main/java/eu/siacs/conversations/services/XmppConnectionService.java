@@ -54,6 +54,8 @@ import androidx.annotation.NonNull;
 import androidx.core.app.RemoteInput;
 import androidx.core.content.ContextCompat;
 
+import com.cheogram.android.WebxdcUpdate;
+
 import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.google.common.base.Strings;
@@ -594,6 +596,18 @@ public class XmppConnectionService extends Service {
 
     public void clearBlockedMedia() {
         this.databaseBackend.clearBlockedMedia();
+    }
+
+    public void insertWebxdcUpdate(final WebxdcUpdate update) {
+        this.databaseBackend.insertWebxdcUpdate(update);
+    }
+
+    public WebxdcUpdate findLastWebxdcUpdate(Message message) {
+        return this.databaseBackend.findLastWebxdcUpdate(message);
+    }
+
+    public List<WebxdcUpdate> findWebxdcUpdates(Message message, long serial) {
+        return this.databaseBackend.findWebxdcUpdates(message, serial);
     }
 
     public AvatarService getAvatarService() {

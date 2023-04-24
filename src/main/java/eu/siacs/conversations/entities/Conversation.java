@@ -57,11 +57,16 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.caverock.androidsvg.SVG;
 
+import com.cheogram.android.ConversationPage;
+import com.cheogram.android.WebxdcPage;
+
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.common.base.Optional;
 import com.google.common.collect.ComparisonChain;
 import com.google.common.collect.Lists;
+
+import io.ipfs.cid.Cid;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -107,6 +112,7 @@ import eu.siacs.conversations.ui.UriHandlerActivity;
 import eu.siacs.conversations.ui.text.FixedURLSpan;
 import eu.siacs.conversations.ui.util.ShareUtil;
 import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
+import eu.siacs.conversations.utils.Consumer;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.utils.MessageUtils;
 import eu.siacs.conversations.utils.UIHelper;
@@ -1299,6 +1305,14 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         return 1;
     }
 
+    public void refreshSessions() {
+        pagerAdapter.refreshSessions();
+    }
+
+    public void startWebxdc(Cid cid, Message message, XmppConnectionService xmppConnectionService) {
+        pagerAdapter.startWebxdc(cid, message, xmppConnectionService);
+    }
+
     public void startCommand(Element command, XmppConnectionService xmppConnectionService) {
         pagerAdapter.startCommand(command, xmppConnectionService);
     }
@@ -1344,7 +1358,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
     public class ConversationPagerAdapter extends PagerAdapter {
         protected ViewPager mPager = null;
         protected TabLayout mTabs = null;
-        ArrayList<CommandSession> sessions = null;
+        ArrayList<ConversationPage> sessions = null;
         protected View page1 = null;
         protected View page2 = null;
         protected boolean mOnboarding = false;
@@ -1391,6 +1405,21 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             notifyDataSetChanged();
         }
 
+        public void refreshSessions() {
+            if (sessions == null) return;
+
+            for (ConversationPage session : sessions) {
+                session.refresh();
+            }
+        }
+
+        public void startWebxdc(Cid cid, Message message, XmppConnectionService xmppConnectionService) {
+            show();
+            sessions.add(new WebxdcPage(cid, message, xmppConnectionService));
+            notifyDataSetChanged();
+            if (mPager != null) mPager.setCurrentItem(getCount() - 1);
+        }
+
         public void startCommand(Element command, XmppConnectionService xmppConnectionService) {
             show();
             CommandSession session = new CommandSession(command.getAttribute("name"), command.getAttribute("node"), xmppConnectionService);
@@ -1432,7 +1461,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             if (mPager != null) mPager.setCurrentItem(getCount() - 1);
         }
 
-        public void removeSession(CommandSession session) {
+        public void removeSession(ConversationPage session) {
             sessions.remove(session);
             notifyDataSetChanged();
         }
@@ -1441,8 +1470,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             if (sessions == null) return false;
 
             int i = 0;
-            for (CommandSession session : sessions) {
-                if (session.mNode.equals(node)) {
+            for (ConversationPage session : sessions) {
+                if (session.getNode().equals(node)) {
                     if (mPager != null) mPager.setCurrentItem(i + 2);
                     return true;
                 }
@@ -1464,10 +1493,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return page2;
             }
 
-            CommandSession session = sessions.get(position-2);
-            CommandPageBinding binding = DataBindingUtil.inflate(LayoutInflater.from(container.getContext()), R.layout.command_page, container, false);
-            container.addView(binding.getRoot());
-            session.setBinding(binding);
+            ConversationPage session = sessions.get(position-2);
+            container.addView(session.inflateUi(container.getContext(), (s) -> removeSession(s)));
             return session;
         }
 
@@ -1478,7 +1505,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return;
             }
 
-            container.removeView(((CommandSession) o).getView());
+            container.removeView(((ConversationPage) o).getView());
         }
 
         @Override
@@ -1512,8 +1539,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         public boolean isViewFromObject(@NonNull View view, @NonNull Object o) {
             if (view == o) return true;
 
-            if (o instanceof CommandSession) {
-                return ((CommandSession) o).getView() == view;
+            if (o instanceof ConversationPage) {
+                return ((ConversationPage) o).getView() == view;
             }
 
             return false;
@@ -1528,13 +1555,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 case 1:
                     return "Commands";
                 default:
-                    CommandSession session = sessions.get(position-2);
+                    ConversationPage session = sessions.get(position-2);
                     if (session == null) return super.getPageTitle(position);
                     return session.getTitle();
             }
         }
 
-        class CommandSession extends RecyclerView.Adapter<CommandSession.ViewHolder> {
+        class CommandSession extends RecyclerView.Adapter<CommandSession.ViewHolder> implements ConversationPage {
             abstract class ViewHolder<T extends ViewDataBinding> extends RecyclerView.ViewHolder {
                 protected T binding;
 
@@ -2434,6 +2461,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return mTitle;
             }
 
+            public String getNode() {
+                return mNode;
+            }
+
             public void updateWithResponse(final IqPacket iq) {
                 if (getView() != null && getView().isAttachedToWindow()) {
                     getView().post(() -> updateWithResponseUiThread(iq));
@@ -2853,6 +2884,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return false;
             }
 
+            public void refresh() { }
+
             protected void loading() {
                 View v = getView();
                 loadingTimer.schedule(new TimerTask() {
@@ -2898,7 +2931,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return layoutManager;
             }
 
-            public void setBinding(CommandPageBinding b) {
+            protected void setBinding(CommandPageBinding b) {
                 mBinding = b;
                 // https://stackoverflow.com/a/32350474/8611
                 mBinding.form.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
@@ -2949,6 +2982,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     pendingResponsePacket = null;
                     updateWithResponseUiThread(pending);
                 }
+            }
+
+            public View inflateUi(Context context, Consumer<ConversationPage> remover) {
+                CommandPageBinding binding = DataBindingUtil.inflate(LayoutInflater.from(context), R.layout.command_page, null, false);
+                setBinding(binding);
+                return binding.getRoot();
             }
 
             // https://stackoverflow.com/a/36037991/8611
