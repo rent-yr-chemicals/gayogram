@@ -1636,7 +1636,7 @@ public class XmppConnectionService extends Service {
         }
 
         MessagePacket packet = null;
-        final boolean addToConversation = !message.edited();
+        final boolean addToConversation = !message.edited() && message.getQuoteableBody() != null;
         boolean saveInDb = addToConversation;
         message.setStatus(Message.STATUS_WAITING);
 

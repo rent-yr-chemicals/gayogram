@@ -120,7 +120,7 @@ public class MessageGenerator extends AbstractGenerator {
 
             packet.addChild("x", Namespace.OOB).addChild("url").setContent(fileParams.url);
         }
-        packet.setBody(message.getQuoteableBody());
+        if (message.getQuoteableBody() != null) packet.setBody(message.getQuoteableBody());
         return packet;
     }
 

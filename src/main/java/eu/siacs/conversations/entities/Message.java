@@ -531,9 +531,6 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     }
 
     public synchronized void setBody(String body) {
-        if (body == null) {
-            throw new Error("You should not set the message body to null");
-        }
         this.body = body;
         this.isGeoUri = null;
         this.isEmojisOnly = null;
