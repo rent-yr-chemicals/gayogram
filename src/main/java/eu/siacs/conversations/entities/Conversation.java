@@ -1488,10 +1488,16 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         @Override
         public Object instantiateItem(@NonNull ViewGroup container, int position) {
             if (position == 0) {
+                if (page1 != null && page1.getParent() != null) {
+                    ((ViewGroup) page1.getParent()).removeView(page1);
+                }
                 container.addView(page1);
                 return page1;
             }
             if (position == 1) {
+                if (page2 != null && page2.getParent() != null) {
+                    ((ViewGroup) page2.getParent()).removeView(page2);
+                }
                 container.addView(page2);
                 return page2;
             }
