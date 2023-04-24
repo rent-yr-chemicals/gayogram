@@ -687,9 +687,12 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             }
         });
         WebxdcUpdate lastUpdate = activity.xmppConnectionService.findLastWebxdcUpdate(message);
-        if (lastUpdate != null && lastUpdate.getSummary() != null) {
+        if (lastUpdate != null && (lastUpdate.getSummary() != null || lastUpdate.getDocument() != null)) {
             viewHolder.messageBody.setVisibility(View.VISIBLE);
-            viewHolder.messageBody.setText(lastUpdate.getSummary());
+            viewHolder.messageBody.setText(
+                (lastUpdate.getDocument() == null ? "" : lastUpdate.getDocument() + "\n") +
+                (lastUpdate.getSummary() == null ? "" : lastUpdate.getSummary())
+            );
         }
     }
 
