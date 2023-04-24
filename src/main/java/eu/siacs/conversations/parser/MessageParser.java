@@ -522,9 +522,10 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
             }
         }
 
+        final boolean conversationIsProbablyMuc = isTypeGroupChat || mucUserElement != null || account.getXmppConnection().getMucServersWithholdAccount().contains(counterpart.getDomain().toEscapedString());
         final Element webxdc = packet.findChild("x", "urn:xmpp:webxdc:0");
         if (webxdc != null) {
-            final Conversation conversation = mXmppConnectionService.find(account, counterpart.asBareJid());
+            final Conversation conversation = mXmppConnectionService.findOrCreateConversation(account, counterpart.asBareJid(), conversationIsProbablyMuc, false, query, false);
             Jid webxdcSender = counterpart.asBareJid();
             if (conversation.getMode() == Conversation.MODE_MULTI) {
                 if(conversation.getMucOptions().nonanonymous()) {
@@ -547,7 +548,6 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
         }
 
         if ((body != null || pgpEncrypted != null || (axolotlEncrypted != null && axolotlEncrypted.hasChild("payload")) || !attachments.isEmpty() || html != null) && !isMucStatusMessage) {
-            final boolean conversationIsProbablyMuc = isTypeGroupChat || mucUserElement != null || account.getXmppConnection().getMucServersWithholdAccount().contains(counterpart.getDomain().toEscapedString());
             final Conversation conversation = mXmppConnectionService.findOrCreateConversation(account, counterpart.asBareJid(), conversationIsProbablyMuc, false, query, false);
             final boolean conversationMultiMode = conversation.getMode() == Conversation.MODE_MULTI;
 
