@@ -40,6 +40,9 @@ import java.util.zip.ZipFile;
 import org.json.JSONObject;
 import org.json.JSONException;
 
+import org.tomlj.Toml;
+import org.tomlj.TomlTable;
+
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.WebxdcPageBinding;
@@ -56,8 +59,10 @@ public class WebxdcPage implements ConversationPage {
 	protected XmppConnectionService xmppConnectionService;
 	protected WebxdcPageBinding binding = null;
 	protected ZipFile zip = null;
+	protected TomlTable manifest = null;
 	protected String baseUrl;
 	protected Message source;
+	protected WebxdcUpdate lastUpdate = null;
 
 	public WebxdcPage(Cid cid, Message source, XmppConnectionService xmppConnectionService) {
 		this.xmppConnectionService = xmppConnectionService;
@@ -65,6 +70,10 @@ public class WebxdcPage implements ConversationPage {
 		File f = xmppConnectionService.getFileForCid(cid);
 		try {
 			if (f != null) zip = new ZipFile(xmppConnectionService.getFileForCid(cid));
+			final ZipEntry manifestEntry = zip.getEntry("manifest.toml");
+			if (manifestEntry != null) {
+				manifest = Toml.parse(zip.getInputStream(manifestEntry));
+			}
 		} catch (final IOException e) {
 			Log.w(Config.LOGTAG, "WebxdcPage: " + e);
 		}
@@ -77,7 +86,15 @@ public class WebxdcPage implements ConversationPage {
 	}
 
 	public String getTitle() {
-		return "WebXDC";
+		String title = manifest == null ? null : manifest.getString("name");
+		if (lastUpdate != null && lastUpdate.getDocument() != null) {
+			if (title == null) {
+				title = lastUpdate.getDocument();
+			} else {
+				title += ": " + lastUpdate.getDocument();
+			}
+		}
+		return title == null ? "ChatApp" : title;
 	}
 
 	public String getNode() {
@@ -316,6 +333,7 @@ public class WebxdcPage implements ConversationPage {
 			StringBuilder builder = new StringBuilder("[");
 			String sep = "";
 			for (WebxdcUpdate update : xmppConnectionService.findWebxdcUpdates(source, lastKnownSerial)) {
+				lastUpdate = update;
 				builder.append(sep);
 				builder.append(update.toString());
 				sep = ",";

@@ -55,6 +55,10 @@ public class WebxdcUpdate {
 		return summary;
 	}
 
+	public String getDocument() {
+		return document;
+	}
+
 	public ContentValues getContentValues() {
 		ContentValues cv = new ContentValues();
 		cv.put(Message.CONVERSATION, conversationId);
