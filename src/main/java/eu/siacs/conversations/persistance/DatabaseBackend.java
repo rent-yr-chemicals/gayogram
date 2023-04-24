@@ -871,7 +871,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         String[] selectionArgs = {message.getConversation().getUuid(), message.getThread().getContent()};
         Cursor cursor = db.query("cheogram.webxdc_updates", null,
                 Message.CONVERSATION + "=? AND thread=?",
-                selectionArgs, null, null, null);
+                selectionArgs, null, null, "serial ASC");
         WebxdcUpdate update = null;
         if (cursor.moveToLast()) {
             update = new WebxdcUpdate(cursor, cursor.getLong(cursor.getColumnIndex("serial")));
@@ -885,7 +885,7 @@ public class DatabaseBackend extends SQLiteOpenHelper {
         String[] selectionArgs = {message.getConversation().getUuid(), message.getThread().getContent(), String.valueOf(serial)};
         Cursor cursor = db.query("cheogram.webxdc_updates", null,
                 Message.CONVERSATION + "=? AND thread=? AND serial>?",
-                selectionArgs, null, null, null);
+                selectionArgs, null, null, "serial ASC");
         long maxSerial = 0;
         if (cursor.moveToLast()) {
             maxSerial = cursor.getLong(cursor.getColumnIndex("serial"));
