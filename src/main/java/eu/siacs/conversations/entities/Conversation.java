@@ -1373,6 +1373,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             if (pager.getChildAt(0) != null) page1 = pager.getChildAt(0);
             if (pager.getChildAt(1) != null) page2 = pager.getChildAt(1);
+            if (page1 == null || page2 == null) {
+                throw new IllegalStateException("page1 or page2 were not present as child or in model?");
+            }
             pager.removeView(page1);
             pager.removeView(page2);
             pager.setAdapter(this);
