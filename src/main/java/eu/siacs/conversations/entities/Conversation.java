@@ -1494,7 +1494,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             ConversationPage session = sessions.get(position-2);
-            container.addView(session.inflateUi(container.getContext(), (s) -> removeSession(s)));
+            View v = session.inflateUi(container.getContext(), (s) -> removeSession(s));
+            if (v != null && v.getParent() != null) {
+                ((ViewGroup) v.getParent()).removeView(v);
+            }
+            container.addView(v);
             return session;
         }
 
