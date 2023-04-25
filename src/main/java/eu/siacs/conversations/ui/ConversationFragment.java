@@ -62,6 +62,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.pm.ShortcutInfoCompat;
+import androidx.core.content.pm.ShortcutManagerCompat;
 import androidx.core.view.inputmethod.InputConnectionCompat;
 import androidx.core.view.inputmethod.InputContentInfoCompat;
 import androidx.databinding.DataBindingUtil;
@@ -1757,6 +1759,9 @@ public class ConversationFragment extends XmppFragment
             case R.id.action_toggle_pinned:
                 togglePinned();
                 break;
+            case R.id.action_add_shortcut:
+                addShortcut();
+                break;
             case R.id.action_refresh_feature_discovery:
                 refreshFeatureDiscovery();
                 break;
@@ -1824,6 +1829,11 @@ public class ConversationFragment extends XmppFragment
                 });
             });
         }
+    }
+
+    private void addShortcut() {
+        ShortcutInfoCompat info = activity.xmppConnectionService.getShortcutService().getShortcutInfoCompat(conversation.getContact());
+        ShortcutManagerCompat.requestPinShortcut(activity, info, null);
     }
 
     private void togglePinned() {

@@ -132,6 +132,12 @@
                 app:showAsAction="never" />
 
             <item
+                android:id="@+id/action_add_shortcut"
+                android:orderInCategory="73"
+                android:title="Add to Home Screen"
+                app:showAsAction="never" />
+
+            <item
                 android:id="@+id/action_clear_history"
                 android:orderInCategory="74"
                 android:title="@string/action_clear_history"
