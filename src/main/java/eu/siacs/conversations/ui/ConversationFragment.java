@@ -1368,7 +1368,7 @@ public class ConversationFragment extends XmppFragment
         messageListAdapter.setOnContactPictureClicked(null);
         messageListAdapter.setOnContactPictureLongClicked(null);
         messageListAdapter.setOnInlineImageLongClicked(null);
-        if (conversation != null) conversation.setupViewPager(null, null, false);
+        if (conversation != null) conversation.setupViewPager(null, null, false, null);
     }
 
     private void quoteText(String text) {
@@ -2855,12 +2855,11 @@ public class ConversationFragment extends XmppFragment
                 .setOpenConversation(this.conversation);
 
         if (commandAdapter != null && conversation != originalConversation) {
-            originalConversation.setupViewPager(null, null, false);
-            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout, activity.xmppConnectionService.isOnboarding());
+            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout, activity.xmppConnectionService.isOnboarding(), originalConversation);
             refreshCommands(false);
         }
         if (commandAdapter == null && conversation != null) {
-            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout, activity.xmppConnectionService.isOnboarding());
+            conversation.setupViewPager(binding.conversationViewPager, binding.tabLayout, activity.xmppConnectionService.isOnboarding(), null);
             commandAdapter = new CommandAdapter((XmppActivity) getActivity());
             binding.commandsView.setAdapter(commandAdapter);
             binding.commandsView.setOnItemClickListener((parent, view, position, id) -> {

@@ -1321,8 +1321,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         return pagerAdapter.switchToSession(node);
     }
 
-    public void setupViewPager(ViewPager pager, TabLayout tabs, boolean onboarding) {
-        pagerAdapter.setupViewPager(pager, tabs, onboarding);
+    public void setupViewPager(ViewPager pager, TabLayout tabs, boolean onboarding, Conversation oldConversation) {
+        pagerAdapter.setupViewPager(pager, tabs, onboarding, oldConversation);
     }
 
     public void showViewPager() {
@@ -1363,16 +1363,23 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         protected View page2 = null;
         protected boolean mOnboarding = false;
 
-        public void setupViewPager(ViewPager pager, TabLayout tabs, boolean onboarding) {
+        public void setupViewPager(ViewPager pager, TabLayout tabs, boolean onboarding, Conversation oldConversation) {
             mPager = pager;
             mTabs = tabs;
             mOnboarding = onboarding;
+
+            if (oldConversation != null) {
+                oldConversation.pagerAdapter.mPager = null;
+                oldConversation.pagerAdapter.mTabs = null;
+            }
 
             if (mPager == null) return;
             if (sessions != null) show();
 
             if (pager.getChildAt(0) != null) page1 = pager.getChildAt(0);
             if (pager.getChildAt(1) != null) page2 = pager.getChildAt(1);
+            if (page1 == null) page1 = oldConversation.pagerAdapter.page1;
+            if (page2 == null) page2 = oldConversation.pagerAdapter.page2;
             if (page1 == null || page2 == null) {
                 throw new IllegalStateException("page1 or page2 were not present as child or in model?");
             }
