@@ -1309,8 +1309,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         pagerAdapter.refreshSessions();
     }
 
-    public void startWebxdc(Cid cid, Message message, XmppConnectionService xmppConnectionService) {
-        pagerAdapter.startWebxdc(cid, message, xmppConnectionService);
+    public void startWebxdc(WebxdcPage page) {
+        pagerAdapter.startWebxdc(page);
     }
 
     public void startCommand(Element command, XmppConnectionService xmppConnectionService) {
@@ -1423,9 +1423,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
         }
 
-        public void startWebxdc(Cid cid, Message message, XmppConnectionService xmppConnectionService) {
+        public void startWebxdc(WebxdcPage page) {
             show();
-            sessions.add(new WebxdcPage(cid, message, xmppConnectionService));
+            sessions.add(page);
             notifyDataSetChanged();
             if (mPager != null) mPager.setCurrentItem(getCount() - 1);
         }

@@ -42,6 +42,7 @@ import androidx.core.content.res.ResourcesCompat;
 
 import com.cheogram.android.BobTransfer;
 import com.cheogram.android.SwipeDetector;
+import com.cheogram.android.WebxdcPage;
 import com.cheogram.android.WebxdcUpdate;
 
 import com.google.common.base.Strings;
@@ -675,25 +676,35 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     }
 
     private void displayWebxdcMessage(ViewHolder viewHolder, final Message message, final boolean darkBackground, final int type) {
+        WebxdcPage webxdc = new WebxdcPage(message.getFileParams().getCids().get(0), message, activity.xmppConnectionService);
         displayTextMessage(viewHolder, message, darkBackground, type);
         viewHolder.image.setVisibility(View.GONE);
         viewHolder.audioPlayer.setVisibility(View.GONE);
         viewHolder.download_button.setVisibility(View.VISIBLE);
-        viewHolder.download_button.setText("Open ChatApp");
+        viewHolder.download_button.setText("Open " + webxdc.getName());
         viewHolder.download_button.setOnClickListener(v -> {
             Conversation conversation = (Conversation) message.getConversation();
             if (!conversation.switchToSession("webxdc\0" + message.getUuid())) {
-                conversation.startWebxdc(message.getFileParams().getCids().get(0), message, activity.xmppConnectionService);
+                conversation.startWebxdc(webxdc);
             }
         });
-        WebxdcUpdate lastUpdate = activity.xmppConnectionService.findLastWebxdcUpdate(message);
-        if (lastUpdate != null && (lastUpdate.getSummary() != null || lastUpdate.getDocument() != null)) {
-            viewHolder.messageBody.setVisibility(View.VISIBLE);
-            viewHolder.messageBody.setText(
-                (lastUpdate.getDocument() == null ? "" : lastUpdate.getDocument() + "\n") +
-                (lastUpdate.getSummary() == null ? "" : lastUpdate.getSummary())
-            );
-        }
+        new Thread(() -> {
+            Drawable icon = webxdc.getIcon();
+            WebxdcUpdate lastUpdate = activity.xmppConnectionService.findLastWebxdcUpdate(message);
+            activity.runOnUiThread(() -> {
+                if (lastUpdate != null && (lastUpdate.getSummary() != null || lastUpdate.getDocument() != null)) {
+                    viewHolder.messageBody.setVisibility(View.VISIBLE);
+                    viewHolder.messageBody.setText(
+                        (lastUpdate.getDocument() == null ? "" : lastUpdate.getDocument() + "\n") +
+                        (lastUpdate.getSummary() == null ? "" : lastUpdate.getSummary())
+                    );
+                }
+                if (icon != null) {
+                    viewHolder.image.setVisibility(View.VISIBLE);
+                    viewHolder.image.setImageDrawable(icon);
+                }
+            });
+        }).start();
     }
 
     private void displayOpenableMessage(ViewHolder viewHolder, final Message message, final boolean darkBackground, final int type) {

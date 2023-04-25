@@ -5,8 +5,12 @@ package com.cheogram.android;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
+import android.graphics.ImageDecoder;
+import android.graphics.Rect;
 import android.net.Uri;
 import android.os.Build;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Gravity;
@@ -25,6 +29,8 @@ import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.databinding.DataBindingUtil;
 
+import com.google.common.io.ByteStreams;
+
 import io.ipfs.cid.Cid;
 
 import java.lang.ref.WeakReference;
@@ -32,6 +38,7 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -48,6 +55,7 @@ import eu.siacs.conversations.R;
 import eu.siacs.conversations.databinding.WebxdcPageBinding;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Message;
+import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.services.XmppConnectionService;
 import eu.siacs.conversations.utils.Consumer;
 import eu.siacs.conversations.utils.MimeUtils;
@@ -83,6 +91,33 @@ public class WebxdcPage implements ConversationPage {
 		// (a random-id would also work, but would need maintenance and does not add benefits as we regard the file-part interceptRequest() only,
 		// also a random-id is not that useful for debugging)
 		baseUrl = "https://" + source.getUuid() + ".localhost";
+	}
+
+	public Drawable getIcon() {
+		if (android.os.Build.VERSION.SDK_INT < 28) return null;
+		ZipEntry entry = zip.getEntry("icon.webp");
+		if (entry == null) entry = zip.getEntry("icon.png");
+		if (entry == null) entry = zip.getEntry("icon.jpg");
+		if (entry == null) return null;
+
+		try {
+			DisplayMetrics metrics = xmppConnectionService.getResources().getDisplayMetrics();
+			ImageDecoder.Source source = ImageDecoder.createSource(ByteBuffer.wrap(ByteStreams.toByteArray(zip.getInputStream(entry))));
+			return ImageDecoder.decodeDrawable(source, (decoder, info, src) -> {
+				int w = info.getSize().getWidth();
+				int h = info.getSize().getHeight();
+				Rect r = FileBackend.rectForSize(w, h, (int)(metrics.density * 288));
+				decoder.setTargetSize(r.width(), r.height());
+			});
+		} catch (final IOException e) {
+			Log.w(Config.LOGTAG, "WebxdcPage.getIcon: " + e);
+			return null;
+		}
+	}
+
+	public String getName() {
+		String title = manifest == null ? null : manifest.getString("name");
+		return title == null ? "ChatApp" : title;
 	}
 
 	public String getTitle() {
