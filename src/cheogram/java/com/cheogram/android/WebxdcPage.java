@@ -316,7 +316,8 @@ public class WebxdcPage implements ConversationPage {
 			if (conversation.getMode() == Conversation.MODE_MULTI) {
 				return conversation.getMucOptions().getActualNick();
 			} else {
-				return conversation.getAccount().getDisplayName();
+				final String displayName = conversation.getAccount().getDisplayName();
+				return displayName == null || "".equals(displayName) ? conversation.getAccount().getUsername() : displayName;
 			}
 		}
 
