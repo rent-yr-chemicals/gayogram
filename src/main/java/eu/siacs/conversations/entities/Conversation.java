@@ -1474,6 +1474,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
         public void removeSession(ConversationPage session) {
             sessions.remove(session);
             notifyDataSetChanged();
+            if (session instanceof WebxdcPage) mPager.setCurrentItem(0);
         }
 
         public boolean switchToSession(final String node) {
