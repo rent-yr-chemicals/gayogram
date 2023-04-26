@@ -294,6 +294,26 @@ public class ExportBackupService extends Service {
         if (cursor != null) {
             cursor.close();
         }
+
+        cursor = db.rawQuery("select webxdc_updates.* from " + Conversation.TABLENAME + " join cheogram.webxdc_updates webxdc_updates on " + Conversation.TABLENAME + ".uuid=webxdc_updates." + Message.CONVERSATION + " where conversations.accountUuid=?", new String[]{uuid});
+        size = cursor != null ? cursor.getCount() : 0;
+        Log.d(Config.LOGTAG, "exporting " + size + " WebXDC updates for account " + uuid);
+        while (cursor != null && cursor.moveToNext()) {
+            writer.write(cursorToString("cheogram.webxdc_updates", cursor, PAGE_SIZE, false));
+            if (i + PAGE_SIZE > size) {
+                i = size;
+            } else {
+                i += PAGE_SIZE;
+            }
+            final int percentage = i * 100 / size;
+            if (p < percentage) {
+                p = percentage;
+                notificationManager.notify(NOTIFICATION_ID, progress.build(p));
+            }
+        }
+        if (cursor != null) {
+            cursor.close();
+        }
     }
 
     private List<File> export(boolean withCheogramDb) throws Exception {
