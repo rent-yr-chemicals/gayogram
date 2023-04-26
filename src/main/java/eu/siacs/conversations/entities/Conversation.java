@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
 import android.net.Uri;
+import android.telephony.PhoneNumberUtils;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.SpannableStringBuilder;
@@ -72,6 +73,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeParseException;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -1662,6 +1669,30 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         textinput.setInputType(flags | InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
                     }
                 }
+
+                protected String formatValue(String datatype, String value, boolean compact) {
+                    if ("xs:dateTime".equals(datatype)) {
+                        ZonedDateTime zonedDateTime = null;
+                        try {
+                            zonedDateTime = ZonedDateTime.parse(value, DateTimeFormatter.ISO_DATE_TIME);
+                        } catch (final DateTimeParseException e) {
+                            try {
+                                DateTimeFormatter almostIso = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm[:ss] X");
+                                zonedDateTime = ZonedDateTime.parse(value, almostIso);
+                            } catch (final DateTimeParseException e2) { }
+                        }
+                        if (zonedDateTime == null) return value;
+                        ZonedDateTime localZonedDateTime = zonedDateTime.withZoneSameInstant(ZoneId.systemDefault());
+                        DateTimeFormatter outputFormat = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.SHORT);
+                        return localZonedDateTime.toLocalDateTime().format(outputFormat);
+                    }
+
+                    if ("html:tel".equals(datatype) && !compact) {
+                        return PhoneNumberUtils.formatNumber(value, value, null);
+                    }
+
+                    return value;
+                }
             }
 
             class ErrorViewHolder extends ViewHolder<CommandNoteBinding> {
@@ -1704,22 +1735,25 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     setTextOrHide(binding.label, field.getLabel());
                     setTextOrHide(binding.desc, field.getDesc());
 
-                    ArrayAdapter<String> values = new ArrayAdapter<String>(binding.getRoot().getContext(), R.layout.simple_list_item);
+                    Element validate = field.el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                    String datatype = validate == null ? null : validate.getAttribute("datatype");
+
+                    ArrayAdapter<Option> values = new ArrayAdapter<>(binding.getRoot().getContext(), R.layout.simple_list_item);
                     for (Element el : field.el.getChildren()) {
                         if (el.getName().equals("value") && el.getNamespace().equals("jabber:x:data")) {
-                            values.add(el.getContent());
+                            values.add(new Option(el.getContent(), formatValue(datatype, el.getContent(), false)));
                         }
                     }
                     binding.values.setAdapter(values);
 
                     if (field.getType().equals(Optional.of("jid-single")) || field.getType().equals(Optional.of("jid-multi"))) {
                         binding.values.setOnItemClickListener((arg0, arg1, pos, id) -> {
-                            new FixedURLSpan("xmpp:" + Jid.ofEscaped(values.getItem(pos)).toEscapedString()).onClick(binding.values);
+                            new FixedURLSpan("xmpp:" + Jid.ofEscaped(values.getItem(pos).getValue()).toEscapedString()).onClick(binding.values);
                         });
                     }
 
                     binding.values.setOnItemLongClickListener((arg0, arg1, pos, id) -> {
-                        if (ShareUtil.copyTextToClipboard(binding.getRoot().getContext(), values.getItem(pos), R.string.message)) {
+                        if (ShareUtil.copyTextToClipboard(binding.getRoot().getContext(), values.getItem(pos).getValue(), R.string.message)) {
                             Toast.makeText(binding.getRoot().getContext(), R.string.message_copied_to_clipboard, Toast.LENGTH_SHORT).show();
                         }
                         return true;
@@ -1738,7 +1772,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Subhead);
                         setTextOrHide(binding.text, cell.reported.getLabel());
                     } else {
-                        String value = cell.el.findChildContent("value", "jabber:x:data");
+                        Element validate = cell.reported.el.findChild("validate", "http://jabber.org/protocol/xdata-validate");
+                        String datatype = validate == null ? null : validate.getAttribute("datatype");
+                        String value = formatValue(datatype, cell.el.findChildContent("value", "jabber:x:data"), true);
                         SpannableStringBuilder text = new SpannableStringBuilder(value == null ? "" : value);
                         if (cell.reported.getType().equals(Optional.of("jid-single"))) {
                             text.setSpan(new FixedURLSpan("xmpp:" + Jid.ofEscaped(text.toString()).toEscapedString()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
@@ -2933,7 +2969,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         (a, b) -> a + b
                     );
 
-                    spanCount = tableHeaderWidth > 0.55 * screenWidth ? 1 : this.reported.size();
+                    spanCount = tableHeaderWidth > 0.59 * screenWidth ? 1 : this.reported.size();
                 }
 
                 if (layoutManager != null && layoutManager.getSpanCount() != spanCount) {
