@@ -22,6 +22,7 @@ import android.text.style.RelativeSizeSpan;
 import android.text.style.StyleSpan;
 import android.text.style.URLSpan;
 import android.util.DisplayMetrics;
+import android.util.LruCache;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -676,7 +677,8 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     }
 
     private void displayWebxdcMessage(ViewHolder viewHolder, final Message message, final boolean darkBackground, final int type) {
-        WebxdcPage webxdc = new WebxdcPage(message.getFileParams().getCids().get(0), message, activity.xmppConnectionService);
+        Cid webxdcCid = message.getFileParams().getCids().get(0);
+        WebxdcPage webxdc = new WebxdcPage(webxdcCid, message, activity.xmppConnectionService);
         displayTextMessage(viewHolder, message, darkBackground, type);
         viewHolder.image.setVisibility(View.GONE);
         viewHolder.audioPlayer.setVisibility(View.GONE);
@@ -688,23 +690,30 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 conversation.startWebxdc(webxdc);
             }
         });
-        new Thread(() -> {
-            Drawable icon = webxdc.getIcon();
-            WebxdcUpdate lastUpdate = activity.xmppConnectionService.findLastWebxdcUpdate(message);
-            activity.runOnUiThread(() -> {
-                if (lastUpdate != null && (lastUpdate.getSummary() != null || lastUpdate.getDocument() != null)) {
-                    viewHolder.messageBody.setVisibility(View.VISIBLE);
-                    viewHolder.messageBody.setText(
-                        (lastUpdate.getDocument() == null ? "" : lastUpdate.getDocument() + "\n") +
-                        (lastUpdate.getSummary() == null ? "" : lastUpdate.getSummary())
-                    );
-                }
+        // TODO: db access on UI thread is bad
+        WebxdcUpdate lastUpdate = activity.xmppConnectionService.findLastWebxdcUpdate(message);
+        if (lastUpdate != null && (lastUpdate.getSummary() != null || lastUpdate.getDocument() != null)) {
+            viewHolder.messageBody.setVisibility(View.VISIBLE);
+            viewHolder.messageBody.setText(
+                (lastUpdate.getDocument() == null ? "" : lastUpdate.getDocument() + "\n") +
+                (lastUpdate.getSummary() == null ? "" : lastUpdate.getSummary())
+            );
+        }
+
+        final LruCache<String, Drawable> cache = activity.xmppConnectionService.getDrawableCache();
+        final Drawable d = cache.get("webxdc:icon:" + webxdcCid);
+        if (d == null) {
+            new Thread(() -> {
+                Drawable icon = webxdc.getIcon();
                 if (icon != null) {
-                    viewHolder.image.setVisibility(View.VISIBLE);
-                    viewHolder.image.setImageDrawable(icon);
+                    cache.put("webxdc:icon:" + webxdcCid, icon);
+                    activity.xmppConnectionService.updateConversationUi();
                 }
-            });
-        }).start();
+            }).start();
+        } else {
+            viewHolder.image.setVisibility(View.VISIBLE);
+            viewHolder.image.setImageDrawable(d);
+        }
     }
 
     private void displayOpenableMessage(ViewHolder viewHolder, final Message message, final boolean darkBackground, final int type) {
