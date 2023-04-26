@@ -2928,11 +2928,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     TextPaint paint = ((TextView) LayoutInflater.from(mPager.getContext()).inflate(R.layout.command_result_cell, null)).getPaint();
                     float tableHeaderWidth = reported.stream().reduce(
                         0f,
-                        (total, field) -> total + StaticLayout.getDesiredWidth(field.getLabel().or("--------"), paint),
+                        (total, field) -> total + StaticLayout.getDesiredWidth(field.getLabel().or("--------") + "\t", paint),
                         (a, b) -> a + b
                     );
 
-                    spanCount = tableHeaderWidth > 0.65 * screenWidth ? 1 : this.reported.size();
+                    spanCount = tableHeaderWidth > 0.55 * screenWidth ? 1 : this.reported.size();
                 }
 
                 if (layoutManager != null && layoutManager.getSpanCount() != spanCount) {
