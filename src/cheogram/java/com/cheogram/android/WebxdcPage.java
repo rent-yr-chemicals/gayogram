@@ -84,7 +84,7 @@ public class WebxdcPage implements ConversationPage {
 		File f = xmppConnectionService.getFileForCid(cid);
 		try {
 			if (f != null) zip = new ZipFile(xmppConnectionService.getFileForCid(cid));
-			final ZipEntry manifestEntry = zip.getEntry("manifest.toml");
+			final ZipEntry manifestEntry = zip == null ? null : zip.getEntry("manifest.toml");
 			if (manifestEntry != null) {
 				manifest = Toml.parse(zip.getInputStream(manifestEntry));
 			}
@@ -101,6 +101,7 @@ public class WebxdcPage implements ConversationPage {
 
 	public Drawable getIcon() {
 		if (android.os.Build.VERSION.SDK_INT < 28) return null;
+		if (zip == null) return null;
 		ZipEntry entry = zip.getEntry("icon.webp");
 		if (entry == null) entry = zip.getEntry("icon.png");
 		if (entry == null) entry = zip.getEntry("icon.jpg");
