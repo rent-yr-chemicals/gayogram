@@ -5,7 +5,9 @@ package com.cheogram.android;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.graphics.drawable.Icon;
 import android.graphics.ImageDecoder;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -27,6 +29,9 @@ import android.widget.TextView;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.pm.ShortcutInfoCompat;
+import androidx.core.content.pm.ShortcutManagerCompat;
+import androidx.core.graphics.drawable.IconCompat;
 import androidx.databinding.DataBindingUtil;
 
 import com.google.common.io.ByteStreams;
@@ -57,6 +62,7 @@ import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.services.XmppConnectionService;
+import eu.siacs.conversations.ui.ConversationsActivity;
 import eu.siacs.conversations.utils.Consumer;
 import eu.siacs.conversations.utils.MimeUtils;
 import eu.siacs.conversations.utils.UIHelper;
@@ -268,7 +274,7 @@ public class WebxdcPage implements ConversationPage {
 
 		binding.webview.loadUrl(baseUrl + "/index.html");
 
-		binding.actions.setAdapter(new ArrayAdapter<String>(context, R.layout.simple_list_item, new String[]{"Close"}) {
+		binding.actions.setAdapter(new ArrayAdapter<String>(context, R.layout.simple_list_item, new String[]{"Add to Home Screen", "Close"}) {
 			@Override
 			public View getView(int position, View convertView, ViewGroup parent) {
 				View v = super.getView(position, convertView, parent);
@@ -280,7 +286,25 @@ public class WebxdcPage implements ConversationPage {
 			}
 		});
 		binding.actions.setOnItemClickListener((parent, v, pos, id) -> {
-			remover.accept(WebxdcPage.this);
+			if (pos == 0) {
+				Intent intent = new Intent(xmppConnectionService, ConversationsActivity.class);
+				intent.setAction(ConversationsActivity.ACTION_VIEW_CONVERSATION);
+				intent.putExtra(ConversationsActivity.EXTRA_CONVERSATION, ((Conversation) source.getConversation()).getUuid());
+				intent.putExtra(ConversationsActivity.EXTRA_POST_INIT_ACTION, "webxdc");
+				intent.putExtra(ConversationsActivity.EXTRA_DOWNLOAD_UUID, source.getUuid());
+				intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP|Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+				ShortcutInfoCompat.Builder builder = new ShortcutInfoCompat.Builder(xmppConnectionService, "webxdc:" + source.getUuid())
+					.setShortLabel(getTitle())
+					.setIntent(intent);
+				Drawable icon = getIcon();
+				if (icon != null && icon instanceof BitmapDrawable) {
+					builder = builder.setIcon(IconCompat.createFromIcon(Icon.createWithBitmap(((BitmapDrawable) icon).getBitmap())));
+				}
+				ShortcutManagerCompat.requestPinShortcut(xmppConnectionService, builder.build(), null);
+			} else {
+				remover.accept(WebxdcPage.this);
+			}
 		});
 
 		return getView();

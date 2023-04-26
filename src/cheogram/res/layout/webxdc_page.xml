@@ -22,7 +22,7 @@
             android:layout_alignParentBottom="true"
             android:horizontalSpacing="0dp"
             android:verticalSpacing="0dp"
-            android:numColumns="1" />
+            android:numColumns="2" />
 
     </RelativeLayout>
 </layout>

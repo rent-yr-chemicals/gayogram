@@ -72,6 +72,7 @@ import androidx.viewpager.widget.PagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.cheogram.android.BobTransfer;
+import com.cheogram.android.WebxdcPage;
 
 import com.google.common.base.Optional;
 import com.google.common.collect.ImmutableList;
@@ -3034,6 +3035,16 @@ public class ConversationFragment extends XmppFragment
         }
         final Message message =
                 downloadUuid == null ? null : conversation.findMessageWithFileAndUuid(downloadUuid);
+        if ("webxdc".equals(postInitAction)) {
+            if (message == null) return;
+
+            Cid webxdcCid = message.getFileParams().getCids().get(0);
+            WebxdcPage webxdc = new WebxdcPage(webxdcCid, message, activity.xmppConnectionService);
+            Conversation conversation = (Conversation) message.getConversation();
+            if (!conversation.switchToSession("webxdc\0" + message.getUuid())) {
+                conversation.startWebxdc(webxdc);
+            }
+        }
         if (message != null) {
             startDownloadable(message);
         }
