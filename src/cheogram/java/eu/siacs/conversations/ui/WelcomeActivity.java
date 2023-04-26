@@ -202,6 +202,12 @@ public class WelcomeActivity extends XmppActivity implements XmppConnectionServi
             addInviteUri(intent);
             startActivity(intent);
         });
+
+        binding.useBackup.setOnClickListener(v -> {
+            if (hasStoragePermission(REQUEST_IMPORT_BACKUP)) {
+                startActivity(new Intent(this, ImportBackupActivity.class));
+            }
+        });
     }
 
     @Override

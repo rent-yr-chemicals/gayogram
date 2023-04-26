@@ -243,7 +243,6 @@
                         android:text="@string/i_already_have_an_account"
                         android:textColor="?colorAccent" />
 
-
                     <Button
                         android:id="@+id/use_snikket"
                         style="@style/Widget.Conversations.Button.Borderless"
@@ -255,6 +254,19 @@
                         android:drawableLeft="@drawable/snikket"
                         android:fontFamily="@font/poppins"
                         android:text="@string/i_am_snikket_user"
+                        android:textColor="?colorAccent" />
+
+                    <Button
+                        android:id="@+id/use_backup"
+                        style="@style/Widget.Conversations.Button.Borderless"
+                        android:textAllCaps="false"
+                        android:textSize="?TextSizeTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:drawableLeft="@drawable/restore"
+                        android:fontFamily="@font/poppins"
+                        android:text="@string/restore_backup"
                         android:textColor="?colorAccent" />
                 </LinearLayout>
             </LinearLayout>
