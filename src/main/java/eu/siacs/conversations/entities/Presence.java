@@ -48,7 +48,7 @@ public class Presence implements Comparable<Presence> {
 	private final String node;
 	private final String message;
 
-	private Presence(Status status, String ver, String hash, String node, String message) {
+	public Presence(Status status, String ver, String hash, String node, String message) {
 		this.status = status;
 		this.ver = ver;
 		this.hash = hash;

@@ -4956,8 +4956,8 @@ public class XmppConnectionService extends Service {
     }
 
     public void fetchCaps(Account account, final Jid jid, final Presence presence, Runnable cb) {
-        final Pair<String, String> key = new Pair<>(presence.getHash(), presence.getVer());
-        final ServiceDiscoveryResult disco = getCachedServiceDiscoveryResult(key);
+        final Pair<String, String> key = presence == null ? null : new Pair<>(presence.getHash(), presence.getVer());
+        final ServiceDiscoveryResult disco = key == null ? null : getCachedServiceDiscoveryResult(key);
 
         if (disco != null) {
             presence.setServiceDiscoveryResult(disco);
@@ -4973,19 +4973,19 @@ public class XmppConnectionService extends Service {
         } else {
             final IqPacket request = new IqPacket(IqPacket.TYPE.GET);
             request.setTo(jid);
-            final String node = presence.getNode();
-            final String ver = presence.getVer();
+            final String node = presence == null ? null : presence.getNode();
+            final String ver = presence == null ? null : presence.getVer();
             final Element query = request.query(Namespace.DISCO_INFO);
             if (node != null && ver != null) {
                 query.setAttribute("node", node + "#" + ver);
             }
-            Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": making disco request for " + key.second + " to " + jid);
+            Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": making disco request for " + (key == null ? "" : key.second) + " to " + jid);
             sendIqPacket(account, request, (a, response) -> {
                 if (response.getType() == IqPacket.TYPE.RESULT) {
                     final ServiceDiscoveryResult discoveryResult = new ServiceDiscoveryResult(response);
-                    if (presence.getVer() == null || presence.getVer().equals(discoveryResult.getVer())) {
+                    if (presence == null || presence.getVer() == null || presence.getVer().equals(discoveryResult.getVer())) {
                         databaseBackend.insertDiscoveryResult(discoveryResult);
-                        injectServiceDiscoveryResult(a.getRoster(), presence.getHash(), presence.getVer(), jid.getResource(), discoveryResult);
+                        injectServiceDiscoveryResult(a.getRoster(), presence == null ? null : presence.getHash(), presence == null ? null : presence.getVer(), jid.getResource(), discoveryResult);
                         if (discoveryResult.hasIdentity("gateway", "pstn")) {
                             final Contact contact = account.getRoster().getContact(jid);
                             contact.registerAsPhoneAccount(this);
@@ -5015,6 +5015,11 @@ public class XmppConnectionService extends Service {
             Presence onePresence = contact.getPresences().get(resource == null ? "" : resource);
             if (onePresence != null) {
                 onePresence.setServiceDiscoveryResult(disco);
+                serviceDiscoverySet = true;
+            } else if (resource == null && hash == null && ver == null) {
+                Presence p = new Presence(Presence.Status.OFFLINE, null, null, null, "");
+                p.setServiceDiscoveryResult(disco);
+                contact.updatePresence("", p);
                 serviceDiscoverySet = true;
             }
             if (hash != null && ver != null) {
