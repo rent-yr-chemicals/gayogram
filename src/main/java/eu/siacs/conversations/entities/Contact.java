@@ -84,7 +84,7 @@ public class Contact implements ListItem, Blockable {
     private RtpCapability.Capability rtpCapability;
 
     public Contact(Contact other) {
-        this(other.getAccount().getUuid(), other.systemName, other.serverName, other.presenceName, other.jid, other.subscription, other.photoUri, other.systemAccount, other.keys.toString(), other.getAvatar().sha1sum, other.mLastseen, other.mLastPresence, other.groups.toString(), other.rtpCapability);
+        this(null, other.systemName, other.serverName, other.presenceName, other.jid, other.subscription, other.photoUri, other.systemAccount, other.keys == null ? null : other.keys.toString(), other.getAvatar() == null ? null : other.getAvatar().sha1sum, other.mLastseen, other.mLastPresence, other.groups == null ? null : other.groups.toString(), other.rtpCapability);
         setAccount(other.getAccount());
     }
 
