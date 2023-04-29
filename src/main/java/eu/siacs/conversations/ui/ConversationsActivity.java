@@ -275,7 +275,9 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
                 downloadStickers();
             }
         });
-        builder.setNegativeButton(R.string.no, (dialog, which) -> { });
+        builder.setNegativeButton(R.string.no, (dialog, which) -> {
+            showDialogsIfMainIsOverview();
+        });
         final AlertDialog dialog = builder.create();
         dialog.setCanceledOnTouchOutside(false);
         dialog.show();
@@ -323,7 +325,9 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
             }
             requestPermissions(permissions, REQUEST_MICROPHONE);
         });
-        builder.setNegativeButton(R.string.no, (dialog, which) -> { });
+        builder.setNegativeButton(R.string.no, (dialog, which) -> {
+            showDialogsIfMainIsOverview();
+        });
         final AlertDialog dialog = builder.create();
         dialog.setCanceledOnTouchOutside(false);
         dialog.show();
@@ -380,7 +384,11 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
                         downloadStickers();
                         break;
                 }
+            } else {
+                showDialogsIfMainIsOverview();
             }
+        } else {
+            showDialogsIfMainIsOverview();
         }
     }
 
