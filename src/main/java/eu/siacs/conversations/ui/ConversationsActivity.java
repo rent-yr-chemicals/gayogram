@@ -289,7 +289,7 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
         }
         if (Build.VERSION.SDK_INT < 23) return false;
         if (Build.VERSION.SDK_INT >= 33) {
-            if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELECOM)) return false;
+            if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELECOM) && !getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONNECTION_SERVICE)) return false;
         } else {
             if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONNECTION_SERVICE)) return false;
         }

@@ -94,7 +94,7 @@ public class ManageAccountActivity extends XmppActivity implements OnAccountUpda
 
         if (Build.VERSION.SDK_INT < 23) return;
         if (Build.VERSION.SDK_INT >= 33) {
-            if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELECOM)) return;
+            if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_TELECOM) && !getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONNECTION_SERVICE)) return;
         } else {
             if (!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CONNECTION_SERVICE)) return;
         }
