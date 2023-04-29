@@ -95,6 +95,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
@@ -899,7 +900,7 @@ public class ConversationFragment extends XmppFragment
         final Message message;
         if (conversation.getCorrectingMessage() == null) {
             boolean attention = false;
-            if (body.matches("\\A@here\\s.*")) {
+            if (Pattern.compile("\\A@here\\s.*").matcher(body).find()) {
                 attention = true;
                 body = body.replaceFirst("\\A@here\\s+", "");
             }
