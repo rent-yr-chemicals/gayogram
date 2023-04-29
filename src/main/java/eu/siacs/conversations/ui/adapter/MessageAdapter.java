@@ -599,6 +599,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 @Override
                 protected void dispatchUrlLongClick(TextView tv, ClickableSpan span) {
                     if (span instanceof URLSpan || mOnInlineImageLongClickedListener == null) {
+                        tv.dispatchTouchEvent(MotionEvent.obtain(0, 0, MotionEvent.ACTION_CANCEL, 0f, 0f, 0));
                         super.dispatchUrlLongClick(tv, span);
                         return;
                     }
