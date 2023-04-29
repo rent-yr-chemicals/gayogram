@@ -22,4 +22,10 @@
         android:title="@string/scan_qr_code"
         android:visible="@bool/show_qr_code_scan"
         app:showAsAction="always" />
+    <item
+        android:id="@+id/action_cleanup"
+        android:orderInCategory="15"
+        android:title="Cleanup Conversations"
+        android:visible="true"
+        app:showAsAction="never" />
 </menu>

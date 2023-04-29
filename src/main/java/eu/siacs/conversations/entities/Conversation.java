@@ -695,7 +695,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 .result();
     }
 
-    private long getSortableTime() {
+    public long getSortableTime() {
         Draft draft = getDraft();
         long messageTime = getLatestMessage().getTimeReceived();
         if (draft == null) {
