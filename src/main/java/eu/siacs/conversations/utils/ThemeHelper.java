@@ -37,6 +37,7 @@ import android.content.res.TypedArray;
 import android.content.res.loader.ResourcesLoader;
 import android.os.Build;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.util.TypedValue;
 import android.widget.TextView;
 
@@ -50,6 +51,7 @@ import com.google.android.material.snackbar.Snackbar;
 import java.util.HashMap;
 
 import eu.siacs.conversations.R;
+import eu.siacs.conversations.Config;
 import eu.siacs.conversations.ui.SettingsActivity;
 
 public class ThemeHelper {
@@ -65,7 +67,11 @@ public class ThemeHelper {
 		if (colors.isEmpty()) return colors;
 
 		ResourcesLoader loader = ColorResourcesLoaderCreator.create(context, colors);
-		if (loader != null) context.getResources().addLoaders(loader);
+		try {
+			if (loader != null) context.getResources().addLoaders(loader);
+		} catch (final IllegalArgumentException e) {
+			Log.w(Config.LOGTAG, "Custom colour failed: " + e);
+		}
 		return colors;
 	}
 
