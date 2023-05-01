@@ -397,7 +397,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         final Element fallback = new Element("fallback", "urn:xmpp:fallback:0").setAttribute("for", "urn:xmpp:reply:0");
         fallback.addChild("body", "urn:xmpp:fallback:0")
                 .setAttribute("start", "0")
-                .setAttribute("end", "" + m.body.length());
+                .setAttribute("end", "" + m.body.codePointCount(0, m.body.length()));
         m.addPayload(fallback);
         return m;
     }
@@ -516,9 +516,9 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         spans.sort((x, y) -> y.first.compareTo(x.first));
         try {
             for (Pair<Integer, Integer> span : spans) {
-                body.delete(span.first, span.second);
+                body.delete(body.offsetByCodePoints(0, span.first.intValue()), body.offsetByCodePoints(0, span.second.intValue()));
             }
-        } catch (final StringIndexOutOfBoundsException e) { spans.clear(); }
+        } catch (final IndexOutOfBoundsException e) { spans.clear(); }
 
         if (spans.isEmpty() && getOob() != null) {
             return body.toString().replace(getOob().toString(), "");
