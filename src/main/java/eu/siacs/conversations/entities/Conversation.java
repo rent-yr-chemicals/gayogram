@@ -1451,7 +1451,13 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 @Override
                 public void run() {
                     if (getAccount().getStatus() != Account.State.ONLINE) {
-                        new Timer().schedule(this, 1000);
+                        final TimerTask self = this;
+                        new Timer().schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                self.run();
+                            }
+                        }, 1000);
                     } else {
                         xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
                             session.updateWithResponse(iq);
