@@ -94,7 +94,7 @@
         android:id="@+id/action_security"
         android:icon="?attr/icon_not_secure"
         android:orderInCategory="65"
-        android:title="Encyption"
+        android:title="Encryption"
         app:showAsAction="never">
         <menu>
             <group android:checkableBehavior="single">
