@@ -59,6 +59,7 @@ import androidx.viewpager.widget.ViewPager;
 import com.caverock.androidsvg.SVG;
 
 import com.cheogram.android.ConversationPage;
+import com.cheogram.android.Util;
 import com.cheogram.android.WebxdcPage;
 
 import com.google.android.material.tabs.TabLayout;
@@ -1751,6 +1752,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         }
                     }
                     binding.values.setAdapter(values);
+                    Util.justifyListViewHeightBasedOnChildren(binding.values);
 
                     if (field.getType().equals(Optional.of("jid-single")) || field.getType().equals(Optional.of("jid-multi"))) {
                         binding.values.setOnItemClickListener((arg0, arg1, pos, id) -> {
