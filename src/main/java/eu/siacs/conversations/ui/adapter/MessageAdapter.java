@@ -54,7 +54,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -121,6 +123,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
     private OnInlineImageLongClicked mOnInlineImageLongClickedListener;
     private boolean mUseGreenBackground = false;
     private final boolean mForceNames;
+    private final Map<String, WebxdcUpdate> lastWebxdcUpdate = new HashMap<>();
 
     public MessageAdapter(final XmppActivity activity, final List<Message> messages, final boolean forceNames) {
         super(activity, 0, messages);
@@ -691,14 +694,25 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 conversation.startWebxdc(webxdc);
             }
         });
-        // TODO: db access on UI thread is bad
-        WebxdcUpdate lastUpdate = activity.xmppConnectionService.findLastWebxdcUpdate(message);
-        if (lastUpdate != null && (lastUpdate.getSummary() != null || lastUpdate.getDocument() != null)) {
-            viewHolder.messageBody.setVisibility(View.VISIBLE);
-            viewHolder.messageBody.setText(
-                (lastUpdate.getDocument() == null ? "" : lastUpdate.getDocument() + "\n") +
-                (lastUpdate.getSummary() == null ? "" : lastUpdate.getSummary())
-            );
+
+        final WebxdcUpdate lastUpdate;
+        synchronized(lastWebxdcUpdate) { lastUpdate = lastWebxdcUpdate.get(message.getUuid()); }
+        if (lastUpdate == null) {
+            new Thread(() -> {
+                final WebxdcUpdate update = activity.xmppConnectionService.findLastWebxdcUpdate(message);
+                if (update != null) {
+                    synchronized(lastWebxdcUpdate) { lastWebxdcUpdate.put(message.getUuid(), update); }
+                    activity.xmppConnectionService.updateConversationUi();
+                }
+            }).start();
+        } else {
+            if (lastUpdate != null && (lastUpdate.getSummary() != null || lastUpdate.getDocument() != null)) {
+                viewHolder.messageBody.setVisibility(View.VISIBLE);
+                viewHolder.messageBody.setText(
+                    (lastUpdate.getDocument() == null ? "" : lastUpdate.getDocument() + "\n") +
+                    (lastUpdate.getSummary() == null ? "" : lastUpdate.getSummary())
+                );
+            }
         }
 
         final LruCache<String, Drawable> cache = activity.xmppConnectionService.getDrawableCache();
