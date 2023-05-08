@@ -522,6 +522,8 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
 
         if (spans.isEmpty() && getOob() != null) {
             return body.toString().replace(getOob().toString(), "");
+        } else if (spans.isEmpty() && isGeoUri()) {
+            return "";
         } else {
             return body.toString();
         }
