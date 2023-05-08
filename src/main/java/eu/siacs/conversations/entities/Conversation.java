@@ -2582,15 +2582,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         xmppConnectionService.getPreferences().edit().putBoolean("onboarding_continued", true).commit();
                     }
 
-                    for (Element el : command.getChildren()) {
-                        if (el.getName().equals("actions") && el.getNamespace().equals("http://jabber.org/protocol/commands")) {
-                            for (Element action : el.getChildren()) {
-                                if (!el.getNamespace().equals("http://jabber.org/protocol/commands")) continue;
-                                if (action.getName().equals("execute")) continue;
+                    Element actions = command.findChild("actions", "http://jabber.org/protocol/commands");
+                    if (actions != null) {
+                        for (Element action : actions.getChildren()) {
+                            if (!"http://jabber.org/protocol/commands".equals(action.getNamespace())) continue;
+                            if ("execute".equals(action.getName())) continue;
 
-                                actionsAdapter.add(Pair.create(action.getName(), action.getName()));
-                            }
+                            actionsAdapter.add(Pair.create(action.getName(), action.getName()));
                         }
+                    }
+
+                    for (Element el : command.getChildren()) {
                         if (el.getName().equals("x") && el.getNamespace().equals("jabber:x:data")) {
                             Data form = Data.parse(el);
                             String title = form.getTitle();
