@@ -928,7 +928,7 @@ public abstract class XmppActivity extends ActionBarActivity {
                 imageView.setBackgroundColor(0xff333333);
                 imageView.setImageDrawable(null);
                 final BitmapWorkerTask task = new BitmapWorkerTask(imageView);
-                final BitmapDrawable fallbackThumb = xmppConnectionService.getFileBackend().getFallbackThumbnail(message, (int) (metrics.density * 288));
+                final BitmapDrawable fallbackThumb = xmppConnectionService.getFileBackend().getFallbackThumbnail(message, (int) (metrics.density * 288), true);
                 final AsyncDrawable asyncDrawable = new AsyncDrawable(
                         getResources(), fallbackThumb != null ? fallbackThumb.getBitmap() : null, task);
                 imageView.setImageDrawable(asyncDrawable);
@@ -990,17 +990,18 @@ public abstract class XmppActivity extends ActionBarActivity {
             if (isCancelled()) {
                 return null;
             }
+            final XmppActivity activity = find(imageViewReference);
+            Drawable d = null;
             message = params[0];
             try {
-                final XmppActivity activity = find(imageViewReference);
                 if (activity != null && activity.xmppConnectionService != null) {
-                    return activity.xmppConnectionService.getFileBackend().getThumbnail(message, imageViewReference.get().getContext().getResources(), (int) (activity.metrics.density * 288), false);
-                } else {
-                    return null;
+                    d = activity.xmppConnectionService.getFileBackend().getThumbnail(message, imageViewReference.get().getContext().getResources(), (int) (activity.metrics.density * 288), false);
                 }
-            } catch (IOException e) {
-                return null;
+            } catch (IOException e) { }
+            if (activity != null && activity.xmppConnectionService != null) {
+                d =  d == null ? activity.xmppConnectionService.getFileBackend().getFallbackThumbnail(message, (int) (activity.metrics.density * 288), false) : d;
             }
+            return d;
         }
 
         @Override

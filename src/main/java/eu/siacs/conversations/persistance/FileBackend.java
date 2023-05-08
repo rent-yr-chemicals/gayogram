@@ -1076,7 +1076,7 @@ public class FileBackend {
         }
     }
 
-    public BitmapDrawable getFallbackThumbnail(final Message message, int size) {
+    public BitmapDrawable getFallbackThumbnail(final Message message, int size, boolean cacheOnly) {
         List<Element> thumbs = message.getFileParams() != null ? message.getFileParams().getThumbnails() : null;
         if (thumbs != null && !thumbs.isEmpty()) {
             for (Element thumb : thumbs) {
@@ -1086,7 +1086,7 @@ public class FileBackend {
                     if (parts[0].equals("image/blurhash")) {
                         final LruCache<String, Drawable> cache = mXmppConnectionService.getDrawableCache();
                         BitmapDrawable cached = (BitmapDrawable) cache.get(parts[1]);
-                        if (cached != null) return cached;
+                        if (cached != null || cacheOnly) return cached;
 
                         int width = message.getFileParams().width;
                         if (width < 1 && thumb.getAttribute("width") != null) width = Integer.parseInt(thumb.getAttribute("width"));
