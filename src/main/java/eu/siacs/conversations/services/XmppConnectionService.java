@@ -2607,6 +2607,7 @@ public class XmppConnectionService extends Service {
     }
 
     public void deleteAccount(final Account account) {
+        getPreferences().edit().remove("onboarding_continued").commit();
         final boolean connected = account.getStatus() == Account.State.ONLINE;
         synchronized (this.conversations) {
             if (connected) {

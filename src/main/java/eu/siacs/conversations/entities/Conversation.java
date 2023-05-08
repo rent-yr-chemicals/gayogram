@@ -2578,6 +2578,10 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         xmppConnectionService.createContact(getAccount().getRoster().getContact(iq.getFrom()), true);
                     }
 
+                    if (xmppConnectionService.isOnboarding() && mNode.equals("jabber:iq:register") && !"canceled".equals(command.getAttribute("status")) && xmppConnectionService.getPreferences().contains("onboarding_action")) {
+                        xmppConnectionService.getPreferences().edit().putBoolean("onboarding_continued", true).commit();
+                    }
+
                     for (Element el : command.getChildren()) {
                         if (el.getName().equals("actions") && el.getNamespace().equals("http://jabber.org/protocol/commands")) {
                             for (Element action : el.getChildren()) {
@@ -2650,12 +2654,19 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     }
 
                     if (responseElement == null && command.getAttribute("status") != null && (command.getAttribute("status").equals("completed") || command.getAttribute("status").equals("canceled"))) {
-                        if (mNode.equals("jabber:iq:register") && command.getAttribute("status").equals("canceled")) {
+                        if ("jabber:iq:register".equals(mNode) && "canceled".equals(command.getAttribute("status"))) {
                             if (xmppConnectionService.isOnboarding()) {
-                                if (!xmppConnectionService.getPreferences().contains("onboarding_action")) {
-                                    xmppConnectionService.getPreferences().edit().putString("onboarding_action", "cancel").commit();
+                                if (xmppConnectionService.getPreferences().contains("onboarding_action")) {
+                                    xmppConnectionService.deleteAccount(getAccount());
+                                } else {
+                                    if (xmppConnectionService.getPreferences().getBoolean("onboarding_continued", false)) {
+                                        removeSession(this);
+                                        return;
+                                    } else {
+                                        xmppConnectionService.getPreferences().edit().putString("onboarding_action", "cancel").commit();
+                                        xmppConnectionService.deleteAccount(getAccount());
+                                    }
                                 }
-                                xmppConnectionService.deleteAccount(getAccount());
                             }
                             xmppConnectionService.archiveConversation(Conversation.this);
                         }
@@ -2945,8 +2956,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         c.setAttribute("action", "execute");
                     }
 
-                    if (mNode.equals("jabber:iq:register") && xmppConnectionService.isOnboarding() && form.getValue("gateway-jid") != null) {
-                        xmppConnectionService.getPreferences().edit().putString("onboarding_action", form.getValue("gateway-jid")).commit();
+                    if (mNode.equals("jabber:iq:register") && xmppConnectionService.isOnboarding() && form.getFieldByName("gateway-jid") != null) {
+                        if (form.getValue("gateway-jid") == null) {
+                            xmppConnectionService.getPreferences().edit().remove("onboarding_action").commit();
+                        } else {
+                            xmppConnectionService.getPreferences().edit().putString("onboarding_action", form.getValue("gateway-jid")).commit();
+                        }
                     }
 
                     responseElement.setAttribute("type", "submit");
