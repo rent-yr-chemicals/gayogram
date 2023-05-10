@@ -1164,11 +1164,15 @@ public class FileBackend {
     }
 
     public Drawable getThumbnail(DownloadableFile file, Resources res, int size, boolean cacheOnly) throws IOException {
+        return getThumbnail(file, res, size, cacheOnly, file.getAbsolutePath());
+    }
+
+    public Drawable getThumbnail(DownloadableFile file, Resources res, int size, boolean cacheOnly, String cacheKey) throws IOException {
         final LruCache<String, Drawable> cache = mXmppConnectionService.getDrawableCache();
-        Drawable thumbnail = cache.get(file.getAbsolutePath());
+        Drawable thumbnail = cache.get(cacheKey);
         if ((thumbnail == null) && (!cacheOnly)) {
             synchronized (THUMBNAIL_LOCK) {
-                thumbnail = cache.get(file.getAbsolutePath());
+                thumbnail = cache.get(cacheKey);
                 if (thumbnail != null) {
                     return thumbnail;
                 }
@@ -1183,7 +1187,7 @@ public class FileBackend {
                         throw new FileNotFoundException();
                     }
                 }
-                cache.put(file.getAbsolutePath(), thumbnail);
+                cache.put(cacheKey, thumbnail);
             }
         }
         return thumbnail;

@@ -27,9 +27,11 @@ import javax.net.ssl.X509TrustManager;
 import eu.siacs.conversations.BuildConfig;
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.entities.DownloadableFile;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.services.AbstractConnectionManager;
 import eu.siacs.conversations.services.XmppConnectionService;
+import eu.siacs.conversations.utils.Consumer;
 import eu.siacs.conversations.utils.TLSSocketFactory;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -85,6 +87,10 @@ public class HttpConnectionManager extends AbstractConnectionManager {
     }
 
     public void createNewDownloadConnection(final Message message, boolean interactive) {
+        createNewDownloadConnection(message, interactive, null);
+    }
+
+    public void createNewDownloadConnection(final Message message, boolean interactive, Consumer<DownloadableFile> cb) {
         synchronized (this.downloadConnections) {
             for (HttpDownloadConnection connection : this.downloadConnections) {
                 if (connection.getMessage() == message) {
@@ -92,7 +98,7 @@ public class HttpConnectionManager extends AbstractConnectionManager {
                     return;
                 }
             }
-            final HttpDownloadConnection connection = new HttpDownloadConnection(message, this);
+            final HttpDownloadConnection connection = new HttpDownloadConnection(message, this, cb);
             connection.init(interactive);
             this.downloadConnections.add(connection);
         }
