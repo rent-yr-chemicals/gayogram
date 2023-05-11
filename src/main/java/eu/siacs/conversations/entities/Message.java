@@ -503,7 +503,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
     public String getBody() {
         StringBuilder body = new StringBuilder(this.body);
 
-        List<Element> fallbacks = getFallbacks();
+        List<Element> fallbacks = getFallbacks("http://jabber.org/protocol/address", Namespace.OOB);
         List<Pair<Integer, Integer>> spans = new ArrayList<>();
         for (Element fallback : fallbacks) {
             for (Element span : fallback.getChildren()) {
@@ -529,8 +529,8 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
         }
     }
 
-    public synchronized void clearFallbacks() {
-        this.payloads.removeAll(getFallbacks());
+    public synchronized void clearFallbacks(String... includeFor) {
+        this.payloads.removeAll(getFallbacks(includeFor));
     }
 
     public synchronized void setBody(String body) {
@@ -1104,7 +1104,7 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
        return new ArrayList<>(this.payloads);
     }
 
-    public List<Element> getFallbacks() {
+    public List<Element> getFallbacks(String... includeFor) {
         List<Element> fallbacks = new ArrayList<>();
 
         if (this.payloads == null) return fallbacks;
@@ -1113,8 +1113,11 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             if (el.getName().equals("fallback") && el.getNamespace().equals("urn:xmpp:fallback:0")) {
                 final String fallbackFor = el.getAttribute("for");
                 if (fallbackFor == null) continue;
-                if (fallbackFor.equals("http://jabber.org/protocol/address") || fallbackFor.equals(Namespace.OOB)) {
-                    fallbacks.add(el);
+                for (String includeOne : includeFor) {
+                    if (fallbackFor.equals(includeOne)) {
+                        fallbacks.add(el);
+                        break;
+                    }
                 }
             }
         }

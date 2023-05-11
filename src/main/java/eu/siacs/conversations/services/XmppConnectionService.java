@@ -1070,7 +1070,7 @@ public class XmppConnectionService extends Service {
             } else {
                 message = inReplyTo.reply();
             }
-            message.clearFallbacks();
+            message.clearFallbacks("urn:xmpp:reply:0");
             message.setBody(body);
             message.setEncryption(conversation.getNextEncryption());
         }
