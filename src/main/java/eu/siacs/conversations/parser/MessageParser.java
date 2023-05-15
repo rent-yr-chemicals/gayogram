@@ -1,5 +1,6 @@
 package eu.siacs.conversations.parser;
 
+import android.net.Uri;
 import android.util.Log;
 import android.util.Pair;
 
@@ -34,6 +35,7 @@ import eu.siacs.conversations.entities.Bookmark;
 import eu.siacs.conversations.entities.Contact;
 import eu.siacs.conversations.entities.Conversation;
 import eu.siacs.conversations.entities.Conversational;
+import eu.siacs.conversations.entities.DownloadableFile;
 import eu.siacs.conversations.entities.Message;
 import eu.siacs.conversations.entities.MucOptions;
 import eu.siacs.conversations.entities.ReadByMarker;
@@ -752,6 +754,19 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
                             if (replaceElement != null && !replaceElement.getName().equals("replace")) {
                                 mXmppConnectionService.getFileBackend().deleteFile(replacedMessage);
                                 mXmppConnectionService.evictPreview(message.getUuid());
+                                List<Element> thumbs = replacedMessage.getFileParams() != null ? replacedMessage.getFileParams().getThumbnails() : null;
+                                if (thumbs != null && !thumbs.isEmpty()) {
+                                    for (Element thumb : thumbs) {
+                                        Uri uri = Uri.parse(thumb.getAttribute("uri"));
+                                        if (uri.getScheme().equals("cid")) {
+                                            Cid cid = BobTransfer.cid(uri);
+                                            if (cid == null) continue;
+                                            DownloadableFile f = mXmppConnectionService.getFileForCid(cid);
+                                            mXmppConnectionService.evictPreview(f);
+                                            f.delete();
+                                        }
+                                    }
+                                }
                                 replacedMessage.clearPayloads();
                                 replacedMessage.setFileParams(null);
                                 replacedMessage.setDeleted(true);
