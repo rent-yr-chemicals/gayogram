@@ -3446,6 +3446,7 @@ public class XmppConnectionService extends Service {
                                     invite(conversation, invite);
                                 }
                                 for (String resource : account.getSelfContact().getPresences().toResourceArray()) {
+                                    if (resource == null || "".equals(resource)) continue;
                                     Jid other = account.getJid().withResource(resource);
                                     Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": sending direct invite to " + other);
                                     directInvite(conversation, other);
