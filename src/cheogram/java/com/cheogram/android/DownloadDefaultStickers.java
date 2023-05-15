@@ -94,11 +94,17 @@ public class DownloadDefaultStickers extends Service {
 
 	private void oneSticker(JSONObject sticker) throws Exception {
 		Response r = http.newCall(new Request.Builder().url(sticker.getString("url")).build()).execute();
-		File file = new File(mStickerDir.getAbsolutePath() + "/" + sticker.getString("pack") + "/" + sticker.getString("name") + "." + MimeUtils.guessExtensionFromMimeType(r.headers().get("content-type")));
-		file.getParentFile().mkdirs();
-		OutputStream os = new FileOutputStream(file);
-		ByteStreams.copy(r.body().byteStream(), os);
-		os.close();
+		File file = null;
+		try {
+			file = new File(mStickerDir.getAbsolutePath() + "/" + sticker.getString("pack") + "/" + sticker.getString("name") + "." + MimeUtils.guessExtensionFromMimeType(r.headers().get("content-type")));
+			file.getParentFile().mkdirs();
+			OutputStream os = new FileOutputStream(file);
+			ByteStreams.copy(r.body().byteStream(), os);
+			os.close();
+		} catch (final Exception e) {
+			file = null;
+			e.printStackTrace();
+		}
 
 		JSONArray cids = sticker.getJSONArray("cids");
 		for (int i = 0; i < cids.length(); i++) {
@@ -153,7 +159,11 @@ public class DownloadDefaultStickers extends Service {
 
 		final Progress progress = new Progress(mBuilder, 1, 0);
 		for (int i = 0; i < stickers.length(); i++) {
-			oneSticker(stickers.getJSONObject(i));
+			try {
+				oneSticker(stickers.getJSONObject(i));
+			} catch (final Exception e) {
+				e.printStackTrace();
+			}
 
 			final int percentage = i * 100 / stickers.length();
 			notificationManager.notify(NOTIFICATION_ID, progress.build(percentage));
