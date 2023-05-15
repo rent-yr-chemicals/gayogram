@@ -325,35 +325,36 @@ public class ConversationsOverviewFragment extends XmppFragment {
 		}
 	}
 
-	 @Override
-	 public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
-		 activity.getMenuInflater().inflate(R.menu.conversations, menu);
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+		activity.getMenuInflater().inflate(R.menu.conversations, menu);
 
-		 final MenuItem menuMucDetails = menu.findItem(R.id.action_muc_details);
-		 final MenuItem menuContactDetails = menu.findItem(R.id.action_contact_details);
-		 final MenuItem menuMute = menu.findItem(R.id.action_mute);
-		 final MenuItem menuUnmute = menu.findItem(R.id.action_unmute);
-		 final MenuItem menuOngoingCall = menu.findItem(R.id.action_ongoing_call);
-		 final MenuItem menuTogglePinned = menu.findItem(R.id.action_toggle_pinned);
+		final MenuItem menuMucDetails = menu.findItem(R.id.action_muc_details);
+		final MenuItem menuContactDetails = menu.findItem(R.id.action_contact_details);
+		final MenuItem menuMute = menu.findItem(R.id.action_mute);
+		final MenuItem menuUnmute = menu.findItem(R.id.action_unmute);
+		final MenuItem menuOngoingCall = menu.findItem(R.id.action_ongoing_call);
+		final MenuItem menuTogglePinned = menu.findItem(R.id.action_toggle_pinned);
 
-		 int pos = ((AdapterContextMenuInfo) menuInfo).position;
-		 if (pos < 0) return;
-		 Conversation conversation = conversations.get(pos);
-		 if (conversation != null) {
-			 if (conversation.getMode() == Conversation.MODE_MULTI) {
-				 menuContactDetails.setVisible(false);
-				 menuMucDetails.setTitle(conversation.getMucOptions().isPrivateAndNonAnonymous() ? R.string.action_muc_details : R.string.channel_details);
-				 menuOngoingCall.setVisible(false);
-			 } else {
-				 final XmppConnectionService service = activity == null ? null : activity.xmppConnectionService;
-				 final Optional<OngoingRtpSession> ongoingRtpSession = service == null ? Optional.absent() : service.getJingleConnectionManager().getOngoingRtpConnection(conversation.getContact());
-				 if (ongoingRtpSession.isPresent()) {
-					 menuOngoingCall.setVisible(true);
-				 } else {
-					 menuOngoingCall.setVisible(false);
-				 }
-				 menuContactDetails.setVisible(!conversation.withSelf());
-				 menuMucDetails.setVisible(false);
+		if (menuInfo == null) return;
+		int pos = ((AdapterContextMenuInfo) menuInfo).position;
+		if (pos < 0) return;
+		Conversation conversation = conversations.get(pos);
+		if (conversation != null) {
+			if (conversation.getMode() == Conversation.MODE_MULTI) {
+				menuContactDetails.setVisible(false);
+				menuMucDetails.setTitle(conversation.getMucOptions().isPrivateAndNonAnonymous() ? R.string.action_muc_details : R.string.channel_details);
+				menuOngoingCall.setVisible(false);
+			} else {
+				final XmppConnectionService service = activity == null ? null : activity.xmppConnectionService;
+				final Optional<OngoingRtpSession> ongoingRtpSession = service == null ? Optional.absent() : service.getJingleConnectionManager().getOngoingRtpConnection(conversation.getContact());
+				if (ongoingRtpSession.isPresent()) {
+					menuOngoingCall.setVisible(true);
+				} else {
+					menuOngoingCall.setVisible(false);
+				}
+				menuContactDetails.setVisible(!conversation.withSelf());
+				menuMucDetails.setVisible(false);
 			}
 			if (conversation.isMuted()) {
 				menuMute.setVisible(false);
