@@ -975,8 +975,13 @@ public class FileBackend {
     public File getStorageLocation(final InputStream is, final String extension) throws IOException, XmppConnectionService.BlockedMediaException {
         final String mime = MimeUtils.guessMimeTypeFromExtension(extension);
         Cid[] cids = calculateCids(is);
+        String base = cids[0].toString();
 
-        File file = getStorageLocation(String.format("%s.%s", cids[0], extension), mime);
+        File file = null;
+        while (file == null || (file.exists() && !file.canRead())) {
+            file = getStorageLocation(String.format("%s.%s", base, extension), mime);
+            base += "_";
+        }
         for (int i = 0; i < cids.length; i++) {
             mXmppConnectionService.saveCid(cids[i], file);
         }
