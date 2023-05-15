@@ -2884,6 +2884,8 @@ public class ConversationFragment extends XmppFragment
             commandAdapter = new CommandAdapter((XmppActivity) getActivity());
             binding.commandsView.setAdapter(commandAdapter);
             binding.commandsView.setOnItemClickListener((parent, view, position, id) -> {
+                if (activity == null) return;
+
                 final Element command = commandAdapter.getItem(position);
                 activity.startCommand(conversation.getAccount(), command.getAttributeAsJid("jid"), command.getAttribute("node"));
             });

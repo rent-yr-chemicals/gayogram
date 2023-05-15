@@ -2632,7 +2632,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     }
 
                     for (Element el : command.getChildren()) {
-                        if (el.getName().equals("x") && el.getNamespace().equals("jabber:x:data")) {
+                        if ("x".equals(el.getName()) && "jabber:x:data".equals(el.getNamespace())) {
                             Data form = Data.parse(el);
                             String title = form.getTitle();
                             if (title != null) {
@@ -2640,7 +2640,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                                 ConversationPagerAdapter.this.notifyDataSetChanged();
                             }
 
-                            if (el.getAttribute("type").equals("result") || el.getAttribute("type").equals("form")) {
+                            if ("result".equals(el.getAttribute("type")) || "form".equals(el.getAttribute("type"))) {
                                 this.responseElement = el;
                                 setupReported(el.findChild("reported", "jabber:x:data"));
                                 if (mBinding != null) mBinding.form.setLayoutManager(setupLayoutManager());
