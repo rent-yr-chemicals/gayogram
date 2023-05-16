@@ -287,6 +287,12 @@ public class ChooseContactActivity extends AbstractSearchableListItemActivity im
                         getListItems().add(contact);
                     }
                 }
+
+                final Contact self = new Contact(account.getSelfContact());
+                self.setSystemName("Note to Self");
+                if (self.match(this, needle)) {
+                    getListItems().add(self);
+                }
             }
         }
         Collections.sort(getListItems());
