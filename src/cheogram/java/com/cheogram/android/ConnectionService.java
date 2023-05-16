@@ -145,6 +145,8 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		permissionManager.checkPermissions(permissions, new PermissionManager.PermissionRequestListener() {
 			@Override
 			public void onPermissionGranted() {
+				if (connection.getState() == Connection.STATE_DISCONNECTED) return;
+
 				connection.setSessionId(xmppConnectionService.getJingleConnectionManager().proposeJingleRtpSession(
 					account,
 					with,
