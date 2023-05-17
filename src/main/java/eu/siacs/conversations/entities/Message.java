@@ -1456,6 +1456,22 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
             return cids;
         }
 
+        public void addThumbnail(int width, int height, String mimeType, String uri) {
+            for (Element thumb : getThumbnails()) {
+                if (uri.equals(thumb.getAttribute("uri"))) return;
+            }
+
+            if (sims == null) toSims();
+            Element file = getFileElement();
+            file.addChild(
+                new Element("thumbnail", "urn:xmpp:thumbs:1")
+                    .setAttribute("width", Integer.toString(width))
+                    .setAttribute("height", Integer.toString(height))
+                    .setAttribute("type", mimeType)
+                    .setAttribute("uri", uri)
+            );
+        }
+
         public List<Element> getThumbnails() {
             List<Element> thumbs = new ArrayList<>();
             Element file = getFileElement();

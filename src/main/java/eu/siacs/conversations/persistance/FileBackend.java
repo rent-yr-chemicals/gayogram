@@ -1125,7 +1125,12 @@ public class FileBackend {
                             return cached;
                         }
                     } else if (parts[0].equals("image/thumbhash")) {
-                        ThumbHash.Image image = ThumbHash.thumbHashToRGBA(data);
+                        ThumbHash.Image image;
+                        try {
+                            image = ThumbHash.thumbHashToRGBA(data);
+                        } catch (final Exception e) {
+                            continue;
+                        }
                         int[] pixels = new int[image.width * image.height];
                         for (int i = 0; i < pixels.length; i++) {
                             pixels[i] = Color.argb(image.rgba[(i*4)+3] & 0xff, image.rgba[i*4] & 0xff, image.rgba[(i*4)+1] & 0xff, image.rgba[(i*4)+2] & 0xff);
@@ -1229,6 +1234,12 @@ public class FileBackend {
 
     public Bitmap getThumbnailBitmap(Message message, Resources res, int size) throws IOException {
           final Drawable drawable = getThumbnail(message, res, size, false);
+          if (drawable == null) return null;
+          return drawDrawable(drawable);
+    }
+
+    public Bitmap getThumbnailBitmap(DownloadableFile file, Resources res, int size, String cacheKey) throws IOException {
+          final Drawable drawable = getThumbnail(file, res, size, false, cacheKey);
           if (drawable == null) return null;
           return drawDrawable(drawable);
     }
@@ -1871,6 +1882,27 @@ public class FileBackend {
             } else if (audio) {
                 fileParams.runtime = getMediaRuntime(file);
             }
+            try {
+                Bitmap thumb = getThumbnailBitmap(file, mXmppConnectionService.getResources(), 100, file.getAbsolutePath() + " x 100");
+                if (thumb != null) {
+                    int[] pixels = new int[thumb.getWidth() * thumb.getHeight()];
+                    byte[] rgba = new byte[pixels.length * 4];
+                    try {
+                        thumb.getPixels(pixels, 0, thumb.getWidth(), 0, 0, thumb.getWidth(), thumb.getHeight());
+                    } catch (final IllegalStateException e) {
+                        Bitmap softThumb = thumb.copy(Bitmap.Config.ARGB_8888, false);
+                        softThumb.getPixels(pixels, 0, thumb.getWidth(), 0, 0, thumb.getWidth(), thumb.getHeight());
+                        softThumb.recycle();
+                    }
+                    for (int i = 0; i < pixels.length; i++) {
+                        rgba[i*4] = (byte)((pixels[i] >> 16) & 0xff);
+                        rgba[(i*4)+1] = (byte)((pixels[i] >> 8) & 0xff);
+                        rgba[(i*4)+2] = (byte)(pixels[i] & 0xff);
+                        rgba[(i*4)+3] = (byte)((pixels[i] >> 24) & 0xff);
+                    }
+                    fileParams.addThumbnail(thumb.getWidth(), thumb.getHeight(), "image/thumbhash", "data:image/thumbhash;base64," + Base64.encodeToString(ThumbHash.rgbaToThumbHash(thumb.getWidth(), thumb.getHeight(), rgba), Base64.NO_WRAP));
+                }
+            } catch (final IOException e) { }
         }
         message.setFileParams(fileParams);
         message.setDeleted(false);
