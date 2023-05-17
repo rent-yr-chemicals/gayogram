@@ -1209,7 +1209,7 @@ public class FileBackend {
     public Drawable getThumbnail(DownloadableFile file, Resources res, int size, boolean cacheOnly, String cacheKey) throws IOException {
         final LruCache<String, Drawable> cache = mXmppConnectionService.getDrawableCache();
         Drawable thumbnail = cache.get(cacheKey);
-        if ((thumbnail == null) && (!cacheOnly)) {
+        if ((thumbnail == null) && (!cacheOnly) && file.exists()) {
             synchronized (THUMBNAIL_LOCK) {
                 thumbnail = cache.get(cacheKey);
                 if (thumbnail != null) {
