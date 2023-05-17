@@ -36,6 +36,7 @@ import android.util.TypedValue;
 import androidx.annotation.RequiresApi;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.BigPictureStyle;
+import androidx.core.app.NotificationCompat.CallStyle;
 import androidx.core.app.NotificationCompat.Builder;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.Person;
@@ -625,15 +626,6 @@ public class NotificationService {
         final NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(
                         mXmppConnectionService, INCOMING_CALLS_NOTIFICATION_CHANNEL);
-        if (media.contains(Media.VIDEO)) {
-            builder.setSmallIcon(R.drawable.ic_videocam_white_24dp);
-            builder.setContentTitle(
-                    mXmppConnectionService.getString(R.string.rtp_state_incoming_video_call));
-        } else {
-            builder.setSmallIcon(R.drawable.ic_call_white_24dp);
-            builder.setContentTitle(
-                    mXmppConnectionService.getString(R.string.rtp_state_incoming_call));
-        }
         final Contact contact = id.getContact();
         builder.addPerson(getPerson(contact));
         ShortcutInfoCompat info = mXmppConnectionService.getShortcutService().getShortcutInfoCompat(contact);
@@ -644,6 +636,26 @@ public class NotificationService {
         if (mXmppConnectionService.getAccounts().size() > 1) {
             builder.setSubText(contact.getAccount().getJid().asBareJid().toString());
         }
+        NotificationCompat.CallStyle style = NotificationCompat.CallStyle.forIncomingCall(
+            getPerson(contact),
+            createCallAction(
+                id.sessionId,
+                XmppConnectionService.ACTION_DISMISS_CALL,
+                102),
+            createPendingRtpSession(id, RtpSessionActivity.ACTION_ACCEPT_CALL, 103)
+        );
+        if (media.contains(Media.VIDEO)) {
+            style.setIsVideo(true);
+            builder.setSmallIcon(R.drawable.ic_videocam_white_24dp);
+            builder.setContentTitle(
+                    mXmppConnectionService.getString(R.string.rtp_state_incoming_video_call));
+        } else {
+            style.setIsVideo(false);
+            builder.setSmallIcon(R.drawable.ic_call_white_24dp);
+            builder.setContentTitle(
+                    mXmppConnectionService.getString(R.string.rtp_state_incoming_call));
+        }
+        builder.setStyle(style);
         builder.setLargeIcon(
                 mXmppConnectionService
                         .getAvatarService()
@@ -660,22 +672,6 @@ public class NotificationService {
         builder.setFullScreenIntent(pendingIntent, true);
         builder.setContentIntent(pendingIntent); // old androids need this?
         builder.setOngoing(true);
-        builder.addAction(
-                new NotificationCompat.Action.Builder(
-                                R.drawable.ic_call_end_white_48dp,
-                                mXmppConnectionService.getString(R.string.dismiss_call),
-                                createCallAction(
-                                        id.sessionId,
-                                        XmppConnectionService.ACTION_DISMISS_CALL,
-                                        102))
-                        .build());
-        builder.addAction(
-                new NotificationCompat.Action.Builder(
-                                R.drawable.ic_call_white_24dp,
-                                mXmppConnectionService.getString(R.string.answer_call),
-                                createPendingRtpSession(
-                                        id, RtpSessionActivity.ACTION_ACCEPT_CALL, 103))
-                        .build());
         modifyIncomingCall(builder);
         final Notification notification = builder.build();
         notification.flags = notification.flags | Notification.FLAG_INSISTENT;
@@ -687,7 +683,13 @@ public class NotificationService {
         final AbstractJingleConnection.Id id = ongoingCall.id;
         final NotificationCompat.Builder builder =
                 new NotificationCompat.Builder(mXmppConnectionService, "ongoing_calls");
+        final Contact contact = id.account.getRoster().getContact(id.with);
+        NotificationCompat.CallStyle style = NotificationCompat.CallStyle.forOngoingCall(
+            getPerson(contact),
+            createCallAction(id.sessionId, XmppConnectionService.ACTION_END_CALL, 104)
+        );
         if (ongoingCall.media.contains(Media.VIDEO)) {
+            style.setIsVideo(true);
             builder.setSmallIcon(R.drawable.ic_videocam_white_24dp);
             if (ongoingCall.reconnecting) {
                 builder.setContentTitle(
@@ -697,6 +699,7 @@ public class NotificationService {
                         mXmppConnectionService.getString(R.string.ongoing_video_call));
             }
         } else {
+            style.setIsVideo(false);
             builder.setSmallIcon(R.drawable.ic_call_white_24dp);
             if (ongoingCall.reconnecting) {
                 builder.setContentTitle(
@@ -705,19 +708,13 @@ public class NotificationService {
                 builder.setContentTitle(mXmppConnectionService.getString(R.string.ongoing_call));
             }
         }
-        builder.setContentText(id.account.getRoster().getContact(id.with).getDisplayName());
+        builder.setStyle(style);
+        builder.setContentText(contact.getDisplayName());
         builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC);
         builder.setPriority(NotificationCompat.PRIORITY_HIGH);
         builder.setCategory(NotificationCompat.CATEGORY_CALL);
         builder.setContentIntent(createPendingRtpSession(id, Intent.ACTION_VIEW, 101));
         builder.setOngoing(true);
-        builder.addAction(
-                new NotificationCompat.Action.Builder(
-                                R.drawable.ic_call_end_white_48dp,
-                                mXmppConnectionService.getString(R.string.hang_up),
-                                createCallAction(
-                                        id.sessionId, XmppConnectionService.ACTION_END_CALL, 104))
-                        .build());
         return builder.build();
     }
 
