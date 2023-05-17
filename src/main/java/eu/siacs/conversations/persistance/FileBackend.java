@@ -44,6 +44,8 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
+import com.madebyevan.thumbhash.ThumbHash;
+
 import com.wolt.blurhashkt.BlurHashDecoder;
 
 import java.io.ByteArrayOutputStream;
@@ -1088,11 +1090,25 @@ public class FileBackend {
                 Uri uri = Uri.parse(thumb.getAttribute("uri"));
                 if (uri.getScheme().equals("data")) {
                     String[] parts = uri.getSchemeSpecificPart().split(",", 2);
-                    if (parts[0].equals("image/blurhash")) {
-                        final LruCache<String, Drawable> cache = mXmppConnectionService.getDrawableCache();
-                        BitmapDrawable cached = (BitmapDrawable) cache.get(parts[1]);
-                        if (cached != null || cacheOnly) return cached;
 
+                    final LruCache<String, Drawable> cache = mXmppConnectionService.getDrawableCache();
+                    BitmapDrawable cached = (BitmapDrawable) cache.get(parts[1]);
+                    if (cached != null || cacheOnly) return cached;
+
+                    byte[] data;
+                    if (Arrays.asList(parts[0].split(";")).contains("base64")) {
+                        String[] parts2 = parts[0].split(";", 2);
+                        parts[0] = parts2[0];
+                        data = Base64.decode(parts[1], 0);
+                    } else {
+                        try {
+                            data = parts[1].getBytes("UTF-8");
+                        } catch (final IOException e) {
+                            data = new byte[0];
+                        }
+                    }
+
+                    if (parts[0].equals("image/blurhash")) {
                         int width = message.getFileParams().width;
                         if (width < 1 && thumb.getAttribute("width") != null) width = Integer.parseInt(thumb.getAttribute("width"));
                         if (width < 1) width = 1920;
@@ -1108,6 +1124,15 @@ public class FileBackend {
                             cache.put(parts[1], cached);
                             return cached;
                         }
+                    } else if (parts[0].equals("image/thumbhash")) {
+                        ThumbHash.Image image = ThumbHash.thumbHashToRGBA(data);
+                        int[] pixels = new int[image.width * image.height];
+                        for (int i = 0; i < pixels.length; i++) {
+                            pixels[i] = Color.argb(image.rgba[(i*4)+3] & 0xff, image.rgba[i*4] & 0xff, image.rgba[(i*4)+1] & 0xff, image.rgba[(i*4)+2] & 0xff);
+                        }
+                        cached = new BitmapDrawable(Bitmap.createBitmap(pixels, image.width, image.height, Bitmap.Config.ARGB_8888));
+                        cache.put(parts[1], cached);
+                        return cached;
                     }
                 }
             }
@@ -1131,14 +1156,18 @@ public class FileBackend {
                         if (uri.getScheme().equals("data")) {
                             if (android.os.Build.VERSION.SDK_INT < 28) continue;
                             String[] parts = uri.getSchemeSpecificPart().split(",", 2);
-                            if (parts[0].equals("image/blurhash")) continue; // blurhash only for fallback
 
                             byte[] data;
                             if (Arrays.asList(parts[0].split(";")).contains("base64")) {
+                                String[] parts2 = parts[0].split(";", 2);
+                                parts[0] = parts2[0];
                                 data = Base64.decode(parts[1], 0);
                             } else {
                                 data = parts[1].getBytes("UTF-8");
                             }
+
+                            if (parts[0].equals("image/blurhash")) continue; // blurhash only for fallback
+                            if (parts[0].equals("image/thumbhash")) continue; // thumbhash only for fallback
 
                             ImageDecoder.Source source = ImageDecoder.createSource(ByteBuffer.wrap(data));
                             thumbnail = ImageDecoder.decodeDrawable(source, (decoder, info, src) -> {

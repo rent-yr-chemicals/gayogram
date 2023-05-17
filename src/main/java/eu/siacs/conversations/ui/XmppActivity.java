@@ -997,9 +997,9 @@ public abstract class XmppActivity extends ActionBarActivity {
                 if (activity != null && activity.xmppConnectionService != null) {
                     d = activity.xmppConnectionService.getFileBackend().getThumbnail(message, imageViewReference.get().getContext().getResources(), (int) (activity.metrics.density * 288), false);
                 }
-            } catch (IOException e) { }
-            if (activity != null && activity.xmppConnectionService != null) {
-                d =  d == null ? activity.xmppConnectionService.getFileBackend().getFallbackThumbnail(message, (int) (activity.metrics.density * 288), false) : d;
+            } catch (IOException e) { e.printStackTrace(); }
+            if (d == null && activity != null && activity.xmppConnectionService != null) {
+                d = activity.xmppConnectionService.getFileBackend().getFallbackThumbnail(message, (int) (activity.metrics.density * 288), false);
             }
             return d;
         }

@@ -641,7 +641,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                 if (uri.getScheme().equals("data")) {
                     String[] parts = uri.getSchemeSpecificPart().split(",", 2);
                     parts = parts[0].split(";");
-                    if (!parts[0].equals("image/blurhash") && !parts[0].equals("image/jpeg") && !parts[0].equals("image/png") && !parts[0].equals("image/webp") && !parts[0].equals("image/gif")) continue;
+                    if (!parts[0].equals("image/blurhash") && !parts[0].equals("image/thumbhash") && !parts[0].equals("image/jpeg") && !parts[0].equals("image/png") && !parts[0].equals("image/webp") && !parts[0].equals("image/gif")) continue;
                 } else if (uri.getScheme().equals("cid")) {
                     Cid cid = BobTransfer.cid(uri);
                     if (cid == null) continue;
