@@ -158,6 +158,10 @@ public class TrustKeysActivity extends OmemoActivity implements OnKeyStatusUpdat
 	}
 
 	private void populateView() {
+		if (this.mAccount == null) {
+			return;
+		}
+
 		setTitle(getString(R.string.trust_omemo_fingerprints));
 		binding.ownKeysDetails.removeAllViews();
 		binding.foreignKeys.removeAllViews();

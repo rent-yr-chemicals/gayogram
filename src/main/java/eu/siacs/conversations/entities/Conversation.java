@@ -3047,8 +3047,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected GridLayoutManager setupLayoutManager() {
                 int spanCount = 1;
 
-                if (reported != null && mPager != null) {
-                    float screenWidth = mPager.getContext().getResources().getDisplayMetrics().widthPixels;
+                Context ctx = mPager == null ? getView().getContext() : mPager.getContext();
+                if (reported != null) {
+                    float screenWidth = ctx.getResources().getDisplayMetrics().widthPixels;
                     TextPaint paint = ((TextView) LayoutInflater.from(mPager.getContext()).inflate(R.layout.command_result_cell, null)).getPaint();
                     float tableHeaderWidth = reported.stream().reduce(
                         0f,
@@ -3064,7 +3065,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     notifyDataSetChanged();
                 }
 
-                layoutManager = new GridLayoutManager(mPager.getContext(), spanCount);
+                layoutManager = new GridLayoutManager(ctx, spanCount);
                 layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
                     @Override
                     public int getSpanSize(int position) {
