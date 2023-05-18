@@ -356,7 +356,11 @@ public class ConnectionService extends android.telecom.ConnectionService {
 		public void onReject() {
 			findRtpConnection();
 			if (rtpConnection != null && rtpConnection.get() != null) {
-				rtpConnection.get().rejectCall();
+				try {
+					rtpConnection.get().rejectCall();
+				} catch (final IllegalStateException e) {
+					Log.w("com.cheogram.android.CheogramConnection", e.toString());
+				}
 			}
 			close(new DisconnectCause(DisconnectCause.LOCAL));
 		}
