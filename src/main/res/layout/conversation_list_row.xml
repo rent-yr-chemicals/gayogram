@@ -4,13 +4,13 @@
     <FrameLayout
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:descendantFocusability="blocksDescendants">
+        android:descendantFocusability="blocksDescendants"
+        android:background="?attr/color_background_primary">
 
         <FrameLayout
             android:id="@+id/frame"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:background="?attr/color_background_primary">
+            android:layout_height="wrap_content">
 
             <RelativeLayout
                 android:layout_width="fill_parent"

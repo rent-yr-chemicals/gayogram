@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 
 import androidx.annotation.NonNull;
+import androidx.core.graphics.ColorUtils;
 import androidx.databinding.DataBindingUtil;
 
 import java.util.List;
@@ -17,6 +18,7 @@ import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.ui.XmppActivity;
 import eu.siacs.conversations.ui.util.AvatarWorkerTask;
 import eu.siacs.conversations.ui.util.StyledAttributes;
+import eu.siacs.conversations.utils.UIHelper;
 
 public class AccountAdapter extends ArrayAdapter<Account> {
 
@@ -79,6 +81,12 @@ public class AccountAdapter extends ArrayAdapter<Account> {
                 ((OnTglAccountState) activity).onClickTglAccountState(account, b);
             }
         });
+        if (activity.xmppConnectionService != null && activity.xmppConnectionService.getAccounts().size() > 1) {
+            viewHolder.binding.frame.setBackgroundColor(ColorUtils.setAlphaComponent(
+                UIHelper.getColorForName(account.getJid().asBareJid().toString()),
+                activity.isDarkTheme() ? 20 : 10
+            ));
+        }
         return view;
     }
 

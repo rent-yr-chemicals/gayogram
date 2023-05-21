@@ -2,10 +2,15 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <FrameLayout
+        android:background="?selectableItemBackground"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content">
+
     <RelativeLayout
+        android:id="@+id/frame"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?selectableItemBackground"
         android:paddingLeft="8dp"
         android:paddingBottom="8dp"
         android:paddingTop="8dp">
@@ -56,4 +61,5 @@
             android:focusable="false" />
 
     </RelativeLayout>
+    </FrameLayout>
 </layout>
