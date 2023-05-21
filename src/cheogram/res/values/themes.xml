@@ -75,7 +75,7 @@
 
         <item name="unread_count">?colorPrimary</item>
 
-        <item name="conversations_overview_background">@color/green700</item>
+        <item name="conversations_overview_background">?colorPrimary</item>
 
         <item name="icon_alpha" type="float">0.54</item>
         <item name="delete_icon_alpha" type="float">0.70</item>
@@ -234,7 +234,7 @@
 
         <item name="unread_count">?colorPrimary</item>
 
-        <item name="conversations_overview_background">@color/green900</item>
+        <item name="conversations_overview_background">?colorPrimary</item>
 
         <item name="icon_alpha" type="float">0.7</item>
         <item name="delete_icon_alpha" type="float">0.7</item>
