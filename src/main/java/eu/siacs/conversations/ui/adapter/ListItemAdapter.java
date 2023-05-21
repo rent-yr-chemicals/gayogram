@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import androidx.core.graphics.ColorUtils;
 import androidx.databinding.DataBindingUtil;
 
 import com.wefika.flowlayout.FlowLayout;
@@ -23,6 +24,7 @@ import eu.siacs.conversations.ui.XmppActivity;
 import eu.siacs.conversations.ui.util.AvatarWorkerTask;
 import eu.siacs.conversations.ui.util.StyledAttributes;
 import eu.siacs.conversations.utils.IrregularUnicodeDetector;
+import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.xmpp.Jid;
 
 public class ListItemAdapter extends ArrayAdapter<ListItem> {
@@ -61,7 +63,15 @@ public class ListItemAdapter extends ArrayAdapter<ListItem> {
 		} else {
 			viewHolder = (ViewHolder) view.getTag();
 		}
-		view.setBackground(StyledAttributes.getDrawable(view.getContext(),R.attr.list_item_background));
+
+		if (activity.xmppConnectionService != null && activity.xmppConnectionService.getAccounts().size() > 1) {
+			view.setBackgroundColor(ColorUtils.setAlphaComponent(
+				UIHelper.getColorForName(item.getAccount().getJid().asBareJid().toString()),
+				activity.isDarkTheme() ? 20 : 10
+			));
+		} else {
+			view.setBackground(StyledAttributes.getDrawable(view.getContext(),R.attr.list_item_background));
+		}
 
 		List<ListItem.Tag> tags = item.getTags(activity);
 		if (tags.size() == 0 || !this.showDynamicTags) {

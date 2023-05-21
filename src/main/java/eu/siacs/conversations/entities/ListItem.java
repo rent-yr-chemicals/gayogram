@@ -6,6 +6,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Locale;
 
+import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.xmpp.Jid;
 
@@ -14,6 +15,8 @@ public interface ListItem extends Comparable<ListItem>, AvatarService.Avatarable
 	String getDisplayName();
 
 	Jid getJid();
+
+	Account getAccount();
 
 	List<Tag> getTags(Context context);
 
