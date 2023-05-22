@@ -67,7 +67,7 @@ public class ListItemAdapter extends ArrayAdapter<ListItem> {
 		if (activity.xmppConnectionService != null && activity.xmppConnectionService.getAccounts().size() > 1) {
 			view.setBackgroundColor(ColorUtils.setAlphaComponent(
 				UIHelper.getColorForName(item.getAccount().getJid().asBareJid().toString()),
-				activity.isDarkTheme() ? 20 : 10
+				activity.isDarkTheme() ? 20 : 15
 			));
 		} else {
 			view.setBackground(StyledAttributes.getDrawable(view.getContext(),R.attr.list_item_background));

@@ -72,7 +72,7 @@ public class ConversationAdapter
         if (activity.xmppConnectionService != null && activity.xmppConnectionService.getAccounts().size() > 1) {
             viewHolder.binding.frame.setBackgroundColor(ColorUtils.setAlphaComponent(
                 UIHelper.getColorForName(conversation.getAccount().getJid().asBareJid().toString()),
-                activity.isDarkTheme() ? 20 : 10
+                activity.isDarkTheme() ? 20 : 15
             ));
         }
 
