@@ -262,7 +262,7 @@ public class JingleConnectionManager extends AbstractConnectionManager {
                     }
                 }
             }
-            return;
+            if ("accept".equals(message.getName())) return;
         }
         final boolean fromSelf = from.asBareJid().equals(account.getJid().asBareJid());
         final boolean addressedDirectly = to != null && to.equals(account.getJid());
