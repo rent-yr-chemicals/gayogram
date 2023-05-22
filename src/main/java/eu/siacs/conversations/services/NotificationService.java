@@ -562,6 +562,8 @@ public class NotificationService {
     }
 
     public synchronized void startRinging(final AbstractJingleConnection.Id id, final Set<Media> media) {
+        if (isQuietHours()) return;
+
         if (tryRingingWithDialerUI(id, media)) {
             return;
         }
@@ -1111,7 +1113,7 @@ public class NotificationService {
     private Builder buildMissedCall(
             final Conversational conversation, final MissedCallsInfo info, boolean publicVersion) {
         final Builder builder =
-                new NotificationCompat.Builder(mXmppConnectionService, "missed_calls");
+                new NotificationCompat.Builder(mXmppConnectionService, isQuietHours() ? "quiet_hours" : "missed_calls");
         final String title =
                 (info.getNumberOfCalls() == 1)
                         ? mXmppConnectionService.getString(R.string.missed_call)
@@ -1165,7 +1167,7 @@ public class NotificationService {
         if (led) {
             builder.setLights(LED_COLOR, 2000, 3000);
         }
-        builder.setPriority(NotificationCompat.PRIORITY_HIGH);
+        builder.setPriority(isQuietHours() ? NotificationCompat.PRIORITY_LOW : NotificationCompat.PRIORITY_HIGH);
         builder.setSound(null);
         setNotificationColor(builder, account);
     }
