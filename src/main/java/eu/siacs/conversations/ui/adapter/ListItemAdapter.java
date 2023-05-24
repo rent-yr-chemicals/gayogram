@@ -56,19 +56,22 @@ public class ListItemAdapter extends ArrayAdapter<ListItem> {
 		LayoutInflater inflater = activity.getLayoutInflater();
 		ListItem item = getItem(position);
 		ViewHolder viewHolder;
+		View innerView;
 		if (view == null) {
 			ContactBinding binding = DataBindingUtil.inflate(inflater,R.layout.contact,parent,false);
 			viewHolder = ViewHolder.get(binding);
 			view = binding.getRoot();
+			innerView = binding.inner;
 		} else {
 			viewHolder = (ViewHolder) view.getTag();
+			innerView = view;
 		}
 
 		if (activity.xmppConnectionService != null && activity.xmppConnectionService.getAccounts().size() > 1) {
-			view.setBackgroundColor(item.getAccount().getColor(activity.isDarkTheme()));
-		} else {
-			view.setBackground(StyledAttributes.getDrawable(view.getContext(),R.attr.list_item_background));
+			innerView.setBackgroundColor(item.getAccount().getColor(activity.isDarkTheme()));
 		}
+
+		view.setBackground(StyledAttributes.getDrawable(view.getContext(),R.attr.list_item_background));
 
 		List<ListItem.Tag> tags = item.getTags(activity);
 		if (tags.size() == 0 || !this.showDynamicTags) {
