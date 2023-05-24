@@ -82,10 +82,7 @@ public class AccountAdapter extends ArrayAdapter<Account> {
             }
         });
         if (activity.xmppConnectionService != null && activity.xmppConnectionService.getAccounts().size() > 1) {
-            viewHolder.binding.frame.setBackgroundColor(ColorUtils.setAlphaComponent(
-                UIHelper.getColorForName(account.getJid().asBareJid().toString()),
-                activity.isDarkTheme() ? 20 : 15
-            ));
+            viewHolder.binding.frame.setBackgroundColor(account.getColor(activity.isDarkTheme()));
         }
         return view;
     }

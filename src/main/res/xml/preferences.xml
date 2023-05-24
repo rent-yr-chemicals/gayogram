@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:background="?attr/color_background_secondary"
-    android:key="main_screen">
+    android:key="main_screen"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <PreferenceCategory
         android:key="general"
@@ -207,15 +208,18 @@
                 <com.rarepebble.colorpicker.ColorPreference
                     android:key="custom_theme_primary"
                     android:title="Custom Primary Color"
-                    android:defaultValue="@color/perpy" />
+                    android:defaultValue="@color/perpy"
+                    app:colorpicker_showAlpha="false" />
                 <com.rarepebble.colorpicker.ColorPreference
                     android:key="custom_theme_primary_dark"
                     android:title="Custom Primary Dark Color"
-                    android:defaultValue="@color/black_perpy" />
+                    android:defaultValue="@color/black_perpy"
+                    app:colorpicker_showAlpha="false" />
                 <com.rarepebble.colorpicker.ColorPreference
                     android:key="custom_theme_accent"
                     android:title="Custom Accent Color"
-                    android:defaultValue="@color/black_perpy" />
+                    android:defaultValue="@color/black_perpy"
+                    app:colorpicker_showAlpha="false" />
             </PreferenceCategory>
 
             <intent

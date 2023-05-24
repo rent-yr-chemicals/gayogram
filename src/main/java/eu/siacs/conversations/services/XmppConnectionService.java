@@ -1288,6 +1288,10 @@ public class XmppConnectionService extends Service {
         this.databaseBackend = DatabaseBackend.getInstance(getApplicationContext());
         Log.d(Config.LOGTAG, "restoring accounts...");
         this.accounts = databaseBackend.getAccounts();
+        for (Account account : this.accounts) {
+            final int color = getPreferences().getInt("account_color:" + account.getUuid(), 0);
+            if (color != 0) account.setColor(color);
+        }
         final SharedPreferences.Editor editor = getPreferences().edit();
         if (this.accounts.size() == 0 && Arrays.asList("Sony", "Sony Ericsson").contains(Build.MANUFACTURER)) {
             editor.putBoolean(SettingsActivity.KEEP_FOREGROUND_SERVICE, true);
@@ -2577,6 +2581,12 @@ public class XmppConnectionService extends Service {
 
     public boolean updateAccount(final Account account) {
         if (databaseBackend.updateAccount(account)) {
+            Integer color = account.getColorToSave();
+            if (color == null) {
+                getPreferences().edit().remove("account_color:" + account.getUuid()).commit();
+            } else {
+                getPreferences().edit().putInt("account_color:" + account.getUuid(), color.intValue()).commit();
+            }
             account.setShowErrorNotification(true);
             this.statusListener.onStatusChanged(account);
             databaseBackend.updateAccount(account);

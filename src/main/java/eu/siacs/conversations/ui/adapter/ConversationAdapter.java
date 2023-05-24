@@ -70,10 +70,7 @@ public class ConversationAdapter
         }
 
         if (activity.xmppConnectionService != null && activity.xmppConnectionService.getAccounts().size() > 1) {
-            viewHolder.binding.frame.setBackgroundColor(ColorUtils.setAlphaComponent(
-                UIHelper.getColorForName(conversation.getAccount().getJid().asBareJid().toString()),
-                activity.isDarkTheme() ? 20 : 15
-            ));
+            viewHolder.binding.frame.setBackgroundColor(conversation.getAccount().getColor(activity.isDarkTheme()));
         }
 
         Message message = conversation.getLatestMessage();
