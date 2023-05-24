@@ -3493,6 +3493,13 @@ public class XmppConnectionService extends Service {
     }
 
     public void checkIfMuc(final Account account, final Jid jid, Consumer<Boolean> cb) {
+        if (jid.isDomainJid()) {
+            // Spec basically says MUC needs to have a node
+            // And also specifies that MUC and MUC service should have the same identity...
+            cb.accept(false);
+            return;
+        }
+
         IqPacket request = mIqGenerator.queryDiscoInfo(jid.asBareJid());
         sendIqPacket(account, request, (acct, reply) -> {
             ServiceDiscoveryResult result = new ServiceDiscoveryResult(reply);
