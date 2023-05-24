@@ -2,6 +2,7 @@ package eu.siacs.conversations.ui;
 
 import android.Manifest;
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -18,6 +19,7 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.style.RelativeSizeSpan;
 import android.util.TypedValue;
+import android.view.inputmethod.InputMethodManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -69,6 +71,7 @@ import eu.siacs.conversations.ui.util.GridManager;
 import eu.siacs.conversations.ui.util.JidDialog;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.ui.util.ShareUtil;
+import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
 import eu.siacs.conversations.utils.AccountUtils;
 import eu.siacs.conversations.utils.Compatibility;
 import eu.siacs.conversations.utils.Emoticons;
@@ -202,7 +205,6 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
 
     @Override
     protected void refreshUiReal() {
-        invalidateOptionsMenu();
         populateView();
     }
 
@@ -329,6 +331,10 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
                     });
                     text.setText(contact.getServerName());
                     text.requestFocus();
+                    InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    if (imm != null) {
+                        imm.showSoftInput(text, InputMethodManager.SHOW_IMPLICIT);
+                    }
                     binding.tags.setVisibility(View.GONE);
                     binding.editTags.clearSync();
                     for (final ListItem.Tag group : contact.getGroupTags()) {
@@ -413,6 +419,7 @@ public class ContactDetailsActivity extends OmemoActivity implements OnAccountUp
         edit.setOnActionExpandListener(new MenuItem.OnActionExpandListener() {
             @Override
             public boolean onMenuItemActionCollapse(MenuItem item) {
+                SoftKeyboardUtils.hideSoftKeyboard(ContactDetailsActivity.this);
                 binding.editTags.setVisibility(View.GONE);
                 if (save != null) save.setVisible(false);
                 populateView();
