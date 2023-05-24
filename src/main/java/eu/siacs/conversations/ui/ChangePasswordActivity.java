@@ -23,7 +23,7 @@ public class ChangePasswordActivity extends XmppActivity implements XmppConnecti
 			if (mAccount != null) {
 				final String currentPassword = mCurrentPassword.getText().toString();
 				final String newPassword = mNewPassword.getText().toString();
-				if (!mAccount.isOptionSet(Account.OPTION_MAGIC_CREATE) && !currentPassword.equals(mAccount.getPassword())) {
+				if (!(mAccount.isOptionSet(Account.OPTION_MAGIC_CREATE) || didUnlock) && !currentPassword.equals(mAccount.getPassword())) {
 					mCurrentPassword.requestFocus();
 					mCurrentPasswordLayout.setError(getString(R.string.account_status_unauthorized));
 					removeErrorsOnAllBut(mCurrentPasswordLayout);
@@ -46,11 +46,12 @@ public class ChangePasswordActivity extends XmppActivity implements XmppConnecti
 	private TextInputLayout mNewPasswordLayout;
 	private TextInputLayout mCurrentPasswordLayout;
 	private Account mAccount;
+	private boolean didUnlock = false;
 
 	@Override
 	void onBackendConnected() {
 		this.mAccount = extractAccount(getIntent());
-		if (this.mAccount != null && this.mAccount.isOptionSet(Account.OPTION_MAGIC_CREATE)) {
+		if (this.mAccount != null && (this.mAccount.isOptionSet(Account.OPTION_MAGIC_CREATE) || didUnlock)) {
 			this.mCurrentPasswordLayout.setVisibility(View.GONE);
 		} else {
 			this.mCurrentPassword.setVisibility(View.VISIBLE);
@@ -79,6 +80,7 @@ public class ChangePasswordActivity extends XmppActivity implements XmppConnecti
 	protected void onStart() {
 		super.onStart();
 		Intent intent = getIntent();
+		this.didUnlock = intent.getBooleanExtra("did_unlock", false);
 		String password = intent != null ? intent.getStringExtra("password") : null;
 		if (password != null) {
 			this.mNewPassword.getEditableText().clear();
