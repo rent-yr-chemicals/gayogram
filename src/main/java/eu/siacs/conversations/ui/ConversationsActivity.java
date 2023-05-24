@@ -628,18 +628,6 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
             case R.id.action_scan_qr_code:
                 UriHandlerActivity.scan(this);
                 return true;
-            case R.id.action_cleanup:
-                for (Conversation c : ImmutableList.copyOf(xmppConnectionService.getConversations())) {
-                    c.trim();
-                    if (c.getDraftMessage() != null) continue;
-                    if (c.getReplyTo() != null) continue;
-                    if (c.getMode() == Conversation.MODE_MULTI) continue;
-                    if (c.getBooleanAttribute(Conversation.ATTRIBUTE_PINNED_ON_TOP, false)) continue;
-                    if (c.unreadCount() > 0) continue;
-                    if (c.getSortableTime() > System.currentTimeMillis() - 600000) continue;
-                    xmppConnectionService.archiveConversation(c);
-                }
-                break;
             case R.id.action_search_all_conversations:
                 startActivity(new Intent(this, SearchActivity.class));
                 return true;
