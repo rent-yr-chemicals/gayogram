@@ -240,6 +240,7 @@ public class ConnectionService extends android.telecom.ConnectionService {
 
 		@Override
 		public void onJingleRtpConnectionUpdate(final Account account, final Jid with, final String sessionId, final RtpEndUserState state) {
+			Log.d("com.cheogram.android.CheogramConnection", "onJingleRtpConnectionUpdate: " + with + " " + sessionId + " (== " + this.sessionId + " )? " + state);
 			if (sessionId == null || !sessionId.equals(this.sessionId)) return;
 			if (rtpConnection == null) {
 				this.with = with; // Store full JID of connection
