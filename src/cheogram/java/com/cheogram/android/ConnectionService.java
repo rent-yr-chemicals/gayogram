@@ -190,6 +190,10 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			Uri.fromParts("tel", with.getLocal(), null),
 			TelecomManager.PRESENTATION_ALLOWED
 		);
+		connection.setCallerDisplayName(
+			account.getRoster().getContact(with).getDisplayName(),
+			TelecomManager.PRESENTATION_ALLOWED
+		);
 		connection.setRinging();
 
 		xmppConnectionService.setOnRtpConnectionUpdateListener(connection);
