@@ -331,19 +331,21 @@ public class NotificationService {
                 "notifications_from_strangers", R.bool.notifications_from_strangers);
     }
 
-    private boolean isQuietHours() {
+    private boolean isQuietHours(Account account) {
+        if (mXmppConnectionService.getAccounts().size() < 2) account = null;
+        final String suffix = account == null ? "" : ":" + account.getUuid();
         if (!mXmppConnectionService.getBooleanPreference(
-                "enable_quiet_hours", R.bool.enable_quiet_hours)) {
+                "enable_quiet_hours" + suffix, R.bool.enable_quiet_hours)) {
             return false;
         }
         final SharedPreferences preferences =
                 PreferenceManager.getDefaultSharedPreferences(mXmppConnectionService);
         final long startTime =
                 TimePreference.minutesToTimestamp(
-                        preferences.getLong("quiet_hours_start", TimePreference.DEFAULT_VALUE));
+                        preferences.getLong("quiet_hours_start" + suffix, TimePreference.DEFAULT_VALUE));
         final long endTime =
                 TimePreference.minutesToTimestamp(
-                        preferences.getLong("quiet_hours_end", TimePreference.DEFAULT_VALUE));
+                        preferences.getLong("quiet_hours_end" + suffix, TimePreference.DEFAULT_VALUE));
         final long nowTime = Calendar.getInstance().getTimeInMillis();
 
         if (endTime < startTime) {
@@ -562,7 +564,7 @@ public class NotificationService {
     }
 
     public synchronized void startRinging(final AbstractJingleConnection.Id id, final Set<Media> media) {
-        if (isQuietHours()) return;
+        if (isQuietHours(id.getContact().getAccount())) return;
 
         if (tryRingingWithDialerUI(id, media)) {
             return;
@@ -912,8 +914,6 @@ public class NotificationService {
         final SharedPreferences preferences =
                 PreferenceManager.getDefaultSharedPreferences(mXmppConnectionService);
 
-        final boolean quiteHours = isQuietHours();
-
         final boolean notifyOnlyOneChild =
                 notify
                         && conversations != null
@@ -930,27 +930,29 @@ public class NotificationService {
             final Builder mBuilder;
             if (notifications.size() == 1 && Build.VERSION.SDK_INT < Build.VERSION_CODES.N) {
                 ArrayList<Message> messages = notifications.values().iterator().next();
-                mBuilder = buildSingleConversations(messages, notify, quiteHours);
-                modifyForSoundVibrationAndLight(mBuilder, notify, quiteHours, preferences, messages.isEmpty() ? null : messages.get(0).getConversation().getAccount());
+                final Account account = messages.isEmpty() ? null : messages.get(0).getConversation().getAccount();
+                mBuilder = buildSingleConversations(messages, notify, isQuietHours(account));
+                modifyForSoundVibrationAndLight(mBuilder, notify, preferences, account);
                 notify(NOTIFICATION_ID, mBuilder.build());
             } else {
-                mBuilder = buildMultipleConversation(notify, quiteHours);
+                mBuilder = buildMultipleConversation(notify, isQuietHours(null));
                 if (notifyOnlyOneChild) {
                     mBuilder.setGroupAlertBehavior(NotificationCompat.GROUP_ALERT_CHILDREN);
                 }
-                modifyForSoundVibrationAndLight(mBuilder, notify, quiteHours, preferences, null);
+                modifyForSoundVibrationAndLight(mBuilder, notify, preferences, null);
                 if (!summaryOnly) {
                     for (Map.Entry<String, ArrayList<Message>> entry : notifications.entrySet()) {
                         String uuid = entry.getKey();
                         final boolean notifyThis =
                                 notifyOnlyOneChild ? conversations.contains(uuid) : notify;
+                        final Account account = entry.getValue().isEmpty() ? null : entry.getValue().get(0).getConversation().getAccount();
                         Builder singleBuilder =
-                                buildSingleConversations(entry.getValue(), notifyThis, quiteHours);
+                                buildSingleConversations(entry.getValue(), notifyThis, isQuietHours(account));
                         if (!notifyOnlyOneChild) {
                             singleBuilder.setGroupAlertBehavior(
                                     NotificationCompat.GROUP_ALERT_SUMMARY);
                         }
-                        modifyForSoundVibrationAndLight(singleBuilder, notifyThis, quiteHours, preferences, entry.getValue().isEmpty() ? null : entry.getValue().get(0).getConversation().getAccount());
+                        modifyForSoundVibrationAndLight(singleBuilder, notifyThis, preferences, account);
                         singleBuilder.setGroup(MESSAGES_GROUP);
                         notify(entry.getKey(), NOTIFICATION_ID, singleBuilder.build());
                     }
@@ -986,7 +988,7 @@ public class NotificationService {
     }
 
     private void modifyForSoundVibrationAndLight(
-            Builder mBuilder, boolean notify, boolean quietHours, SharedPreferences preferences, Account account) {
+            Builder mBuilder, boolean notify, SharedPreferences preferences, Account account) {
         final Resources resources = mXmppConnectionService.getResources();
         final String ringtone =
                 preferences.getString(
@@ -1000,7 +1002,7 @@ public class NotificationService {
         final boolean headsup =
                 preferences.getBoolean(
                         "notification_headsup", resources.getBoolean(R.bool.headsup_notifications));
-        if (notify && !quietHours) {
+        if (notify && !isQuietHours(account)) {
             if (vibrate) {
                 final int dat = 70;
                 final long[] pattern = {0, 3 * dat, dat, dat};
@@ -1113,7 +1115,7 @@ public class NotificationService {
     private Builder buildMissedCall(
             final Conversational conversation, final MissedCallsInfo info, boolean publicVersion) {
         final Builder builder =
-                new NotificationCompat.Builder(mXmppConnectionService, isQuietHours() ? "quiet_hours" : "missed_calls");
+                new NotificationCompat.Builder(mXmppConnectionService, isQuietHours(conversation.getAccount()) ? "quiet_hours" : "missed_calls");
         final String title =
                 (info.getNumberOfCalls() == 1)
                         ? mXmppConnectionService.getString(R.string.missed_call)
@@ -1167,7 +1169,7 @@ public class NotificationService {
         if (led) {
             builder.setLights(LED_COLOR, 2000, 3000);
         }
-        builder.setPriority(isQuietHours() ? NotificationCompat.PRIORITY_LOW : NotificationCompat.PRIORITY_HIGH);
+        builder.setPriority(isQuietHours(account) ? NotificationCompat.PRIORITY_LOW : NotificationCompat.PRIORITY_HIGH);
         builder.setSound(null);
         setNotificationColor(builder, account);
     }

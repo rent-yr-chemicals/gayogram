@@ -9,6 +9,8 @@ import android.preference.PreferenceScreen;
 import android.text.TextUtils;
 import android.widget.ListView;
 
+import java.lang.reflect.Method;
+
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.utils.Compatibility;
@@ -16,6 +18,7 @@ import eu.siacs.conversations.utils.Compatibility;
 public class SettingsFragment extends PreferenceFragment {
 
 	private String page = null;
+	private String suffix = null;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -57,6 +60,7 @@ public class SettingsFragment extends PreferenceFragment {
 			if (Intent.ACTION_VIEW.equals(intent.getAction())) {
 				if (intent.getExtras() != null) {
 					this.page = intent.getExtras().getString("page");
+					this.suffix = intent.getExtras().getString("suffix");
 					if (wasEmpty) {
 						openPreferenceScreen(page);
 					}
@@ -71,7 +75,30 @@ public class SettingsFragment extends PreferenceFragment {
 			final PreferenceScreen preferenceScreen = (PreferenceScreen) pref;
 			getActivity().setTitle(preferenceScreen.getTitle());
 			preferenceScreen.setDependency("");
+			if (this.suffix != null) {
+				for (int i = 0; i < preferenceScreen.getPreferenceCount(); i++) {
+					final Preference p = preferenceScreen.getPreference(i);
+					if (!p.hasKey()) continue;
+					p.setKey(p.getKey() + this.suffix);
+					if (p.getDependency() != null && !"".equals(p.getDependency())) {
+						p.setDependency(p.getDependency() + this.suffix);
+					}
+					reloadPref(p);
+				}
+			}
 			setPreferenceScreen((PreferenceScreen) pref);
+		}
+	}
+
+	static void reloadPref(final Preference pref) {
+		Class iterClass = pref.getClass();
+		while(iterClass != Object.class) {
+			try {
+				Method m = iterClass.getDeclaredMethod("onSetInitialValue", boolean.class, Object.class);
+				m.setAccessible(true);
+				m.invoke(pref, true, null);
+			} catch (Exception e) { }
+			iterClass = iterClass.getSuperclass();
 		}
 	}
 }

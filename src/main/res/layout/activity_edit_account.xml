@@ -582,6 +582,46 @@
                         </RelativeLayout>
 
                         <RelativeLayout
+                            android:id="@+id/quiet_hours_box"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_marginTop="12dp">
+
+                            <LinearLayout
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentLeft="true"
+                                android:layout_centerVertical="true"
+                                android:layout_toLeftOf="@+id/action_edit_quiet_hours"
+                                android:orientation="vertical">
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/title_pref_quiet_hours"
+                                    android:textAppearance="@style/TextAppearance.Conversations.Body1"/>
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/pref_quiet_hours_summary"
+                                    android:textAppearance="@style/TextAppearance.Conversations.Caption"/>
+                            </LinearLayout>
+
+                            <ImageView
+                                android:id="@+id/action_edit_quiet_hours"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentRight="true"
+                                android:layout_centerVertical="true"
+                                android:alpha="?attr/icon_alpha"
+                                android:background="?attr/selectableItemBackgroundBorderless"
+                                android:padding="@dimen/image_button_padding"
+                                android:src="?attr/icon_edit_body"
+                                android:visibility="visible"/>
+                        </RelativeLayout>
+
+                        <RelativeLayout
                             android:id="@+id/pgp_fingerprint_box"
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
