@@ -1385,17 +1385,19 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             if (oldConversation != null) {
                 oldConversation.pagerAdapter.mPager = null;
                 oldConversation.pagerAdapter.mTabs = null;
-                page1 = oldConversation.pagerAdapter.page1;
-                page2 = oldConversation.pagerAdapter.page2;
-                oldConversation.pagerAdapter.page1 = null;
-                oldConversation.pagerAdapter.page2 = null;
             }
 
             if (mPager == null) return;
             if (sessions != null) show();
 
-            if (page1 == null) page1 = pager.getChildAt(0);
-            if (page2 == null) page2 = pager.getChildAt(1);
+            if (pager.getChildAt(0) != null) page1 = pager.getChildAt(0);
+            if (pager.getChildAt(1) != null) page2 = pager.getChildAt(1);
+            if (page2.findViewById(R.id.commands_view) == null) {
+                page1 = null;
+                page2 = null;
+            }
+            if (page1 == null) page1 = oldConversation.pagerAdapter.page1;
+            if (page2 == null) page2 = oldConversation.pagerAdapter.page2;
             if (page1 == null || page2 == null) {
                 throw new IllegalStateException("page1 or page2 were not present as child or in model?");
             }
