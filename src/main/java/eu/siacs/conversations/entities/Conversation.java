@@ -1838,6 +1838,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         SpannableStringBuilder text = new SpannableStringBuilder(value == null ? "" : value);
                         if (cell.reported.getType().equals(Optional.of("jid-single"))) {
                             text.setSpan(new FixedURLSpan("xmpp:" + Jid.ofEscaped(text.toString()).toEscapedString()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        } else if ("xs:anyURI".equals(datatype)) {
+                            text.setSpan(new FixedURLSpan(text.toString()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                        } else if ("html:tel".equals(datatype)) {
+                            try {
+                                text.setSpan(new FixedURLSpan("tel:" + PhoneNumberUtilWrapper.normalize(binding.getRoot().getContext(), text.toString())), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            } catch (final IllegalArgumentException | NumberParseException | NullPointerException e) { }
                         }
 
                         binding.text.setTextAppearance(binding.getRoot().getContext(), R.style.TextAppearance_Conversations_Body1);
