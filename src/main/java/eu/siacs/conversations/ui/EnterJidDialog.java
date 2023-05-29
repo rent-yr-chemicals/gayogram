@@ -516,14 +516,22 @@ public class EnterJidDialog extends DialogFragment implements OnBackendConnected
         }
 
         public String getType(Contact gateway) {
+            List<String> types = getTypes(gateway);
+            return types.isEmpty() ? null : types.get(0);
+        }
+
+        public List<String> getTypes(Contact gateway) {
+            List<String> types = new ArrayList<>();
+
             for(Presence p : gateway.getPresences().getPresences()) {
-                ServiceDiscoveryResult.Identity id;
-                if(p.getServiceDiscoveryResult() != null && (id = p.getServiceDiscoveryResult().getIdentity("gateway", null)) != null) {
-                    return id.getType();
+                if(p.getServiceDiscoveryResult() != null) {
+                    for (ServiceDiscoveryResult.Identity id : p.getServiceDiscoveryResult().getIdentities()) {
+                        if ("gateway".equals(id.getCategory())) types.add(id.getType());
+                    }
                 }
             }
 
-            return null;
+            return types;
         }
 
         public String getSelectedType() {
