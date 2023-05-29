@@ -1385,15 +1385,17 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             if (oldConversation != null) {
                 oldConversation.pagerAdapter.mPager = null;
                 oldConversation.pagerAdapter.mTabs = null;
+                page1 = oldConversation.pagerAdapter.page1;
+                page2 = oldConversation.pagerAdapter.page2;
+                oldConversation.pagerAdapter.page1 = null;
+                oldConversation.pagerAdapter.page2 = null;
             }
 
             if (mPager == null) return;
             if (sessions != null) show();
 
-            if (pager.getChildAt(0) != null) page1 = pager.getChildAt(0);
-            if (pager.getChildAt(1) != null) page2 = pager.getChildAt(1);
-            if (page1 == null) page1 = oldConversation.pagerAdapter.page1;
-            if (page2 == null) page2 = oldConversation.pagerAdapter.page2;
+            if (page1 == null) page1 = pager.getChildAt(0);
+            if (page2 == null) page2 = pager.getChildAt(1);
             if (page1 == null || page2 == null) {
                 throw new IllegalStateException("page1 or page2 were not present as child or in model?");
             }
@@ -1798,16 +1800,16 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                     if (field.getType().equals(Optional.of("jid-single")) || field.getType().equals(Optional.of("jid-multi"))) {
                         binding.values.setOnItemClickListener((arg0, arg1, pos, id) -> {
-                            new FixedURLSpan("xmpp:" + Jid.ofEscaped(values.getItem(pos).getValue()).toEscapedString()).onClick(binding.values);
+                            new FixedURLSpan("xmpp:" + Jid.ofEscaped(values.getItem(pos).getValue()).toEscapedString(), account).onClick(binding.values);
                         });
                     } else if ("xs:anyURI".equals(datatype)) {
                         binding.values.setOnItemClickListener((arg0, arg1, pos, id) -> {
-                            new FixedURLSpan(values.getItem(pos).getValue()).onClick(binding.values);
+                            new FixedURLSpan(values.getItem(pos).getValue(), account).onClick(binding.values);
                         });
                     } else if ("html:tel".equals(datatype)) {
                         binding.values.setOnItemClickListener((arg0, arg1, pos, id) -> {
                             try {
-                                new FixedURLSpan("tel:" + PhoneNumberUtilWrapper.normalize(binding.getRoot().getContext(), values.getItem(pos).getValue())).onClick(binding.values);
+                                new FixedURLSpan("tel:" + PhoneNumberUtilWrapper.normalize(binding.getRoot().getContext(), values.getItem(pos).getValue()), account).onClick(binding.values);
                             } catch (final IllegalArgumentException | NumberParseException | NullPointerException e) { }
                         });
                     }
@@ -1837,12 +1839,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         String value = formatValue(datatype, cell.el.findChildContent("value", "jabber:x:data"), true);
                         SpannableStringBuilder text = new SpannableStringBuilder(value == null ? "" : value);
                         if (cell.reported.getType().equals(Optional.of("jid-single"))) {
-                            text.setSpan(new FixedURLSpan("xmpp:" + Jid.ofEscaped(text.toString()).toEscapedString()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            text.setSpan(new FixedURLSpan("xmpp:" + Jid.ofEscaped(text.toString()).toEscapedString(), account), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         } else if ("xs:anyURI".equals(datatype)) {
-                            text.setSpan(new FixedURLSpan(text.toString()), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            text.setSpan(new FixedURLSpan(text.toString(), account), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                         } else if ("html:tel".equals(datatype)) {
                             try {
-                                text.setSpan(new FixedURLSpan("tel:" + PhoneNumberUtilWrapper.normalize(binding.getRoot().getContext(), text.toString())), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+                                text.setSpan(new FixedURLSpan("tel:" + PhoneNumberUtilWrapper.normalize(binding.getRoot().getContext(), text.toString()), account), 0, text.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
                             } catch (final IllegalArgumentException | NumberParseException | NullPointerException e) { }
                         }
 

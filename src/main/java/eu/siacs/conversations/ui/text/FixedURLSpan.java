@@ -44,14 +44,21 @@ import android.widget.Toast;
 import java.util.Arrays;
 
 import eu.siacs.conversations.R;
+import eu.siacs.conversations.entities.Account;
 import eu.siacs.conversations.ui.ConversationsActivity;
-
 
 @SuppressLint("ParcelCreator")
 public class FixedURLSpan extends URLSpan {
 
+	protected final Account account;
+
 	public FixedURLSpan(String url) {
+		this(url, null);
+	}
+
+	public FixedURLSpan(String url, Account account) {
 		super(url);
+		this.account = account;
 	}
 
 	public static void fix(final Editable editable) {
@@ -74,6 +81,14 @@ public class FixedURLSpan extends URLSpan {
 				return;
 			}
 		}
+
+		if (("sms".equals(uri.getScheme()) || "tel".equals(uri.getScheme())) && context instanceof ConversationsActivity) {
+			if (((ConversationsActivity) context).onTelUriClicked(uri, account)) {
+				widget.playSoundEffect(0);
+				return;
+			}
+		}
+
 		final Intent intent = new Intent(Intent.ACTION_VIEW, uri);
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			intent.setFlags(Intent.FLAG_ACTIVITY_NEW_DOCUMENT);

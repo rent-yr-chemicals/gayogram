@@ -64,6 +64,8 @@ import com.cheogram.android.DownloadDefaultStickers;
 
 import com.google.common.collect.ImmutableList;
 
+import io.michaelrocks.libphonenumber.android.NumberParseException;
+
 import org.openintents.openpgp.util.OpenPgpApi;
 
 import java.util.Arrays;
@@ -92,6 +94,7 @@ import eu.siacs.conversations.ui.util.ConversationMenuConfigurator;
 import eu.siacs.conversations.ui.util.MenuDoubleTabUtil;
 import eu.siacs.conversations.ui.util.PendingItem;
 import eu.siacs.conversations.utils.ExceptionHelper;
+import eu.siacs.conversations.utils.PhoneNumberUtilWrapper;
 import eu.siacs.conversations.utils.SignupUtils;
 import eu.siacs.conversations.utils.ThemeHelper;
 import eu.siacs.conversations.utils.XmppUri;
@@ -597,6 +600,36 @@ public class ConversationsActivity extends XmppActivity implements OnConversatio
                 return true;
             }
         }
+        return false;
+    }
+
+    public boolean onTelUriClicked(Uri uri, Account acct) {
+        final String tel;
+        try {
+            tel = PhoneNumberUtilWrapper.normalize(this, uri.getSchemeSpecificPart());
+        } catch (final IllegalArgumentException | NumberParseException | NullPointerException e) {
+            return false;
+        }
+
+        Set<String> gateways = new HashSet<>();
+        for (Account account : (acct == null ? xmppConnectionService.getAccounts() : List.of(acct))) {
+            for (Contact contact : account.getRoster().getContacts()) {
+                if (contact.getPresences().anyIdentity("gateway", "pstn") || contact.getPresences().anyIdentity("gateway", "sms")) {
+                    if (acct == null) acct = account;
+                    gateways.add(contact.getJid().asBareJid().toEscapedString());
+                }
+            }
+        }
+
+        for (String gateway : gateways) {
+            if (onXmppUriClicked(Uri.parse("xmpp:" + tel + "@" + gateway))) return true;
+        }
+
+        if (gateways.size() == 1 && acct != null) {
+            openConversation(xmppConnectionService.findOrCreateConversation(acct, Jid.ofLocalAndDomain(tel, gateways.iterator().next()), false, true), null);
+            return true;
+        }
+
         return false;
     }
 
