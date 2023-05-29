@@ -72,6 +72,8 @@ import com.google.common.collect.Lists;
 
 import io.ipfs.cid.Cid;
 
+import io.michaelrocks.libphonenumber.android.NumberParseException;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -126,6 +128,7 @@ import eu.siacs.conversations.ui.util.SoftKeyboardUtils;
 import eu.siacs.conversations.utils.Consumer;
 import eu.siacs.conversations.utils.JidHelper;
 import eu.siacs.conversations.utils.MessageUtils;
+import eu.siacs.conversations.utils.PhoneNumberUtilWrapper;
 import eu.siacs.conversations.utils.UIHelper;
 import eu.siacs.conversations.xml.Element;
 import eu.siacs.conversations.xml.Namespace;
@@ -1796,6 +1799,16 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     if (field.getType().equals(Optional.of("jid-single")) || field.getType().equals(Optional.of("jid-multi"))) {
                         binding.values.setOnItemClickListener((arg0, arg1, pos, id) -> {
                             new FixedURLSpan("xmpp:" + Jid.ofEscaped(values.getItem(pos).getValue()).toEscapedString()).onClick(binding.values);
+                        });
+                    } else if ("xs:anyURI".equals(datatype)) {
+                        binding.values.setOnItemClickListener((arg0, arg1, pos, id) -> {
+                            new FixedURLSpan(values.getItem(pos).getValue()).onClick(binding.values);
+                        });
+                    } else if ("html:tel".equals(datatype)) {
+                        binding.values.setOnItemClickListener((arg0, arg1, pos, id) -> {
+                            try {
+                                new FixedURLSpan("tel:" + PhoneNumberUtilWrapper.normalize(binding.getRoot().getContext(), values.getItem(pos).getValue())).onClick(binding.values);
+                            } catch (final IllegalArgumentException | NumberParseException | NullPointerException e) { }
                         });
                     }
 
