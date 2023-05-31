@@ -2952,7 +2952,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         return new ProgressBarViewHolder(binding);
                     }
                     default:
-                        throw new IllegalArgumentException("Unknown viewType: " + viewType);
+                        throw new IllegalArgumentException("Unknown viewType: " + viewType + " based on: " + response);
                 }
             }
 
