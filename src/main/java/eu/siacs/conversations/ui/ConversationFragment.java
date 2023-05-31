@@ -3313,9 +3313,9 @@ public class ConversationFragment extends XmppFragment
                 }
                 updateSendButton();
                 updateEditablity();
+                conversation.refreshSessions();
             }
         }
-        conversation.refreshSessions();
     }
 
     protected void messageSent() {
