@@ -2121,9 +2121,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         public View getView(int position, View convertView, ViewGroup parent) {
                             Button v = (Button) super.getView(position, convertView, parent);
                             v.setOnClickListener((view) -> {
-                                loading = true;
                                 mValue.setContent(getItem(position).getValue());
                                 execute();
+                                loading = true;
                             });
 
                             final SVG icon = getItem(position).getIcon();
@@ -2179,12 +2179,12 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                         dialog.setOnShowListener(d -> SoftKeyboardUtils.showKeyboard(dialogBinding.inputEditText));
                         dialog.show();
                         View.OnClickListener clickListener = v -> {
-                            loading = true;
                             String value = dialogBinding.inputEditText.getText().toString();
                             mValue.setContent(value);
                             SoftKeyboardUtils.hideSoftKeyboard(dialogBinding.inputEditText);
                             dialog.dismiss();
                             execute();
+                            loading = true;
                         };
                         dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(clickListener);
                         dialog.getButton(DialogInterface.BUTTON_NEGATIVE).setOnClickListener((v -> {
@@ -2230,9 +2230,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                         binding.defaultButton.setText(defaultOption.toString());
                         binding.defaultButton.setOnClickListener((view) -> {
-                            loading = true;
                             mValue.setContent(defaultOption.getValue());
                             execute();
+                            loading = true;
                         });
                     }
 
@@ -2350,7 +2350,9 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 public ProgressBarViewHolder(CommandProgressBarBinding binding) { super(binding); }
 
                 @Override
-                public void bind(Item item) { }
+                public void bind(Item item) {
+                    binding.text.setVisibility(loadingHasBeenLong ? View.VISIBLE : View.GONE);
+                }
             }
 
             class Item {
@@ -2570,6 +2572,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_BUTTON_GRID_FIELD = 13;
 
             protected boolean loading = false;
+            protected boolean loadingHasBeenLong = false;
             protected Timer loadingTimer = new Timer();
             protected String mTitle;
             protected String mNode;
@@ -2625,6 +2628,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 this.loadingTimer.cancel();
                 this.loadingTimer = new Timer();
                 this.loading = false;
+                this.loadingHasBeenLong = false;
                 this.responseElement = null;
                 this.fillableFieldCount = 0;
                 this.reported = null;
@@ -2986,6 +2990,11 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             }
 
             public boolean execute(String action) {
+                if (!"cancel".equals(action) && loading) {
+                    loadingHasBeenLong = true;
+                    notifyDataSetChanged();
+                    return false;
+                }
                 if (!action.equals("cancel") && !action.equals("prev") && !validate()) return false;
 
                 if (response == null) return true;
@@ -3060,6 +3069,15 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                     public void run() {
                         View v2 = getView();
                         loading = true;
+
+                        loadingTimer.schedule(new TimerTask() {
+                            @Override
+                            public void run() {
+                                loadingHasBeenLong = true;
+                                if (v == null && v2 == null) return;
+                                (v == null ? v2 : v).post(() -> notifyDataSetChanged());
+                            }
+                        }, 3000);
 
                         if (v == null && v2 == null) return;
                         (v == null ? v2 : v).post(() -> notifyDataSetChanged());
