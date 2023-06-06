@@ -316,7 +316,7 @@ public class ConversationsOverviewFragment extends XmppFragment {
 		AccountUtils.showHideMenuItems(menu);
 		final MenuItem easyOnboardInvite = menu.findItem(R.id.action_easy_invite);
 		easyOnboardInvite.setVisible(EasyOnboardingInvite.anyHasSupport(activity == null ? null : activity.xmppConnectionService));
-		if (activity.xmppConnectionService != null && activity.xmppConnectionService.isOnboarding()) {
+		if (activity != null && activity.xmppConnectionService != null && activity.xmppConnectionService.isOnboarding()) {
 			final MenuItem manageAccounts = menu.findItem(R.id.action_accounts);
 			if (manageAccounts != null) manageAccounts.setVisible(false);
 
