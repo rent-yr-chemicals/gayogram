@@ -161,7 +161,10 @@ class ToneManager {
             currentTone.cancel(true);
         }
         if (toneGenerator != null) {
-            toneGenerator.stopTone();
+            // catch race condition with already-released generator
+            try {
+                toneGenerator.stopTone();
+            } catch (final RuntimeException e) { }
         }
     }
 
