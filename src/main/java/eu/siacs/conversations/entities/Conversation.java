@@ -2571,6 +2571,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             final int TYPE_ITEM_CARD = 12;
             final int TYPE_BUTTON_GRID_FIELD = 13;
 
+            protected boolean executing = false;
             protected boolean loading = false;
             protected boolean loadingHasBeenLong = false;
             protected Timer loadingTimer = new Timer();
@@ -2627,6 +2628,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
             protected void updateWithResponseUiThread(final IqPacket iq) {
                 this.loadingTimer.cancel();
                 this.loadingTimer = new Timer();
+                this.executing = false;
                 this.loading = false;
                 this.loadingHasBeenLong = false;
                 this.responseElement = null;
@@ -2989,8 +2991,8 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 return execute(actionsAdapter.getItem(actionPosition).first);
             }
 
-            public boolean execute(String action) {
-                if (!"cancel".equals(action) && loading) {
+            public synchronized boolean execute(String action) {
+                if (!"cancel".equals(action) && executing) {
                     loadingHasBeenLong = true;
                     notifyDataSetChanged();
                     return false;
@@ -3050,6 +3052,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
                 if (c.getAttribute("action") == null) c.setAttribute("action", action);
 
+                executing = true;
                 xmppConnectionService.sendIqPacket(getAccount(), packet, (a, iq) -> {
                     updateWithResponse(iq);
                 });
