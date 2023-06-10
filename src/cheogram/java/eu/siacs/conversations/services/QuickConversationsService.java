@@ -27,7 +27,7 @@ public class QuickConversationsService extends AbstractQuickConversationsService
 
     protected final AtomicInteger mRunningSyncJobs = new AtomicInteger(0);
     protected final SerialSingleThreadExecutor mSerialSingleThreadExecutor = new SerialSingleThreadExecutor(QuickConversationsService.class.getSimpleName());
-    protected Attempt mLastSyncAttempt = Attempt.NULL;
+    protected HashMap<String,Attempt> mLastSyncAttempt = new HashMap<>();
 
     QuickConversationsService(XmppConnectionService xmppConnectionService) {
         super(xmppConnectionService);
@@ -122,13 +122,13 @@ public class QuickConversationsService extends AbstractQuickConversationsService
     protected boolean considerSync(final Account account, final List<String> gateways, final Map<String, PhoneNumberContact> contacts, final boolean forced) {
         final int hash = Objects.hash(contacts.keySet(), gateways);
         Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": consider sync of " + hash);
-        if (!mLastSyncAttempt.retry(hash) && !forced) {
+        if (!mLastSyncAttempt.getOrDefault(account.getUuid(), Attempt.NULL).retry(hash) && !forced) {
             Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": do not attempt sync");
             return false;
         }
         mRunningSyncJobs.incrementAndGet();
 
-        mLastSyncAttempt = Attempt.create(hash);
+        mLastSyncAttempt.put(account.getUuid(), Attempt.create(hash));
         final List<Contact> withSystemAccounts = account.getRoster().getWithSystemAccounts(PhoneNumberContact.class);
         for (Map.Entry<String, PhoneNumberContact> item : contacts.entrySet()) {
             PhoneNumberContact phoneContact = item.getValue();
