@@ -492,6 +492,14 @@ public class ConversationsOverviewFragment extends XmppFragment {
 
 		if (activity.xmppConnectionService != null && activity.xmppConnectionService.isOnboarding()) {
 			binding.fab.setVisibility(View.GONE);
+
+			if (this.conversations.size() == 1) {
+				if (activity instanceof OnConversationSelected) {
+					((OnConversationSelected) activity).onConversationSelected(this.conversations.get(0));
+				} else {
+					Log.w(ConversationsOverviewFragment.class.getCanonicalName(), "Activity does not implement OnConversationSelected");
+				}
+			}
 		} else {
 			binding.fab.setVisibility(View.VISIBLE);
 		}
