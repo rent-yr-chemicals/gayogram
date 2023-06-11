@@ -2431,6 +2431,8 @@ public class XmppConnectionService extends Service {
     }
 
     private void archiveConversation(Conversation conversation, final boolean maySynchronizeWithBookmarks) {
+        if (isOnboarding()) return;
+
         getNotificationService().clear(conversation);
         conversation.setStatus(Conversation.STATUS_ARCHIVED);
         conversation.setNextMessage(null);

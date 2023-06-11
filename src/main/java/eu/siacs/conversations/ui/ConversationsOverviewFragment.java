@@ -205,7 +205,7 @@ public class ConversationsOverviewFragment extends XmppFragment {
 		}
 	};
 
-	private ItemTouchHelper touchHelper;
+	private ItemTouchHelper touchHelper = null;
 
 	public static Conversation getSuggestion(Activity activity) {
 		final Conversation exception;
@@ -305,8 +305,6 @@ public class ConversationsOverviewFragment extends XmppFragment {
 		this.binding.list.setAdapter(this.conversationsAdapter);
 		this.binding.list.setLayoutManager(new LinearLayoutManager(getActivity(),LinearLayoutManager.VERTICAL,false));
 		registerForContextMenu(this.binding.list);
-		this.touchHelper = new ItemTouchHelper(this.callback);
-		this.touchHelper.attachToRecyclerView(this.binding.list);
 		return binding.getRoot();
 	}
 
@@ -387,6 +385,10 @@ public class ConversationsOverviewFragment extends XmppFragment {
 
 	@Override
 	public void onBackendConnected() {
+		if (this.touchHelper == null && (activity.xmppConnectionService == null || !activity.xmppConnectionService.isOnboarding())) {
+			this.touchHelper = new ItemTouchHelper(this.callback);
+			this.touchHelper.attachToRecyclerView(this.binding.list);
+		}
 		refresh();
 	}
 
