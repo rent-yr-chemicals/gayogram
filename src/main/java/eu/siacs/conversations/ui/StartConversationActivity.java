@@ -565,42 +565,44 @@ public class StartConversationActivity extends XmppActivity implements XmppConne
             }
 
             xmppConnectionService.checkIfMuc(account, contactJid, (isMuc) -> {
-                if (isMuc) {
-                    if (save) {
-                        Bookmark bookmark = account.getBookmark(contactJid);
-                        if (bookmark != null) {
-                            openConversationsForBookmark(bookmark);
-                        } else {
-                            bookmark = new Bookmark(account, contactJid.asBareJid());
-                            bookmark.setAutojoin(getBooleanPreference("autojoin", R.bool.autojoin));
-                            final String nick = contactJid.getResource();
-                            if (nick != null && !nick.isEmpty() && !nick.equals(MucOptions.defaultNick(account))) {
-                                bookmark.setNick(nick);
+                runOnUiThread(() -> {
+                    if (isMuc) {
+                        if (save) {
+                            Bookmark bookmark = account.getBookmark(contactJid);
+                            if (bookmark != null) {
+                                openConversationsForBookmark(bookmark);
+                            } else {
+                                bookmark = new Bookmark(account, contactJid.asBareJid());
+                                bookmark.setAutojoin(getBooleanPreference("autojoin", R.bool.autojoin));
+                                final String nick = contactJid.getResource();
+                                if (nick != null && !nick.isEmpty() && !nick.equals(MucOptions.defaultNick(account))) {
+                                    bookmark.setNick(nick);
+                                }
+                                xmppConnectionService.createBookmark(account, bookmark);
+                                final Conversation conversation = xmppConnectionService
+                                        .findOrCreateConversation(account, contactJid, true, true, true);
+                                bookmark.setConversation(conversation);
+                                switchToConversationDoNotAppend(conversation, invite == null ? null : invite.getBody());
                             }
-                            xmppConnectionService.createBookmark(account, bookmark);
-                            final Conversation conversation = xmppConnectionService
-                                    .findOrCreateConversation(account, contactJid, true, true, true);
-                            bookmark.setConversation(conversation);
+                        } else {
+                            final Conversation conversation = xmppConnectionService.findOrCreateConversation(account, contactJid, true, true, true);
                             switchToConversationDoNotAppend(conversation, invite == null ? null : invite.getBody());
                         }
                     } else {
-                        final Conversation conversation = xmppConnectionService.findOrCreateConversation(account, contactJid, true, true, true);
-                        switchToConversationDoNotAppend(conversation, invite == null ? null : invite.getBody());
-                    }
-                } else {
-                    if (save) {
-                        final String preAuth = invite == null ? null : invite.getParameter(XmppUri.PARAMETER_PRE_AUTH);
-                        xmppConnectionService.createContact(contact, true, preAuth);
-                        if (invite != null && invite.hasFingerprints()) {
-                            xmppConnectionService.verifyFingerprints(contact, invite.getFingerprints());
+                        if (save) {
+                            final String preAuth = invite == null ? null : invite.getParameter(XmppUri.PARAMETER_PRE_AUTH);
+                            xmppConnectionService.createContact(contact, true, preAuth);
+                            if (invite != null && invite.hasFingerprints()) {
+                                xmppConnectionService.verifyFingerprints(contact, invite.getFingerprints());
+                            }
                         }
+                        switchToConversationDoNotAppend(contact, invite == null ? null : invite.getBody(), call ? "call" : null);
                     }
-                    switchToConversationDoNotAppend(contact, invite == null ? null : invite.getBody(), call ? "call" : null);
-                }
 
-                try {
-                    dialog.dismiss();
-                } catch (final IllegalStateException e) { }
+                    try {
+                        dialog.dismiss();
+                    } catch (final IllegalStateException e) { }
+                });
             });
 
             return false;
