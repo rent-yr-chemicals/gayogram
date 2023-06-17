@@ -1275,14 +1275,18 @@ public class Message extends AbstractEntity implements AvatarService.Avatarable 
                     if (file == null) file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:4");
                     if (file == null) file = mediaSharing.findChild("file", "urn:xmpp:jingle:apps:file-transfer:3");
                     if (file != null) {
-                        String sizeS = file.findChildContent("size", file.getNamespace());
-                        if (sizeS != null) size = new Long(sizeS);
-                        String widthS = file.findChildContent("width", "https://schema.org/");
-                        if (widthS != null) width = parseInt(widthS);
-                        String heightS = file.findChildContent("height", "https://schema.org/");
-                        if (heightS != null) height = parseInt(heightS);
-                        String durationS = file.findChildContent("duration", "https://schema.org/");
-                        if (durationS != null) runtime = (int)(Duration.parse(durationS).toMillis() / 1000L);
+                        try {
+                            String sizeS = file.findChildContent("size", file.getNamespace());
+                            if (sizeS != null) size = new Long(sizeS);
+                            String widthS = file.findChildContent("width", "https://schema.org/");
+                            if (widthS != null) width = parseInt(widthS);
+                            String heightS = file.findChildContent("height", "https://schema.org/");
+                            if (heightS != null) height = parseInt(heightS);
+                            String durationS = file.findChildContent("duration", "https://schema.org/");
+                            if (durationS != null) runtime = (int)(Duration.parse(durationS).toMillis() / 1000L);
+                        } catch (final NumberFormatException e) {
+                            Log.w(Config.LOGTAG, "Trouble parsing as number: " + e);
+                        }
                     }
 
                     final Element sources = mediaSharing.findChild("sources", "urn:xmpp:sims:1");
