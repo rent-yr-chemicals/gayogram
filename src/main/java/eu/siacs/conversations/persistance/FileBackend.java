@@ -488,7 +488,7 @@ public class FileBackend {
                 bitmap = withGifOverlay;
             }
         }
-        if (bitmap != null) {
+        if (key != null && bitmap != null) {
             cache.put(key, bitmap);
         }
         return bitmap;
@@ -1121,7 +1121,7 @@ public class FileBackend {
                         Bitmap blurhash = BlurHashDecoder.INSTANCE.decode(parts[1], r.width(), r.height(), 1.0f, false);
                         if (blurhash != null) {
                             cached = new BitmapDrawable(blurhash);
-                            cache.put(parts[1], cached);
+                            if (parts[1] != null && cached != null) cache.put(parts[1], cached);
                             return cached;
                         }
                     } else if (parts[0].equals("image/thumbhash")) {
@@ -1136,7 +1136,7 @@ public class FileBackend {
                             pixels[i] = Color.argb(image.rgba[(i*4)+3] & 0xff, image.rgba[i*4] & 0xff, image.rgba[(i*4)+1] & 0xff, image.rgba[(i*4)+2] & 0xff);
                         }
                         cached = new BitmapDrawable(Bitmap.createBitmap(pixels, image.width, image.height, Bitmap.Config.ARGB_8888));
-                        cache.put(parts[1], cached);
+                        if (parts[1] != null && cached != null) cache.put(parts[1], cached);
                         return cached;
                     }
                 }
@@ -1182,7 +1182,7 @@ public class FileBackend {
                                 decoder.setTargetSize(r.width(), r.height());
                             });
 
-                            if (thumbnail != null) {
+                            if (thumbnail != null && file.getAbsolutePath() != null) {
                                 cache.put(file.getAbsolutePath(), thumbnail);
                                 return thumbnail;
                             }
@@ -1226,7 +1226,7 @@ public class FileBackend {
                         throw new FileNotFoundException();
                     }
                 }
-                cache.put(cacheKey, thumbnail);
+                if (cacheKey != null && thumbnail != null) cache.put(cacheKey, thumbnail);
             }
         }
         return thumbnail;
