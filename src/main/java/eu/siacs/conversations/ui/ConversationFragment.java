@@ -1396,7 +1396,7 @@ public class ConversationFragment extends XmppFragment
         if (message.isPrivateMessage()) privateMessageWith(message.getCounterpart());
         setThread(message.getThread());
         conversation.setUserSelectedThread(true);
-        if (message.getThread() == null) newThread();
+        if (message.getThread() == null && conversation.getMode() == Conversation.MODE_MULTI) newThread();
         setupReply(message);
     }
 
