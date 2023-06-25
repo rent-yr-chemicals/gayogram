@@ -23,6 +23,7 @@ import androidx.databinding.DataBindingUtil;
 import com.google.common.base.Strings;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -52,7 +53,9 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
     private MenuItem mMenuSearchView;
     private EditText mSearchEditText;
 
+    private String[] pendingServices = null;
     private ChannelDiscoveryService.Method method = ChannelDiscoveryService.Method.LOCAL_SERVER;
+    private HashMap<Jid, Account> mucServices = null;
 
     private boolean optedIn = false;
 
@@ -63,6 +66,15 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
 
     @Override
     void onBackendConnected() {
+        if (pendingServices != null) {
+            mucServices = new HashMap<>();
+            for (int i = 0; i < pendingServices.length; i += 2) {
+                mucServices.put(Jid.of(pendingServices[i]), xmppConnectionService.findAccountByJid(Jid.of(pendingServices[i+1])));
+            }
+        }
+
+        this.method = getMethod(this);
+
         if (optedIn || method == ChannelDiscoveryService.Method.LOCAL_SERVER) {
             final String query;
             if (mMenuSearchView != null && mMenuSearchView.isActionViewExpanded()) {
@@ -71,7 +83,7 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
                 query = mInitialSearchValue.peek();
             }
             toggleLoadingScreen();
-            xmppConnectionService.discoverChannels(query, this.method, this);
+            xmppConnectionService.discoverChannels(query, this.method, this.mucServices, this);
         }
     }
 
@@ -89,9 +101,12 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
         if (search != null) {
             mInitialSearchValue.push(search);
         }
+
+        pendingServices = getIntent().getStringArrayExtra("services");
     }
 
-    private static ChannelDiscoveryService.Method getMethod(final Context c) {
+    private ChannelDiscoveryService.Method getMethod(final Context c) {
+        if (this.mucServices != null) return ChannelDiscoveryService.Method.LOCAL_SERVER;
         if ( Strings.isNullOrEmpty(Config.CHANNEL_DISCOVERY)) {
             return ChannelDiscoveryService.Method.LOCAL_SERVER;
         }
@@ -121,7 +136,7 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
             mSearchEditText.append(initialSearchValue);
             mSearchEditText.requestFocus();
             if ((optedIn || method == ChannelDiscoveryService.Method.LOCAL_SERVER) && xmppConnectionService != null) {
-                xmppConnectionService.discoverChannels(initialSearchValue, this.method, this);
+                xmppConnectionService.discoverChannels(initialSearchValue, this.method, this.mucServices, this);
             }
         }
         mSearchEditText.setOnEditorActionListener(this);
@@ -146,7 +161,7 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
         mSearchEditText.setText("");
         toggleLoadingScreen();
         if (optedIn || method == ChannelDiscoveryService.Method.LOCAL_SERVER) {
-            xmppConnectionService.discoverChannels(null, this.method, this);
+            xmppConnectionService.discoverChannels(null, this.method, this.mucServices, this);
         }
         return true;
     }
@@ -161,7 +176,7 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
     public void onStart() {
         super.onStart();
         this.method = getMethod(this);
-        if (!optedIn && method == ChannelDiscoveryService.Method.JABBER_NETWORK) {
+        if (pendingServices == null && !optedIn && method == ChannelDiscoveryService.Method.JABBER_NETWORK) {
             final AlertDialog.Builder builder = new AlertDialog.Builder(this);
             builder.setTitle(R.string.channel_discovery_opt_in_title);
             builder.setMessage(Html.fromHtml(getString(R.string.channel_discover_opt_in_message)));
@@ -201,7 +216,7 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
         preferences.edit().putBoolean(CHANNEL_DISCOVERY_OPT_IN, true).apply();
         optedIn = true;
         toggleLoadingScreen();
-        xmppConnectionService.discoverChannels(null, this.method, this);
+        xmppConnectionService.discoverChannels(null, this.method, this.mucServices, this);
     }
 
     @Override
@@ -209,7 +224,7 @@ public class ChannelDiscoveryActivity extends XmppActivity implements MenuItem.O
         if (optedIn || method == ChannelDiscoveryService.Method.LOCAL_SERVER) {
             toggleLoadingScreen();
             SoftKeyboardUtils.hideSoftKeyboard(this);
-            xmppConnectionService.discoverChannels(v.getText().toString(), this.method, this);
+            xmppConnectionService.discoverChannels(v.getText().toString(), this.method, this.mucServices, this);
         }
         return true;
     }

@@ -34,13 +34,14 @@
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:padding="@dimen/card_padding_regular">
+                        android:paddingVertical="@dimen/card_padding_regular"
+                        android:orientation="vertical">
 
                         <RelativeLayout
                             android:layout_width="fill_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginBottom="32dp">
+                            android:layout_marginBottom="32dp"
+                            android:paddingHorizontal="@dimen/card_padding_regular">
 
                             <com.google.android.material.imageview.ShapeableImageView
                                 android:id="@+id/your_photo"
@@ -166,7 +167,8 @@
                         <RelativeLayout
                             android:id="@+id/muc_settings"
                             android:layout_width="fill_parent"
-                            android:layout_height="wrap_content">
+                            android:layout_height="wrap_content"
+                            android:paddingHorizontal="@dimen/card_padding_regular">
 
                             <TextView
                                 android:id="@+id/muc_conference_type"
@@ -198,6 +200,7 @@
                             android:id="@+id/muc_info_more"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:paddingHorizontal="@dimen/card_padding_regular"
                             android:shrinkColumns="0"
                             android:stretchColumns="1"
                             android:visibility="gone">
@@ -226,12 +229,24 @@
 
                         </TableLayout>
 
+                        <Button
+                            android:id="@+id/relatedMucs"
+                            style="@style/Widget.Conversations.Button.Borderless"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="end"
+                            android:minWidth="0dp"
+                            android:layout_marginTop="32dp"
+                            android:layout_marginRight="4dp"
+                            android:text="Related Chats"
+                            android:textColor="?attr/colorAccent" />
+
                         <TextView
                             android:id="@+id/jid"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
-                            android:layout_marginTop="32dp"
+                            android:paddingHorizontal="@dimen/card_padding_regular"
                             android:textAppearance="@style/TextAppearance.Conversations.Caption"/>
 
                         <TextView
@@ -240,6 +255,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="end"
+                            android:paddingHorizontal="@dimen/card_padding_regular"
                             android:textAppearance="@style/TextAppearance.Conversations.Caption"/>
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>

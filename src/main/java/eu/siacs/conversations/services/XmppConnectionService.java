@@ -1045,8 +1045,8 @@ public class XmppConnectionService extends Service {
         mChannelDiscoveryService.initializeMuclumbusService();
     }
 
-    public void discoverChannels(String query, ChannelDiscoveryService.Method method, ChannelDiscoveryService.OnChannelSearchResultsFound onChannelSearchResultsFound) {
-        mChannelDiscoveryService.discover(Strings.nullToEmpty(query).trim(), method, onChannelSearchResultsFound);
+    public void discoverChannels(String query, ChannelDiscoveryService.Method method, Map<Jid, Account> mucServices, ChannelDiscoveryService.OnChannelSearchResultsFound onChannelSearchResultsFound) {
+        mChannelDiscoveryService.discover(Strings.nullToEmpty(query).trim(), method, mucServices, onChannelSearchResultsFound);
     }
 
     public boolean isDataSaverDisabled() {
