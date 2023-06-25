@@ -47,6 +47,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -190,6 +192,7 @@ public class XmppConnection implements Runnable {
     private String verifiedHostname = null;
     private volatile Thread mThread;
     private CountDownLatch mStreamCountDownLatch;
+    private static ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1);
 
     public XmppConnection(final Account account, final XmppConnectionService service) {
         this.account = account;
@@ -2243,12 +2246,20 @@ public class XmppConnection implements Runnable {
     }
 
     public String sendIqPacket(final IqPacket packet, final OnIqPacketReceived callback) {
+        return sendIqPacket(packet, callback, null);
+    }
+
+    public String sendIqPacket(final IqPacket packet, final OnIqPacketReceived callback, Long timeout) {
         packet.setFrom(account.getJid());
-        return this.sendUnmodifiedIqPacket(packet, callback, false);
+        return this.sendUnmodifiedIqPacket(packet, callback, false, timeout);
+    }
+
+    public String sendUnmodifiedIqPacket(final IqPacket packet, final OnIqPacketReceived callback, boolean force) {
+        return sendUnmodifiedIqPacket(packet, callback, force, null);
     }
 
     public synchronized String sendUnmodifiedIqPacket(
-            final IqPacket packet, final OnIqPacketReceived callback, boolean force) {
+            final IqPacket packet, final OnIqPacketReceived callback, boolean force, Long timeout) {
         if (packet.getId() == null) {
             packet.setAttribute("id", nextRandomId());
         }
@@ -2258,6 +2269,15 @@ public class XmppConnection implements Runnable {
             }
         }
         this.sendPacket(packet, force);
+        if (timeout != null) {
+            SCHEDULER.schedule(() -> {
+                synchronized (this.packetCallbacks) {
+                    final IqPacket failurePacket = new IqPacket(IqPacket.TYPE.TIMEOUT);
+                    final Pair<IqPacket, OnIqPacketReceived> removedCallback = packetCallbacks.remove(packet.getId());
+                    if (removedCallback != null) removedCallback.second.onIqPacketReceived(account, failurePacket);
+                }
+            }, timeout, TimeUnit.SECONDS);
+        }
         return packet.getId();
     }
 

@@ -4706,9 +4706,13 @@ public class XmppConnectionService extends Service {
     }
 
     public void sendIqPacket(final Account account, final IqPacket packet, final OnIqPacketReceived callback) {
+        sendIqPacket(account, packet, callback, null);
+    }
+
+    public void sendIqPacket(final Account account, final IqPacket packet, final OnIqPacketReceived callback, Long timeout) {
         final XmppConnection connection = account.getXmppConnection();
         if (connection != null) {
-            connection.sendIqPacket(packet, callback);
+            connection.sendIqPacket(packet, callback, timeout);
         } else if (callback != null) {
             callback.onIqPacketReceived(account, new IqPacket(IqPacket.TYPE.TIMEOUT));
         }
