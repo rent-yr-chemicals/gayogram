@@ -11,6 +11,7 @@ import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
+import android.os.Build;
 import android.net.Uri;
 import android.telephony.PhoneNumberUtils;
 import android.text.Editable;
@@ -3005,7 +3006,7 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
                 String status = command.getAttribute("status");
                 if (status == null || (!status.equals("executing") && !action.equals("prev"))) return true;
 
-                if (actionToWebview != null && !action.equals("cancel")) {
+                if (actionToWebview != null && !action.equals("cancel") && Build.VERSION.SDK_INT >= 23) {
                     actionToWebview.postWebMessage(new WebMessage("xmpp_xep0050/" + action), Uri.parse("*"));
                     return false;
                 }
