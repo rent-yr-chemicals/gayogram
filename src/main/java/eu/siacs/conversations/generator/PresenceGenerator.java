@@ -54,10 +54,10 @@ public class PresenceGenerator extends AbstractGenerator {
     }
 
     public PresencePacket selfPresence(Account account, Presence.Status status) {
-        return selfPresence(account, status, true);
+        return selfPresence(account, status, true, null);
     }
 
-    public PresencePacket selfPresence(final Account account, final Presence.Status status, final boolean personal) {
+    public PresencePacket selfPresence(final Account account, final Presence.Status status, final boolean personal, final String nickname) {
         final PresencePacket packet = new PresencePacket();
         if (personal) {
             final String sig = account.getPgpSignature();
@@ -71,6 +71,10 @@ public class PresenceGenerator extends AbstractGenerator {
             if (sig != null && mXmppConnectionService.getPgpEngine() != null) {
                 packet.addChild("x", "jabber:x:signed").setContent(sig);
             }
+        }
+        if (nickname != null) {
+            Element nick = packet.addChild("nick", "http://jabber.org/protocol/nick");
+            nick.setContent(nickname);
         }
         final String capHash = getCapHash(account);
         if (capHash != null) {
