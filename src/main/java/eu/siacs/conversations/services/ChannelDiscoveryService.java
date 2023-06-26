@@ -195,6 +195,7 @@ public class ChannelDiscoveryService {
                         if (itemsResponse.getType() == IqPacket.TYPE.RESULT) {
                             final List<Jid> items = IqParser.items(itemsResponse);
                             for (Jid item : items) {
+                                if (item.isDomainJid()) continue; // Only looking for MUCs for now, and by spec they have a localpart
                                 IqPacket infoRequest =
                                         service.getIqGenerator().queryDiscoInfo(item);
                                 queriesInFlight.incrementAndGet();
