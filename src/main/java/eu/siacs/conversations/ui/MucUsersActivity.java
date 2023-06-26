@@ -68,7 +68,7 @@ public class MucUsersActivity extends XmppActivity implements XmppConnectionServ
             final String needle = search.toLowerCase(Locale.getDefault());
             ArrayList<MucOptions.User> filtered = new ArrayList<>();
             for(MucOptions.User user : allUsers) {
-                final String name = user.getName();
+                final String name = user.getNick();
                 final Contact contact = user.getContact();
                 if (name != null && name.toLowerCase(Locale.getDefault()).contains(needle) || contact != null && contact.getDisplayName().toLowerCase(Locale.getDefault()).contains(needle)) {
                     filtered.add(user);

@@ -3037,7 +3037,7 @@ public class XmppConnectionService extends Service {
 
                     final Jid joinJid = mucOptions.getSelf().getFullJid();
                     Log.d(Config.LOGTAG, account.getJid().asBareJid().toString() + ": joining conversation " + joinJid.toString());
-                    PresencePacket packet = mPresenceGenerator.selfPresence(account, Presence.Status.ONLINE, mucOptions.nonanonymous() || onConferenceJoined != null);
+                    PresencePacket packet = mPresenceGenerator.selfPresence(account, Presence.Status.ONLINE, mucOptions.nonanonymous() || onConferenceJoined != null, mucOptions.getSelf().getNick());
                     packet.setTo(joinJid);
                     Element x = packet.addChild("x", "http://jabber.org/protocol/muc");
                     if (conversation.getMucOptions().getPassword() != null) {
@@ -3303,17 +3303,18 @@ public class XmppConnectionService extends Service {
             databaseBackend.updateConversation(conversation);
         }
 
+        final String nick = self.getNick();
         final Bookmark bookmark = conversation.getBookmark();
         final String bookmarkedNick = bookmark == null ? null : bookmark.getNick();
-        if (bookmark != null && (tookProposedNickFromBookmark || TextUtils.isEmpty(bookmarkedNick)) && !full.getResource().equals(bookmarkedNick)) {
+        if (bookmark != null && (tookProposedNickFromBookmark || TextUtils.isEmpty(bookmarkedNick)) && !nick.equals(bookmarkedNick)) {
             final Account account = conversation.getAccount();
             final String defaultNick = MucOptions.defaultNick(account);
-            if (TextUtils.isEmpty(bookmarkedNick) && full.getResource().equals(defaultNick)) {
+            if (TextUtils.isEmpty(bookmarkedNick) && nick.equals(defaultNick)) {
                 Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": do not overwrite empty bookmark nick with default nick for " + conversation.getJid().asBareJid());
                 return;
             }
-            Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": persist nick '" + full.getResource() + "' into bookmark for " + conversation.getJid().asBareJid());
-            bookmark.setNick(full.getResource());
+            Log.d(Config.LOGTAG, account.getJid().asBareJid() + ": persist nick '" + nick + "' into bookmark for " + conversation.getJid().asBareJid());
+            bookmark.setNick(nick);
             createBookmark(bookmark.getAccount(), bookmark);
         }
     }
@@ -3339,7 +3340,7 @@ public class XmppConnectionService extends Service {
                 }
             });
 
-            final PresencePacket packet = mPresenceGenerator.selfPresence(account, Presence.Status.ONLINE, options.nonanonymous());
+            final PresencePacket packet = mPresenceGenerator.selfPresence(account, Presence.Status.ONLINE, options.nonanonymous(), nick);
             packet.setTo(joinJid);
             sendPresencePacket(account, packet);
         } else {
@@ -4183,7 +4184,7 @@ public class XmppConnectionService extends Service {
                 if (conversation.getAccount() == account && conversation.getMode() == Conversational.MODE_MULTI) {
                     final MucOptions mucOptions = conversation.getMucOptions();
                     if (mucOptions.online()) {
-                        PresencePacket packet = mPresenceGenerator.selfPresence(account, Presence.Status.ONLINE, mucOptions.nonanonymous());
+                        PresencePacket packet = mPresenceGenerator.selfPresence(account, Presence.Status.ONLINE, mucOptions.nonanonymous(), mucOptions.getSelf().getNick());
                         packet.setTo(mucOptions.getSelf().getFullJid());
                         connection.sendPresencePacket(packet);
                     }
@@ -5107,7 +5108,8 @@ public class XmppConnectionService extends Service {
     public void saveConversationAsBookmark(Conversation conversation, String name) {
         final Account account = conversation.getAccount();
         final Bookmark bookmark = new Bookmark(account, conversation.getJid().asBareJid());
-        final String nick = conversation.getJid().getResource();
+        String nick = conversation.getMucOptions().getActualNick();
+        if (nick == null) nick = conversation.getJid().getResource();
         if (nick != null && !nick.isEmpty() && !nick.equals(MucOptions.defaultNick(account))) {
             bookmark.setNick(nick);
         }

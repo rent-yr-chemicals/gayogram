@@ -582,6 +582,12 @@ public class MessageAdapter extends ArrayAdapter<Message> {
                     while (matcher.find()) {
                         body.setSpan(new StyleSpan(Typeface.BOLD), matcher.start(), matcher.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     }
+
+                    pattern = NotificationService.generateNickHighlightPattern(conversation.getMucOptions().getActualName());
+                    matcher = pattern.matcher(body);
+                    while (matcher.find()) {
+                        body.setSpan(new StyleSpan(Typeface.BOLD), matcher.start(), matcher.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    }
                 }
             }
             Matcher matcher = Emoticons.getEmojiPattern(body).matcher(body);

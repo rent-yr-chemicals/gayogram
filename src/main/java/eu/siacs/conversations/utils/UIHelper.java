@@ -462,7 +462,7 @@ public class UIHelper {
         if (contact != null) {
             return contact.getDisplayName();
         } else {
-            final String name = user.getName();
+            final String name = user.getNick();
             if (name != null) {
                 return name;
             }
@@ -540,6 +540,10 @@ public class UIHelper {
                 if (contact != null) {
                     return contact.getDisplayName();
                 } else {
+                    if (conversation instanceof Conversation) {
+                        final MucOptions.User user = ((Conversation) conversation).getMucOptions().findUserByFullJid(message.getCounterpart());
+                        if (user != null) return getDisplayName(user);
+                    }
                     return getDisplayedMucCounterpart(message.getCounterpart());
                 }
             } else {
@@ -547,7 +551,7 @@ public class UIHelper {
             }
         } else {
             if (conversation instanceof Conversation && conversation.getMode() == Conversation.MODE_MULTI) {
-                return ((Conversation) conversation).getMucOptions().getSelf().getName();
+                return ((Conversation) conversation).getMucOptions().getSelf().getNick();
             } else {
                 final Account account = conversation.getAccount();
                 final Jid jid = account.getJid();

@@ -71,7 +71,7 @@ public class UserAdapter extends ListAdapter<MucOptions.User, UserAdapter.ViewHo
         viewHolder.binding.getRoot().setOnClickListener(v -> {
             final XmppActivity activity = XmppActivity.find(v);
             if (activity != null) {
-                activity.highlightInMuc(user.getConversation(), user.getName());
+                activity.highlightInMuc(user.getConversation(), user.getNick());
             }
         });
         viewHolder.binding.getRoot().setTag(user);
@@ -80,7 +80,7 @@ public class UserAdapter extends ListAdapter<MucOptions.User, UserAdapter.ViewHo
             selectedUser = user;
             return false;
         });
-        final String name = user.getName();
+        final String name = user.getNick();
         final Contact contact = user.getContact();
         if (contact != null) {
             final String displayName = contact.getDisplayName();

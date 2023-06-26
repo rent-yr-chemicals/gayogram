@@ -991,10 +991,13 @@ public class ConversationFragment extends XmppFragment
         } else if (multi && conversation.getNextCounterpart() != null) {
             this.binding.textinput.setHint(R.string.send_message);
             this.binding.textInputHint.setVisibility(View.VISIBLE);
+            final MucOptions.User user = conversation.getMucOptions().findUserByName(conversation.getNextCounterpart().getResource());
+            String nick = user == null ? null : user.getNick();
+            if (nick == null) nick = conversation.getNextCounterpart().getResource();
             this.binding.textInputHint.setText(
                     getString(
                             R.string.send_private_message_to,
-                            conversation.getNextCounterpart().getResource()));
+                            nick));
             binding.conversationViewPager.setCurrentItem(0);
         } else if (multi && !conversation.getMucOptions().participating()) {
             this.binding.textInputHint.setVisibility(View.GONE);
@@ -3889,7 +3892,7 @@ public class ConversationFragment extends XmppFragment
         }
         List<String> completions = new ArrayList<>();
         for (MucOptions.User user : conversation.getMucOptions().getUsers()) {
-            String name = user.getName();
+            String name = user.getNick();
             if (name != null && name.startsWith(incomplete)) {
                 completions.add(name + (firstWord ? ": " : " "));
             }
@@ -4093,10 +4096,9 @@ public class ConversationFragment extends XmppFragment
                     if (mucOptions.participating()
                             || ((Conversation) message.getConversation()).getNextCounterpart()
                                     != null) {
-                        if (!mucOptions.isUserInRoom(user)
-                                && mucOptions.findUserByRealJid(
-                                                tcp == null ? null : tcp.asBareJid())
-                                        == null) {
+                        MucOptions.User mucUser = mucOptions.findUserByFullJid(user);
+                        MucOptions.User tcpMucUser = mucOptions.findUserByRealJid(tcp == null ? null : tcp.asBareJid());
+                        if (mucUser == null && tcpMucUser == null) {
                             Toast.makeText(
                                             getActivity(),
                                             activity.getString(
@@ -4105,7 +4107,7 @@ public class ConversationFragment extends XmppFragment
                                             Toast.LENGTH_SHORT)
                                     .show();
                         }
-                        highlightInConference(user.getResource());
+                        highlightInConference(mucUser == null ? (tcpMucUser == null ? user.getResource() : tcpMucUser.getNick()) : mucUser.getNick());
                     } else {
                         Toast.makeText(
                                         getActivity(),

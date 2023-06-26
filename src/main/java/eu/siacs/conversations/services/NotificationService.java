@@ -1817,11 +1817,14 @@ public class NotificationService {
 
             final String nick = conversation.getMucOptions().getActualNick();
             final Pattern highlight = generateNickHighlightPattern(nick);
-            if (message.getBody() == null || nick == null) {
+            final String name = conversation.getMucOptions().getActualName();
+            final Pattern highlightName = generateNickHighlightPattern(name);
+            if (message.getBody() == null || (nick == null && name == null)) {
                 return false;
             }
             final Matcher m = highlight.matcher(message.getBody());
-            return (m.find() || message.isPrivateMessage());
+            final Matcher m2 = highlightName.matcher(message.getBody());
+            return (m.find() || m2.find() || message.isPrivateMessage());
         } else {
             return false;
         }
