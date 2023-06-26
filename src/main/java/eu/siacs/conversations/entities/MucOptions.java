@@ -110,7 +110,7 @@ public class MucOptions {
 
     void notifyOfBookmarkNick(final String nick) {
         final String normalized = normalize(account.getJid(),nick);
-        if (normalized != null && normalized.equals(getSelf().getFullJid().getResource())) {
+        if (normalized != null && normalized.equals(getSelf().getNick())) {
             this.tookProposedNickFromBookmark = true;
         }
     }
@@ -469,12 +469,12 @@ public class MucOptions {
         if (account == null || TextUtils.isEmpty(nick)) {
             return null;
         }
+
         try {
             return account.withResource(nick).getResource();
         } catch (IllegalArgumentException e) {
-            return null;
+            return nick;
         }
-
     }
 
     public String getActualNick() {

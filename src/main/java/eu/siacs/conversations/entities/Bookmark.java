@@ -192,8 +192,19 @@ public class Bookmark extends Element implements ListItem {
 	}
 
 	public Jid getFullJid() {
-		final String nick = getNick();
-		return jid == null || nick == null || nick.trim().isEmpty() ? jid : jid.withResource(nick);
+		return getFullJid(getNick(), true);
+	}
+
+	private Jid getFullJid(final String nick, boolean tryFix) {
+		try {
+			return jid == null || nick == null || nick.trim().isEmpty() ? jid : jid.withResource(nick);
+		} catch (final IllegalArgumentException e) {
+			try {
+				return tryFix ? getFullJid(gnu.inet.encoding.Punycode.encode(nick), false) : null;
+			} catch (final gnu.inet.encoding.PunycodeException e2) {
+				return null;
+			}
+		}
 	}
 
 	public List<Tag> getGroupTags() {
