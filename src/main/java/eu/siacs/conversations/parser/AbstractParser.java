@@ -154,7 +154,7 @@ public abstract class AbstractParser {
 			if (nickname != null && nick != null && !nick.equals(nickname) && gnu.inet.encoding.Punycode.decode(nick).equals(nickname)) {
 				nick = nickname;
 			}
-		} catch (final gnu.inet.encoding.PunycodeException e) { }
+		} catch (final gnu.inet.encoding.PunycodeException | ArrayIndexOutOfBoundsException e) { }
 		MucOptions.User user = new MucOptions.User(conference.getMucOptions(), fullJid, nick);
 		if (InvalidJid.isValid(realJid)) {
 			user.setRealJid(realJid);
