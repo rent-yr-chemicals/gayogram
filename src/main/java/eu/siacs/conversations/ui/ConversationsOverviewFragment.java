@@ -385,11 +385,14 @@ public class ConversationsOverviewFragment extends XmppFragment {
 
 	@Override
 	public void onBackendConnected() {
+		refresh();
+	}
+
+	private void setupSwipe() {
 		if (this.touchHelper == null && (activity.xmppConnectionService == null || !activity.xmppConnectionService.isOnboarding())) {
 			this.touchHelper = new ItemTouchHelper(this.callback);
 			this.touchHelper.attachToRecyclerView(this.binding.list);
 		}
-		refresh();
 	}
 
 	@Override
@@ -503,6 +506,7 @@ public class ConversationsOverviewFragment extends XmppFragment {
 		} else {
 			binding.fab.setVisibility(View.VISIBLE);
 		}
+		setupSwipe();
 	}
 
 	private void setScrollPosition(ScrollState scrollPosition) {
