@@ -2,6 +2,8 @@ package eu.siacs.conversations.ui;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -244,12 +246,12 @@ public class PublishProfilePictureActivity extends XmppActivity implements XmppC
 
     protected void loadImageIntoPreview(Uri uri) {
 
-        Bitmap bm = null;
+        Drawable bm = null;
         if (uri == null) {
             bm = avatarService().get(account, (int) getResources().getDimension(R.dimen.publish_avatar_size));
         } else {
             try {
-                bm = xmppConnectionService.getFileBackend().cropCenterSquare(uri, (int) getResources().getDimension(R.dimen.publish_avatar_size));
+                bm = new BitmapDrawable(xmppConnectionService.getFileBackend().cropCenterSquare(uri, (int) getResources().getDimension(R.dimen.publish_avatar_size)));
             } catch (Exception e) {
                 Log.d(Config.LOGTAG, "unable to load bitmap into image view", e);
             }
@@ -262,7 +264,7 @@ public class PublishProfilePictureActivity extends XmppActivity implements XmppC
             this.hintOrWarning.setText(R.string.error_publish_avatar_converting);
             return;
         }
-        this.avatar.setImageBitmap(bm);
+        this.avatar.setImageDrawable(bm);
         if (support) {
             togglePublishButton(uri != null, R.string.publish);
             this.hintOrWarning.setVisibility(View.INVISIBLE);

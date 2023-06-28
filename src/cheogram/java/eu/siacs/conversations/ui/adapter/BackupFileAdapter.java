@@ -86,7 +86,7 @@ public class BackupFileAdapter extends RecyclerView.Adapter<BackupFileAdapter.Ba
         void onClick(ImportBackupService.BackupFile backupFile);
     }
 
-    static class BitmapWorkerTask extends AsyncTask<Jid, Void, Bitmap> {
+    static class BitmapWorkerTask extends AsyncTask<Jid, Void, Drawable> {
         private final WeakReference<ImageView> imageViewReference;
         private Jid jid  = null;
         private final int size;
@@ -98,17 +98,17 @@ public class BackupFileAdapter extends RecyclerView.Adapter<BackupFileAdapter.Ba
         }
 
         @Override
-        protected Bitmap doInBackground(Jid... params) {
+        protected Drawable doInBackground(Jid... params) {
             this.jid = params[0];
             return AvatarService.get(this.jid, size);
         }
 
         @Override
-        protected void onPostExecute(Bitmap bitmap) {
+        protected void onPostExecute(Drawable bitmap) {
             if (bitmap != null && !isCancelled()) {
                 final ImageView imageView = imageViewReference.get();
                 if (imageView != null) {
-                    imageView.setImageBitmap(bitmap);
+                    imageView.setImageDrawable(bitmap);
                     imageView.setBackgroundColor(0x00000000);
                 }
             }

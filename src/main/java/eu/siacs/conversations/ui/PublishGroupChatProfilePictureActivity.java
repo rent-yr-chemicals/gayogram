@@ -31,6 +31,8 @@ package eu.siacs.conversations.ui;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -76,14 +78,14 @@ public class PublishGroupChatProfilePictureActivity extends XmppActivity impleme
 
     private void reloadAvatar() {
         final int size = (int) getResources().getDimension(R.dimen.publish_avatar_size);
-        Bitmap bitmap;
+        Drawable bitmap;
         if (uri == null) {
             bitmap = xmppConnectionService.getAvatarService().get(conversation, size);
         } else {
             Log.d(Config.LOGTAG, "loading " + uri.toString() + " into preview");
-            bitmap = xmppConnectionService.getFileBackend().cropCenterSquare(uri, size);
+            bitmap = new BitmapDrawable(xmppConnectionService.getFileBackend().cropCenterSquare(uri, size));
         }
-        this.binding.accountImage.setImageBitmap(bitmap);
+        this.binding.accountImage.setImageDrawable(bitmap);
         this.binding.publishButton.setEnabled(uri != null);
     }
 

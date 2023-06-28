@@ -21,6 +21,7 @@ import java.util.List;
 
 import eu.siacs.conversations.Config;
 import eu.siacs.conversations.entities.Conversation;
+import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.ui.ConversationsActivity;
 import eu.siacs.conversations.utils.Compatibility;
 
@@ -69,8 +70,8 @@ public class ContactChooserTargetService extends ChooserTargetService implements
                 }
                 final String name = conversation.getName().toString();
                 final Icon icon =
-                        Icon.createWithBitmap(
-                                mXmppConnectionService.getAvatarService().get(conversation, pixel));
+                        Icon.createWithBitmap(FileBackend.drawDrawable(
+                                mXmppConnectionService.getAvatarService().get(conversation, pixel)));
                 final float score = 1 - (1.0f / MAX_TARGETS) * chooserTargets.size();
                 final Bundle extras = new Bundle();
                 extras.putString(ConversationsActivity.EXTRA_CONVERSATION, conversation.getUuid());

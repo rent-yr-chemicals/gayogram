@@ -44,6 +44,7 @@ import io.michaelrocks.libphonenumber.android.NumberParseException;
 
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.entities.Account;
+import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.services.AppRTCAudioManager;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.XmppConnectionService.XmppConnectionBinder;
@@ -215,11 +216,11 @@ public class ConnectionService extends android.telecom.ConnectionService {
 			this.account = account;
 			this.with = with;
 
-			gatewayIcon = Icon.createWithBitmap(xmppConnectionService.getAvatarService().get(
+			gatewayIcon = Icon.createWithBitmap(FileBackend.drawDrawable(xmppConnectionService.getAvatarService().get(
 				account.getRoster().getContact(Jid.of(with.getDomain())),
 				AvatarService.getSystemUiAvatarSize(xmppConnectionService),
 				false
-			));
+			)));
 
 			if (postDialString != null) {
 				for (int i = postDialString.length() - 1; i >= 0; i--) {

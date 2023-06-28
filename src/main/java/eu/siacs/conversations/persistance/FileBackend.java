@@ -1293,7 +1293,9 @@ public class FileBackend {
         }
     }
 
-    protected Bitmap drawDrawable(Drawable drawable) {
+    public static Bitmap drawDrawable(Drawable drawable) {
+        if (drawable == null) return null;
+
         Bitmap bitmap = null;
 
         if (drawable instanceof BitmapDrawable) {
@@ -2001,12 +2003,12 @@ public class FileBackend {
         return new Dimensions(h, w);
     }
 
-    public Bitmap getAvatar(String avatar, int size) {
+    public Drawable getAvatar(String avatar, int size) {
         if (avatar == null) {
             return null;
         }
         Bitmap bm = cropCenter(getAvatarUri(avatar), size, size);
-        return bm;
+        return new BitmapDrawable(bm);
     }
 
     private static class Dimensions {

@@ -35,6 +35,7 @@ import eu.siacs.conversations.Config;
 import eu.siacs.conversations.R;
 import eu.siacs.conversations.android.AbstractPhoneContact;
 import eu.siacs.conversations.android.JabberIdContact;
+import eu.siacs.conversations.persistance.FileBackend;
 import eu.siacs.conversations.services.AvatarService;
 import eu.siacs.conversations.services.QuickConversationsService;
 import eu.siacs.conversations.services.XmppConnectionService;
@@ -680,7 +681,7 @@ public class Contact implements ListItem, Blockable {
         ).setAddress(
             Uri.fromParts("xmpp", account.getJid().asBareJid().toString(), null)
         ).setIcon(
-            Icon.createWithBitmap(ctx.getAvatarService().get(this, AvatarService.getSystemUiAvatarSize(ctx) / 2, false))
+            Icon.createWithBitmap(FileBackend.drawDrawable(ctx.getAvatarService().get(this, AvatarService.getSystemUiAvatarSize(ctx) / 2, false)))
         ).setHighlightColor(
             0x7401CF
         ).setShortDescription(

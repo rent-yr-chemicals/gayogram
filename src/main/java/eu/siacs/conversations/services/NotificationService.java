@@ -660,10 +660,10 @@ public class NotificationService {
                     mXmppConnectionService.getString(R.string.rtp_state_incoming_call));
         }
         builder.setStyle(style);
-        builder.setLargeIcon(
+        builder.setLargeIcon(FileBackend.drawDrawable(
                 mXmppConnectionService
                         .getAvatarService()
-                        .get(contact, AvatarService.getSystemUiAvatarSize(mXmppConnectionService)));
+                        .get(contact, AvatarService.getSystemUiAvatarSize(mXmppConnectionService))));
         final Uri systemAccount = contact.getSystemAccount();
         if (systemAccount != null) {
             builder.addPerson(systemAccount.toString());
@@ -1150,12 +1150,12 @@ public class NotificationService {
         builder.setContentIntent(createContentIntent(conversation));
         builder.setDeleteIntent(createMissedCallsDeleteIntent(conversation));
         if (!publicVersion && conversation instanceof Conversation) {
-            builder.setLargeIcon(
+            builder.setLargeIcon(FileBackend.drawDrawable(
                     mXmppConnectionService
                             .getAvatarService()
                             .get(
                                     (Conversation) conversation,
-                                    AvatarService.getSystemUiAvatarSize(mXmppConnectionService)));
+                                    AvatarService.getSystemUiAvatarSize(mXmppConnectionService))));
         }
         modifyMissedCall(builder, conversation.getAccount());
         return builder;
@@ -1250,12 +1250,12 @@ public class NotificationService {
                         quietHours ? "quiet_hours" : (notify ? "messages" : "silent_messages"));
         if (messages.size() >= 1) {
             final Conversation conversation = (Conversation) messages.get(0).getConversation();
-            mBuilder.setLargeIcon(
+            mBuilder.setLargeIcon(FileBackend.drawDrawable(
                     mXmppConnectionService
                             .getAvatarService()
                             .get(
                                     conversation,
-                                    AvatarService.getSystemUiAvatarSize(mXmppConnectionService)));
+                                    AvatarService.getSystemUiAvatarSize(mXmppConnectionService))));
             mBuilder.setContentTitle(conversation.getName());
             if (Config.HIDE_MESSAGE_TEXT_IN_NOTIFICATION) {
                 int count = messages.size();
@@ -1446,14 +1446,14 @@ public class NotificationService {
                 builder.setImportant(c.getBooleanAttribute(Conversation.ATTRIBUTE_PINNED_ON_TOP, false));
             }
             builder.setIcon(
-                    IconCompat.createWithBitmap(
+                    IconCompat.createWithBitmap(FileBackend.drawDrawable(
                             mXmppConnectionService
                                     .getAvatarService()
                                     .get(
                                             message,
                                             AvatarService.getSystemUiAvatarSize(
                                                     mXmppConnectionService),
-                                            false)));
+                                            false))));
         }
         return builder.build();
     }
@@ -1473,14 +1473,14 @@ public class NotificationService {
                 builder.setImportant(c.getBooleanAttribute(Conversation.ATTRIBUTE_PINNED_ON_TOP, false));
             }
             builder.setIcon(
-                    IconCompat.createWithBitmap(
+                    IconCompat.createWithBitmap(FileBackend.drawDrawable(
                             mXmppConnectionService
                                     .getAvatarService()
                                     .get(
                                             contact,
                                             AvatarService.getSystemUiAvatarSize(
                                                     mXmppConnectionService),
-                                            false)));
+                                            false))));
         }
         return builder.build();
     }
@@ -1492,13 +1492,13 @@ public class NotificationService {
                     new Person.Builder().setName(mXmppConnectionService.getString(R.string.me));
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 meBuilder.setIcon(
-                        IconCompat.createWithBitmap(
+                        IconCompat.createWithBitmap(FileBackend.drawDrawable(
                                 mXmppConnectionService
                                         .getAvatarService()
                                         .get(
                                                 conversation.getAccount(),
                                                 AvatarService.getSystemUiAvatarSize(
-                                                        mXmppConnectionService))));
+                                                        mXmppConnectionService)))));
             }
             final Person me = meBuilder.build();
             NotificationCompat.MessagingStyle messagingStyle =
