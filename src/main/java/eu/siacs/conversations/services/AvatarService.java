@@ -154,7 +154,7 @@ public class AvatarService implements OnAdvancedStreamFeaturesLoaded {
 		canvas.drawARGB(0, 0, 0, 0);
 		canvas.drawCircle(bitmap.getWidth() / 2, bitmap.getHeight() / 2, bitmap.getWidth() / 2, paint);
 		paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_IN));
-		canvas.drawBitmap(bitmap, rect, rect, paint);
+		canvas.drawBitmap(bitmap.copy(Bitmap.Config.ARGB_8888, false), rect, rect, paint);
 	}
 
 	private void drawIcon(Canvas canvas, Paint paint) {

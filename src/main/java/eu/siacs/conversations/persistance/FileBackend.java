@@ -2008,8 +2008,28 @@ public class FileBackend {
         if (avatar == null) {
             return null;
         }
-        Bitmap bm = cropCenter(getAvatarUri(avatar), size, size);
-        return new BitmapDrawable(bm);
+
+        if (android.os.Build.VERSION.SDK_INT >= 28) {
+            try {
+                ImageDecoder.Source source = ImageDecoder.createSource(getAvatarFile(avatar));
+                return ImageDecoder.decodeDrawable(source, (decoder, info, src) -> {
+                    int w = info.getSize().getWidth();
+                    int h = info.getSize().getHeight();
+                    Rect r = rectForSize(w, h, size);
+                    decoder.setTargetSize(r.width(), r.height());
+
+                    int newSize = Math.min(r.width(), r.height());
+                    int left = (r.width() - newSize) / 2;
+                    int top = (r.height() - newSize) / 2;
+                    decoder.setCrop(new Rect(left, top, left + newSize, top + newSize));
+                });
+            } catch (final IOException e) {
+                return null;
+            }
+        } else {
+            Bitmap bm = cropCenter(getAvatarUri(avatar), size, size);
+            return new BitmapDrawable(bm);
+        }
     }
 
     private static class Dimensions {
