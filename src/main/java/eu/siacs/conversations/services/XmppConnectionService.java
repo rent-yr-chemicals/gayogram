@@ -1268,7 +1268,10 @@ public class XmppConnectionService extends Service {
             @Override
             protected int sizeOf(final String key, final Drawable drawable) {
                 if (drawable instanceof BitmapDrawable) {
-                    return ((BitmapDrawable) drawable).getBitmap().getByteCount() / 1024;
+                    Bitmap bitmap =  ((BitmapDrawable) drawable).getBitmap();
+                    if (bitmap == null) return 1024;
+
+                    return bitmap.getByteCount() / 1024;
                 } else {
                     return drawable.getIntrinsicWidth() * drawable.getIntrinsicHeight() * 40 / 1024;
                 }
