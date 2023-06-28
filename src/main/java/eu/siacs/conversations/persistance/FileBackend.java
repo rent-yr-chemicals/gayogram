@@ -2,6 +2,7 @@ package eu.siacs.conversations.persistance;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.res.AssetFileDescriptor;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -1504,19 +1505,58 @@ public class FileBackend {
     }
 
     private Avatar getUncompressedAvatar(Uri uri) {
-        Bitmap bitmap = null;
         try {
-            bitmap =
+            if (android.os.Build.VERSION.SDK_INT >= 28) {
+                ImageDecoder.Source source = ImageDecoder.createSource(mXmppConnectionService.getContentResolver(), uri);
+                int[] size = new int[] { 0, 0 };
+                boolean[] animated = new boolean[] { false };
+                String[] mimeType = new String[] { null };
+                Drawable drawable = ImageDecoder.decodeDrawable(source, (decoder, info, src) -> {
+                    mimeType[0] = info.getMimeType();
+                    animated[0] = info.isAnimated();
+                    size[0] = info.getSize().getWidth();
+                    size[1] = info.getSize().getHeight();
+                });
+
+                if (animated[0]) {
+                    Avatar avatar = getPepAvatar(uri, size[0], size[1], mimeType[0]);
+                    if (avatar != null) return avatar;
+                }
+
+                return getPepAvatar(drawDrawable(drawable), Bitmap.CompressFormat.PNG, 100);
+            } else {
+                Bitmap bitmap =
                     BitmapFactory.decodeStream(
                             mXmppConnectionService.getContentResolver().openInputStream(uri));
-            return getPepAvatar(bitmap, Bitmap.CompressFormat.PNG, 100);
+                return getPepAvatar(bitmap, Bitmap.CompressFormat.PNG, 100);
+            }
         } catch (Exception e) {
             return null;
-        } finally {
-            if (bitmap != null) {
-                bitmap.recycle();
-            }
         }
+    }
+
+    private Avatar getPepAvatar(Uri uri, int width, int height, final String mimeType) throws IOException, NoSuchAlgorithmException {
+        AssetFileDescriptor fd = mXmppConnectionService.getContentResolver().openAssetFileDescriptor(uri, "r");
+        if (fd.getLength() > Config.AVATAR_CHAR_LIMIT) return null; // Too big to use raw file
+
+        ByteArrayOutputStream mByteArrayOutputStream = new ByteArrayOutputStream();
+        Base64OutputStream mBase64OutputStream =
+                new Base64OutputStream(mByteArrayOutputStream, Base64.DEFAULT);
+        MessageDigest digest = MessageDigest.getInstance("SHA-1");
+        DigestOutputStream mDigestOutputStream =
+                new DigestOutputStream(mBase64OutputStream, digest);
+
+        ByteStreams.copy(fd.createInputStream(), mDigestOutputStream);
+        mDigestOutputStream.flush();
+        mDigestOutputStream.close();
+
+        final Avatar avatar = new Avatar();
+        avatar.sha1sum = CryptoHelper.bytesToHex(digest.digest());
+        avatar.image = new String(mByteArrayOutputStream.toByteArray());
+        avatar.type = mimeType;
+        avatar.width = width;
+        avatar.height = height;
+        return avatar;
     }
 
     private Avatar getPepAvatar(Bitmap bitmap, Bitmap.CompressFormat format, int quality) {
@@ -1694,6 +1734,29 @@ public class FileBackend {
 
     public Uri getAvatarUri(String avatar) {
         return Uri.fromFile(getAvatarFile(avatar));
+    }
+
+    public Drawable cropCenterSquareDrawable(Uri image, int size) {
+        if (android.os.Build.VERSION.SDK_INT >= 28) {
+            try {
+                ImageDecoder.Source source = ImageDecoder.createSource(mXmppConnectionService.getContentResolver(), image);
+                return ImageDecoder.decodeDrawable(source, (decoder, info, src) -> {
+                    int w = info.getSize().getWidth();
+                    int h = info.getSize().getHeight();
+                    Rect r = rectForSize(w, h, size);
+                    decoder.setTargetSize(r.width(), r.height());
+
+                    int newSize = Math.min(r.width(), r.height());
+                    int left = (r.width() - newSize) / 2;
+                    int top = (r.height() - newSize) / 2;
+                    decoder.setCrop(new Rect(left, top, left + newSize, top + newSize));
+                });
+            } catch (final IOException e) {
+                return null;
+            }
+        } else {
+            return new BitmapDrawable(cropCenterSquare(image, size));
+        }
     }
 
     public Bitmap cropCenterSquare(Uri image, int size) {

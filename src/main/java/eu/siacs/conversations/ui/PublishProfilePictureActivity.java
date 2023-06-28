@@ -2,6 +2,7 @@ package eu.siacs.conversations.ui;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.AnimatedImageDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.graphics.Bitmap;
@@ -174,7 +175,7 @@ public class PublishProfilePictureActivity extends XmppActivity implements XmppC
             }
         } else if (requestCode == REQUEST_CHOOSE_PICTURE) {
             if (resultCode == RESULT_OK) {
-                cropUri(this, data.getData());
+                cropUri(data.getData());
             }
         }
     }
@@ -227,7 +228,7 @@ public class PublishProfilePictureActivity extends XmppActivity implements XmppC
         final Uri uri = intent != null ? intent.getData() : null;
 
         if (uri != null && handledExternalUri.compareAndSet(false,true)) {
-            cropUri(this, uri);
+            cropUri(uri);
             return;
         }
 
@@ -237,11 +238,19 @@ public class PublishProfilePictureActivity extends XmppActivity implements XmppC
         configureActionBar(getSupportActionBar(), !this.mInitialAccountSetup && !handledExternalUri.get());
     }
 
-    public static void cropUri(final Activity activity, final Uri uri) {
+    public void cropUri(final Uri uri) {
+        if (Build.VERSION.SDK_INT >= 28) {
+            loadImageIntoPreview(uri);
+            if (this.avatar.getDrawable() instanceof AnimatedImageDrawable) {
+                this.avatarUri = uri;
+                return;
+            }
+        }
+
         CropImage.activity(uri).setOutputCompressFormat(Bitmap.CompressFormat.PNG)
                 .setAspectRatio(1, 1)
                 .setMinCropResultSize(Config.AVATAR_SIZE, Config.AVATAR_SIZE)
-                .start(activity);
+                .start(this);
     }
 
     protected void loadImageIntoPreview(Uri uri) {
@@ -251,7 +260,7 @@ public class PublishProfilePictureActivity extends XmppActivity implements XmppC
             bm = avatarService().get(account, (int) getResources().getDimension(R.dimen.publish_avatar_size));
         } else {
             try {
-                bm = new BitmapDrawable(xmppConnectionService.getFileBackend().cropCenterSquare(uri, (int) getResources().getDimension(R.dimen.publish_avatar_size)));
+                bm = xmppConnectionService.getFileBackend().cropCenterSquareDrawable(uri, (int) getResources().getDimension(R.dimen.publish_avatar_size));
             } catch (Exception e) {
                 Log.d(Config.LOGTAG, "unable to load bitmap into image view", e);
             }
@@ -265,6 +274,9 @@ public class PublishProfilePictureActivity extends XmppActivity implements XmppC
             return;
         }
         this.avatar.setImageDrawable(bm);
+        if (Build.VERSION.SDK_INT >= 28 && bm instanceof AnimatedImageDrawable) {
+            ((AnimatedImageDrawable) bm).start();
+        }
         if (support) {
             togglePublishButton(uri != null, R.string.publish);
             this.hintOrWarning.setVisibility(View.INVISIBLE);

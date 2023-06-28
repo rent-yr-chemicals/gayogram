@@ -31,9 +31,11 @@ package eu.siacs.conversations.ui;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.drawable.AnimatedImageDrawable;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -83,10 +85,13 @@ public class PublishGroupChatProfilePictureActivity extends XmppActivity impleme
             bitmap = xmppConnectionService.getAvatarService().get(conversation, size);
         } else {
             Log.d(Config.LOGTAG, "loading " + uri.toString() + " into preview");
-            bitmap = new BitmapDrawable(xmppConnectionService.getFileBackend().cropCenterSquare(uri, size));
+            bitmap = xmppConnectionService.getFileBackend().cropCenterSquareDrawable(uri, size);
         }
         this.binding.accountImage.setImageDrawable(bitmap);
         this.binding.publishButton.setEnabled(uri != null);
+        if (Build.VERSION.SDK_INT >= 28 && bitmap instanceof AnimatedImageDrawable) {
+            ((AnimatedImageDrawable) bitmap).start();
+        }
     }
 
     @Override
@@ -131,9 +136,24 @@ public class PublishGroupChatProfilePictureActivity extends XmppActivity impleme
             }
         } else if (requestCode == REQUEST_CHOOSE_PICTURE) {
             if (resultCode == RESULT_OK) {
-                PublishProfilePictureActivity.cropUri(this, data.getData());
+                cropUri(data.getData());
             }
         }
+    }
+
+    public void cropUri(final Uri uri) {
+        if (Build.VERSION.SDK_INT >= 28) {
+            this.uri = uri;
+            reloadAvatar();
+            if (this.binding.accountImage.getDrawable() instanceof AnimatedImageDrawable) {
+                return;
+            }
+        }
+
+        CropImage.activity(uri).setOutputCompressFormat(Bitmap.CompressFormat.PNG)
+                .setAspectRatio(1, 1)
+                .setMinCropResultSize(Config.AVATAR_SIZE, Config.AVATAR_SIZE)
+                .start(this);
     }
 
     @Override
