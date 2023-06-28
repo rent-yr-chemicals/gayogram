@@ -503,7 +503,6 @@ public class XmppConnectionService extends Service {
     private OpenPgpServiceConnection pgpServiceConnection;
     private PgpEngine mPgpEngine = null;
     private WakeLock wakeLock;
-    private LruCache<String, Bitmap> mBitmapCache;
     private LruCache<String, Drawable> mDrawableCache;
     private final BroadcastReceiver mInternalEventReceiver = new InternalEventReceiver();
     private final BroadcastReceiver mInternalScreenEventReceiver = new InternalEventReceiver();
@@ -1265,12 +1264,6 @@ public class XmppConnectionService extends Service {
         updateMemorizingTrustmanager();
         final int maxMemory = (int) (Runtime.getRuntime().maxMemory() / 1024);
         final int cacheSize = maxMemory / 10;
-        this.mBitmapCache = new LruCache<String, Bitmap>(cacheSize) {
-            @Override
-            protected int sizeOf(final String key, final Bitmap bitmap) {
-                return bitmap.getByteCount() / 1024;
-            }
-        };
         this.mDrawableCache = new LruCache<String, Drawable>(cacheSize) {
             @Override
             protected int sizeOf(final String key, final Drawable drawable) {
@@ -1411,7 +1404,7 @@ public class XmppConnectionService extends Service {
         super.onTrimMemory(level);
         if (level >= TRIM_MEMORY_COMPLETE) {
             Log.d(Config.LOGTAG, "clear cache due to low memory");
-            getBitmapCache().evictAll();
+            getDrawableCache().evictAll();
         }
     }
 
@@ -2092,7 +2085,7 @@ public class XmppConnectionService extends Service {
                     databaseBackend.readRoster(account.getRoster());
                     account.initAccountServices(XmppConnectionService.this); //roster needs to be loaded at this stage
                 }
-                getBitmapCache().evictAll();
+                getDrawableCache().evictAll();
                 loadPhoneContacts();
                 Log.d(Config.LOGTAG, "restoring messages...");
                 final long startMessageRestore = SystemClock.elapsedRealtime();
@@ -4635,10 +4628,6 @@ public class XmppConnectionService extends Service {
         setMemorizingTrustManager(tm);
     }
 
-    public LruCache<String, Bitmap> getBitmapCache() {
-        return this.mBitmapCache;
-    }
-
     public LruCache<String, Drawable> getDrawableCache() {
         return this.mDrawableCache;
     }
@@ -5178,18 +5167,12 @@ public class XmppConnectionService extends Service {
     }
 
     public void evictPreview(File f) {
-        if (mBitmapCache.remove(f.getAbsolutePath()) != null) {
-            Log.d(Config.LOGTAG, "deleted cached preview");
-        }
         if (mDrawableCache.remove(f.getAbsolutePath()) != null) {
             Log.d(Config.LOGTAG, "deleted cached preview");
         }
     }
 
     public void evictPreview(String uuid) {
-        if (mBitmapCache.remove(uuid) != null) {
-            Log.d(Config.LOGTAG, "deleted cached preview");
-        }
         if (mDrawableCache.remove(uuid) != null) {
             Log.d(Config.LOGTAG, "deleted cached preview");
         }

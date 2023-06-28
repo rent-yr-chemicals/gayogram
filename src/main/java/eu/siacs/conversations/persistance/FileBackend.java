@@ -452,11 +452,12 @@ public class FileBackend {
 
     public Bitmap getPreviewForUri(Attachment attachment, int size, boolean cacheOnly) {
         final String key = "attachment_" + attachment.getUuid().toString() + "_" + size;
-        final LruCache<String, Bitmap> cache = mXmppConnectionService.getBitmapCache();
-        Bitmap bitmap = cache.get(key);
-        if (bitmap != null || cacheOnly) {
-            return bitmap;
+        final LruCache<String, Drawable> cache = mXmppConnectionService.getDrawableCache();
+        Drawable drawable = cache.get(key);
+        if (drawable != null || cacheOnly) {
+            return drawDrawable(drawable);
         }
+        Bitmap bitmap = null;
         final String mime = attachment.getMime();
         if ("application/pdf".equals(mime)) {
             bitmap = cropCenterSquarePdf(attachment.getUri(), size);
@@ -489,7 +490,7 @@ public class FileBackend {
             }
         }
         if (key != null && bitmap != null) {
-            cache.put(key, bitmap);
+            cache.put(key, new BitmapDrawable(bitmap));
         }
         return bitmap;
     }

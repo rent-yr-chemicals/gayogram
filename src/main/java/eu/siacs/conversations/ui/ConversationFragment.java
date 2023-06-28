@@ -2155,7 +2155,6 @@ public class ConversationFragment extends XmppFragment
         }
         if (writeGranted(grantResults, permissions)) {
             if (activity != null && activity.xmppConnectionService != null) {
-                activity.xmppConnectionService.getBitmapCache().evictAll();
                 activity.xmppConnectionService.getDrawableCache().evictAll();
                 activity.xmppConnectionService.restartFileObserver();
             }
