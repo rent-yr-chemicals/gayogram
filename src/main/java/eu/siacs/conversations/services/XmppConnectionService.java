@@ -4657,6 +4657,7 @@ public class XmppConnectionService extends Service {
         if (Config.MAGIC_CREATE_DOMAIN != null) {
             hosts.add(Config.MAGIC_CREATE_DOMAIN);
         }
+        hosts.add("chat.above.im");
         return hosts;
     }
 
