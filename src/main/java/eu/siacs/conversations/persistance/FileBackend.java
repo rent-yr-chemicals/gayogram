@@ -30,6 +30,7 @@ import android.system.StructStat;
 import android.util.Base64;
 import android.util.Base64OutputStream;
 import android.util.DisplayMetrics;
+import android.util.Pair;
 import android.util.Log;
 import android.util.LruCache;
 
@@ -1479,16 +1480,16 @@ public class FileBackend {
 
     public Avatar getPepAvatar(Uri image, int size, Bitmap.CompressFormat format) {
 
-        final Avatar uncompressAvatar = getUncompressedAvatar(image);
-        if (uncompressAvatar != null
-                && uncompressAvatar.image.length() <= Config.AVATAR_CHAR_LIMIT) {
-            return uncompressAvatar;
+        final Pair<Avatar,Boolean> uncompressAvatar = getUncompressedAvatar(image);
+        if (uncompressAvatar != null && uncompressAvatar.first != null &&
+                (uncompressAvatar.first.image.length() <= Config.AVATAR_CHAR_LIMIT || uncompressAvatar.second)) {
+            return uncompressAvatar.first;
         }
-        if (uncompressAvatar != null) {
+        if (uncompressAvatar != null && uncompressAvatar.first != null) {
             Log.d(
                     Config.LOGTAG,
                     "uncompressed avatar exceeded char limit by "
-                            + (uncompressAvatar.image.length() - Config.AVATAR_CHAR_LIMIT));
+                            + (uncompressAvatar.first.image.length() - Config.AVATAR_CHAR_LIMIT));
         }
 
         Bitmap bm = cropCenterSquare(image, size);
@@ -1504,7 +1505,7 @@ public class FileBackend {
         return getPepAvatar(bm, format, 100);
     }
 
-    private Avatar getUncompressedAvatar(Uri uri) {
+    private Pair<Avatar,Boolean> getUncompressedAvatar(Uri uri) {
         try {
             if (android.os.Build.VERSION.SDK_INT >= 28) {
                 ImageDecoder.Source source = ImageDecoder.createSource(mXmppConnectionService.getContentResolver(), uri);
@@ -1520,15 +1521,15 @@ public class FileBackend {
 
                 if (animated[0]) {
                     Avatar avatar = getPepAvatar(uri, size[0], size[1], mimeType[0]);
-                    if (avatar != null) return avatar;
+                    if (avatar != null) return new Pair(avatar, true);
                 }
 
-                return getPepAvatar(drawDrawable(drawable), Bitmap.CompressFormat.PNG, 100);
+                return new Pair(getPepAvatar(drawDrawable(drawable), Bitmap.CompressFormat.PNG, 100), false);
             } else {
                 Bitmap bitmap =
                     BitmapFactory.decodeStream(
                             mXmppConnectionService.getContentResolver().openInputStream(uri));
-                return getPepAvatar(bitmap, Bitmap.CompressFormat.PNG, 100);
+                return new Pair(getPepAvatar(bitmap, Bitmap.CompressFormat.PNG, 100), false);
             }
         } catch (Exception e) {
             return null;
@@ -1537,7 +1538,7 @@ public class FileBackend {
 
     private Avatar getPepAvatar(Uri uri, int width, int height, final String mimeType) throws IOException, NoSuchAlgorithmException {
         AssetFileDescriptor fd = mXmppConnectionService.getContentResolver().openAssetFileDescriptor(uri, "r");
-        if (fd.getLength() > Config.AVATAR_CHAR_LIMIT) return null; // Too big to use raw file
+        if (fd.getLength() > 100000) return null; // Too big to use raw file
 
         ByteArrayOutputStream mByteArrayOutputStream = new ByteArrayOutputStream();
         Base64OutputStream mBase64OutputStream =
