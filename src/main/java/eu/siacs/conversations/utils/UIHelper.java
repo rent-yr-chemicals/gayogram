@@ -542,7 +542,10 @@ public class UIHelper {
                 } else {
                     if (conversation instanceof Conversation) {
                         final MucOptions.User user = ((Conversation) conversation).getMucOptions().findUserByFullJid(message.getCounterpart());
-                        if (user != null) return getDisplayName(user);
+                        if (user != null) {
+                            final String dname = getDisplayName(user);
+                            if (dname != null) return dname;
+                        }
                     }
                     return getDisplayedMucCounterpart(message.getCounterpart());
                 }

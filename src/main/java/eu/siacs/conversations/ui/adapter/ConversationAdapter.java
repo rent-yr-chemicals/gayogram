@@ -204,8 +204,9 @@ public class ConversationAdapter
             if (message.getStatus() == Message.STATUS_RECEIVED) {
                 if (conversation.getMode() == Conversation.MODE_MULTI) {
                     viewHolder.binding.senderName.setVisibility(View.VISIBLE);
-                    viewHolder.binding.senderName.setText(
-                            UIHelper.getMessageDisplayName(message).split("\\s+")[0] + ':');
+                    final String dname = UIHelper.getMessageDisplayName(message);
+                    final String[] words = dname.split("\\s+");
+                    viewHolder.binding.senderName.setText((words.length > 0 ? words[0] : dname) + ':');
                 } else {
                     viewHolder.binding.senderName.setVisibility(View.GONE);
                 }
