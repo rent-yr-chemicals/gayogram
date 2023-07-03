@@ -3327,6 +3327,9 @@ public class XmppConnectionService extends Service {
 
                 @Override
                 public void onSuccess() {
+                    final PresencePacket packet = mPresenceGenerator.selfPresence(account, Presence.Status.ONLINE, options.nonanonymous(), nick);
+                    packet.setTo(joinJid);
+                    sendPresencePacket(account, packet);
                     callback.success(conversation);
                 }
 
