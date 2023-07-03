@@ -3068,25 +3068,27 @@ public class Conversation extends AbstractEntity implements Blockable, Comparabl
 
             protected void loading() {
                 View v = getView();
-                loadingTimer.schedule(new TimerTask() {
-                    @Override
-                    public void run() {
-                        View v2 = getView();
-                        loading = true;
+                try {
+                    loadingTimer.schedule(new TimerTask() {
+                        @Override
+                        public void run() {
+                            View v2 = getView();
+                            loading = true;
 
-                        loadingTimer.schedule(new TimerTask() {
-                            @Override
-                            public void run() {
-                                loadingHasBeenLong = true;
-                                if (v == null && v2 == null) return;
-                                (v == null ? v2 : v).post(() -> notifyDataSetChanged());
-                            }
-                        }, 3000);
+                            loadingTimer.schedule(new TimerTask() {
+                                @Override
+                                public void run() {
+                                    loadingHasBeenLong = true;
+                                    if (v == null && v2 == null) return;
+                                    (v == null ? v2 : v).post(() -> notifyDataSetChanged());
+                                }
+                            }, 3000);
 
-                        if (v == null && v2 == null) return;
-                        (v == null ? v2 : v).post(() -> notifyDataSetChanged());
-                    }
-                }, 500);
+                            if (v == null && v2 == null) return;
+                            (v == null ? v2 : v).post(() -> notifyDataSetChanged());
+                        }
+                    }, 500);
+                } catch (final IllegalStateException e) { }
             }
 
             protected GridLayoutManager setupLayoutManager() {
