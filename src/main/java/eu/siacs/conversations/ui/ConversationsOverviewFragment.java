@@ -371,9 +371,9 @@ public class ConversationsOverviewFragment extends XmppFragment {
 	@Override
 	public boolean onContextItemSelected(MenuItem item) {
 		int pos = ((AdapterContextMenuInfo) item.getMenuInfo()).position;
-		if (conversations == null || conversations.size() < pos || pos < 0) return false;
+		if (conversations == null || conversations.size() <= pos || pos < 0) return false;
 
-		Conversation conversation = conversations.get(((AdapterContextMenuInfo) item.getMenuInfo()).position);
+		Conversation conversation = conversations.get(pos);
 		ConversationFragment fragment = new ConversationFragment();
 		fragment.setHasOptionsMenu(false);
 		fragment.onAttach(activity);
