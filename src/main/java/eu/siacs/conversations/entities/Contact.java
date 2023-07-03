@@ -690,7 +690,11 @@ public class Contact implements ListItem, Blockable {
             PhoneAccount.CAPABILITY_CALL_PROVIDER
         ).build();
 
-        telecomManager.registerPhoneAccount(phoneAccount);
+        try {
+            telecomManager.registerPhoneAccount(phoneAccount);
+        } catch (final Exception e) {
+            Log.w(Config.LOGTAG, "Could not registerPhoneAccount: " + e);
+        }
     }
 
     // Unregister any associated PSTN gateway integration
