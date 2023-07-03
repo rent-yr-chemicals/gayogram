@@ -96,7 +96,7 @@ public class ShortcutService {
         return new ShortcutInfoCompat.Builder(xmppConnectionService, getShortcutId(contact))
                         .setShortLabel(contact.getDisplayName())
                         .setIntent(getShortcutIntent(contact))
-                        .setIcon(IconCompat.createFromIcon(Icon.createWithBitmap(xmppConnectionService.getAvatarService().getRoundedShortcut(contact))))
+                        .setIcon(IconCompat.createWithBitmap(xmppConnectionService.getAvatarService().getRoundedShortcut(contact)))
                         .setIsConversation()
                         .build();
     }
