@@ -893,7 +893,7 @@ public class MessageParser extends AbstractParser implements OnMessagePacketRece
 
             final HttpConnectionManager manager = this.mXmppConnectionService.getHttpConnectionManager();
             if (message.getRelativeFilePath() == null && message.trusted() && message.treatAsDownloadable() && manager.getAutoAcceptFileSize() > 0) {
-                if (message.getOob() != null && message.getOob().getScheme().equalsIgnoreCase("cid")) {
+                if (message.getOob() != null && "cid".equalsIgnoreCase(message.getOob().getScheme())) {
                     try {
                         BobTransfer transfer = new BobTransfer.ForMessage(message, mXmppConnectionService);
                         message.setTransferable(transfer);
