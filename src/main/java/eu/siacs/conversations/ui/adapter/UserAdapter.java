@@ -1,9 +1,11 @@
 package eu.siacs.conversations.ui.adapter;
 
 import android.app.PendingIntent;
+import android.content.Context;
 import android.content.IntentSender;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.widget.TextView;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -12,6 +14,9 @@ import androidx.databinding.DataBindingUtil;
 import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import org.openintents.openpgp.util.OpenPgpUtils;
 
@@ -82,17 +87,17 @@ public class UserAdapter extends ListAdapter<MucOptions.User, UserAdapter.ViewHo
         });
         final String name = user.getNick();
         final Contact contact = user.getContact();
+        viewHolder.binding.contactJid.setVisibility(View.GONE);
+        viewHolder.binding.contactJid.setText("");
         if (contact != null) {
             final String displayName = contact.getDisplayName();
             viewHolder.binding.contactDisplayName.setText(displayName);
             if (name != null && !name.equals(displayName)) {
-                viewHolder.binding.contactJid.setText(String.format("%s \u2022 %s", name, ConferenceDetailsActivity.getStatus(viewHolder.binding.getRoot().getContext(), user, advancedMode)));
-            } else {
-                viewHolder.binding.contactJid.setText(ConferenceDetailsActivity.getStatus(viewHolder.binding.getRoot().getContext(), user, advancedMode));
+                viewHolder.binding.contactJid.setVisibility(View.VISIBLE);
+                viewHolder.binding.contactJid.setText(name);
             }
         } else {
             viewHolder.binding.contactDisplayName.setText(name == null ? "" : name);
-            viewHolder.binding.contactJid.setText(ConferenceDetailsActivity.getStatus(viewHolder.binding.getRoot().getContext(), user, advancedMode));
         }
         if (advancedMode && user.getPgpKeyId() != 0) {
             viewHolder.binding.key.setVisibility(View.VISIBLE);
@@ -116,7 +121,36 @@ public class UserAdapter extends ListAdapter<MucOptions.User, UserAdapter.ViewHo
             viewHolder.binding.key.setVisibility(View.GONE);
         }
 
+        viewHolder.binding.tags.setVisibility(View.VISIBLE);
+        viewHolder.binding.tags.removeAllViewsInLayout();
+        for (MucOptions.Hat hat : getPseudoHats(viewHolder.binding.getRoot().getContext(), user)) {
+            TextView tv = (TextView) LayoutInflater.from(viewHolder.binding.getRoot().getContext()).inflate(R.layout.list_item_tag, viewHolder.binding.tags, false);
+            tv.setText(hat.toString());
+            tv.setBackgroundColor(hat.getColor());
+            viewHolder.binding.tags.addView(tv);
+        }
+        for (MucOptions.Hat hat : user.getHats()) {
+            TextView tv = (TextView) LayoutInflater.from(viewHolder.binding.getRoot().getContext()).inflate(R.layout.list_item_tag, viewHolder.binding.tags, false);
+            tv.setText(hat.toString());
+            tv.setBackgroundColor(hat.getColor());
+            viewHolder.binding.tags.addView(tv);
+        }
 
+        if (viewHolder.binding.tags.getChildCount() < 1) {
+            viewHolder.binding.contactJid.setVisibility(View.VISIBLE);
+            viewHolder.binding.tags.setVisibility(View.GONE);
+        }
+    }
+
+    private List<MucOptions.Hat> getPseudoHats(Context context, MucOptions.User user) {
+        List<MucOptions.Hat> hats = new ArrayList<>();
+        if (user.getAffiliation() != MucOptions.Affiliation.NONE) {
+            hats.add(new MucOptions.Hat(null, context.getString(user.getAffiliation().getResId())));
+        }
+        if (user.getRole() != MucOptions.Role.PARTICIPANT) {
+            hats.add(new MucOptions.Hat(null, context.getString(user.getRole().getResId())));
+        }
+        return hats;
     }
 
     public MucOptions.User getSelectedUser() {

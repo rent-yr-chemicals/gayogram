@@ -671,7 +671,6 @@ public class ConferenceDetailsActivity extends XmppActivity implements OnConvers
         return getStatus(this, user, mAdvancedMode);
     }
 
-
     @Override
     public void onAffiliationChangedSuccessful(Jid jid) {
         refreshUi();

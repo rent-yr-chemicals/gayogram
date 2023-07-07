@@ -1,5 +1,6 @@
 package eu.siacs.conversations.entities;
 
+import android.net.Uri;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
@@ -25,6 +26,7 @@ import eu.siacs.conversations.xmpp.chatstate.ChatState;
 import eu.siacs.conversations.xmpp.forms.Data;
 import eu.siacs.conversations.xmpp.forms.Field;
 import eu.siacs.conversations.xmpp.pep.Avatar;
+import eu.siacs.conversations.xml.Element;
 
 public class MucOptions {
 
@@ -54,7 +56,7 @@ public class MucOptions {
         this.account = conversation.getAccount();
         this.conversation = conversation;
         final String nick = getProposedNick(conversation.getAttribute("mucNick"));
-        this.self = new User(this, createJoinJid(nick), nick);
+        this.self = new User(this, createJoinJid(nick), nick, new HashSet<>());
         this.self.affiliation = Affiliation.of(conversation.getAttribute("affiliation"));
         this.self.role = Role.of(conversation.getAttribute("role"));
     }
@@ -338,7 +340,7 @@ public class MucOptions {
     public User findOrCreateUserByRealJid(Jid jid, Jid fullJid) {
         User user = findUserByRealJid(jid);
         if (user == null) {
-            user = new User(this, fullJid, null);
+            user = new User(this, fullJid, null, new HashSet<>());
             user.setRealJid(jid);
         }
         return user;
@@ -537,7 +539,7 @@ public class MucOptions {
     private List<User> getFallbackUsersFromCryptoTargets() {
         List<User> users = new ArrayList<>();
         for (Jid jid : conversation.getAcceptedCryptoTargets()) {
-            User user = new User(this, null, null);
+            User user = new User(this, null, null, new HashSet<>());
             user.setRealJid(jid);
             users.add(user);
         }
@@ -781,6 +783,39 @@ public class MucOptions {
 
     }
 
+    public static class Hat implements Comparable<Hat> {
+        private final Uri uri;
+        private final String title;
+
+        public Hat(final Element el) {
+            Uri parseUri = null; // null hat uri is invaild per spec
+            try {
+                parseUri = Uri.parse(el.getAttribute("uri"));
+            } catch (final Exception e) { }
+            uri = parseUri;
+
+            title = el.getAttribute("title");
+        }
+
+        public Hat(final Uri uri, final String title) {
+            this.uri = uri;
+            this.title = title;
+        }
+
+        public String toString() {
+            return title;
+        }
+
+        public int getColor() {
+            return UIHelper.getColorForName(uri == null ? title : uri.toString());
+        }
+
+        @Override
+        public int compareTo(@NonNull Hat another) {
+            return title.compareTo(another.title);
+        }
+    }
+
     public static class User implements Comparable<User>, AvatarService.Avatarable {
         private Role role = Role.NONE;
         private Affiliation affiliation = Affiliation.NONE;
@@ -791,11 +826,13 @@ public class MucOptions {
         private Avatar avatar;
         private final MucOptions options;
         private ChatState chatState = Config.DEFAULT_CHAT_STATE;
+        private final Set<Hat> hats;
 
-        public User(MucOptions options, Jid fullJid, final String nick) {
+        public User(MucOptions options, Jid fullJid, final String nick, final Set<Hat> hats) {
             this.options = options;
             this.fullJid = fullJid;
             this.nick = nick == null ? getName() : nick;
+            this.hats = hats;
         }
 
         public String getName() {
@@ -820,6 +857,10 @@ public class MucOptions {
 
         public void setAffiliation(String affiliation) {
             this.affiliation = Affiliation.of(affiliation);
+        }
+
+        public Set<Hat> getHats() {
+            return this.hats;
         }
 
         public long getPgpKeyId() {
