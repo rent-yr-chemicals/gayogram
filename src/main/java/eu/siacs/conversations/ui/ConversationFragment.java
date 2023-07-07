@@ -2195,7 +2195,7 @@ public class ConversationFragment extends XmppFragment
                     .show();
             return;
         }
-        if (message.getOob() != null && message.getOob().getScheme().equalsIgnoreCase("cid")) {
+        if (message.getOob() != null && "cid".equalsIgnoreCase(message.getOob().getScheme())) {
             try {
                 BobTransfer transfer = new BobTransfer.ForMessage(message, activity.xmppConnectionService);
                 message.setTransferable(transfer);
