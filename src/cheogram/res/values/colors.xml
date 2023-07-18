@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<color name="splash_screen_background">#7401cf</color>
-	<color name="splash_screen_status_bar">#7401cf</color>
-	<color name="perpy">#7401CF</color>
-	<color name="black_perpy">#1E0036</color>
-	<color name="yeller">#FFC700</color>
+	<color name="splash_screen_background">#eda4b2</color>
+	<color name="splash_screen_status_bar">#58c8f2</color>
+	<color name="perpy">#cc6696</color>
+	<color name="black_perpy">#804971</color>
+	<color name="vantablack_perpy">#4c2c44</color>
+	<color name="yeller">#58c8f2</color>
 
 	<color name="custom_theme_primary">@color/perpy</color>
 	<color name="custom_theme_primary_dark">@color/black_perpy</color>

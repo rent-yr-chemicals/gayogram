@@ -1,3 +1,9 @@
+# 🏳‍🌈 Cheogram? More like *Gay*ogram! 🏳‍🌈
+
+This is a fork of [Cheogram Android](https://git.singpolyma.net/cheogram-android). It *should* be identical to Cheogram, but with a gayer color scheme and infinitely more mommy.
+
+Be gay. Do crime. See CHANGELOG.md for details.
+
 # Cheogram Android
 
 This is a fork of [Conversations](https://conversations.im) to implement features of use to the [Sopranica](https://soprani.ca) project.

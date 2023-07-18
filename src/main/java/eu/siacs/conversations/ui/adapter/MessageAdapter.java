@@ -492,7 +492,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             viewHolder.messageBody.setTextAppearance(getContext(), R.style.TextAppearance_Conversations_Body1);
         }
         viewHolder.messageBody.setHighlightColor(ContextCompat.getColor(activity, darkBackground
-                ? (type == SENT || !mUseGreenBackground ? R.color.black26 : R.color.grey800) : R.color.grey500));
+                ? (type == SENT || !mUseGreenBackground ? R.color.black26 : R.color.grey800) : R.color.yeller));
         viewHolder.messageBody.setTypeface(null, Typeface.NORMAL);
 
         if (message.getBody() != null && !message.getBody().equals("")) {

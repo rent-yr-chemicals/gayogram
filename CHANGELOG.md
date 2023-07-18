@@ -1,5 +1,36 @@
 # Changelog
 
+### PRIDE VERSION
+
+Getting this shit to compile:
+
+* build.gradle:
+  * Change Gradle version
+  * Specify Kotlin version
+* gradle/wrapper/gradle-wrapper.properties:
+  * Change distribution URL and SHA-256
+
+Making this shit adequately gay:
+
+* src/cheogram/res/drawable/ic_launcher.xml:
+  * Change colors
+* src/cheogram/res/drawable/main_logo.xml:
+  * Change colors
+* src/cheogram/res/values/colors.xml:
+  * Change color constants
+  * Add vantablack_perpy (currently unused)
+* src/cheogram/res/values/themes.xml:
+  * Change light mode accent color
+  * Change dark mode message bubble background
+* src/main/java/eu.siacs/conversations/ui/adapter/MessageAdapter.java:
+  * Change message body highlight color
+  * DISCLAIMER: I do not remember why I did this or what it *actually* affects
+* src/main/res/drawable-\*dpi:
+  * Change green icons to blue
+* src/main/res/values/strings: 
+  * Change OMEMO to OHMOMMY
+  * Fix string formatting syntax error (GET FUCKED, OTHER DEVS)
+
 ### Version 2.12.1
 
 * Fix crash in UnifiedPush Distributor
