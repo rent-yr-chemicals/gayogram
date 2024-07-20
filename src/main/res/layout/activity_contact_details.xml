@@ -113,7 +113,7 @@
                                 android:textAppearance="?textAppearanceBodyMedium"
                                 tools:text="Hey there! I’m using Conversations" />
 
-                            <Button
+                                <Button
                                 android:id="@+id/add_contact_button"
                                 style="@style/Widget.Material3.Button.ElevatedButton"
                                 android:layout_width="wrap_content"

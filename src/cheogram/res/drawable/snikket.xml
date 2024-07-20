@@ -53,10 +53,10 @@
                             android:endY="493.17"
                             android:tileMode="clamp">
                             <item
-                                android:color="#F58020"
+                                android:color="#b55a86"
                                 android:offset="0" />
                             <item
-                                android:color="#FDEB01"
+                                android:color="#eda4b2"
                                 android:offset="1" />
                         </gradient>
                     </aapt:attr>
@@ -76,10 +76,10 @@
                             android:endY="368.93"
                             android:tileMode="clamp">
                             <item
-                                android:color="#FFC50D"
+                                android:color="#b55a86"
                                 android:offset="0" />
                             <item
-                                android:color="#FDEB01"
+                                android:color="#eda4b2"
                                 android:offset="1" />
                         </gradient>
                     </aapt:attr>
@@ -99,7 +99,7 @@
                             android:endY="599.59"
                             android:tileMode="clamp">
                             <item
-                                android:color="#3FC6F1"
+                                android:color="#58c8f2"
                                 android:offset="0" />
                             <item
                                 android:color="#4063AE"
@@ -155,7 +155,7 @@
                             android:endY="539.48"
                             android:tileMode="clamp">
                             <item
-                                android:color="#3FC6F1"
+                                android:color="#58c8f2"
                                 android:offset="0" />
                             <item
                                 android:color="#4063AE"

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+<layout xmlns:tools="http://schemas.android.com/tools"
+    xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
 
 <androidx.constraintlayout.widget.ConstraintLayout
     android:layout_width="match_parent"
@@ -38,7 +39,7 @@
             android:layout_marginBottom="15dp"
             android:layout_gravity="center"
             android:fontFamily="@font/archivoblack"
-            android:textColor="?colorOnSecondaryContainer"
+            android:textColor="?colorSecondaryContainer"
             android:textSize="18sp"
             android:text="Welcome to Cheogram Android" />
 
@@ -146,7 +147,7 @@
             android:layout_marginBottom="15dp"
             android:layout_gravity="center"
             android:fontFamily="@font/archivoblack"
-            android:textColor="?colorOnSecondaryContainer"
+            android:textColor="?colorSecondaryContainer"
             android:textSize="18sp"
             android:text="How the Jabber network works" />
 
@@ -163,16 +164,17 @@
             android:layout_marginBottom="30dp"
             android:layout_gravity="center"
             android:fontFamily="@font/archivoblack"
-            android:textColor="?colorOnSecondaryContainer"
+            android:textColor="?colorSecondaryContainer"
             android:textSize="18sp"
             android:text="username@service.com" />
 
         <com.caverock.androidsvg.SVGImageView
-           android:layout_width="match_parent"
-           android:layout_height="wrap_content"
-           android:layout_weight="1"
-           android:layout_gravity="center"
-           app:svg="@raw/federation_diagram" />
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            app:svg="@raw/federation_diagram"
+            tools:srcCompat="@tools:sample/avatars" />
     </LinearLayout>
     </ScrollView>
 
