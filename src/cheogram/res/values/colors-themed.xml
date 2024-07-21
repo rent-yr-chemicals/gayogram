@@ -44,10 +44,10 @@
     <color name="md_theme_dark_secondaryContainer">#eda4b2</color>
     <color name="md_theme_dark_onSecondaryContainer">#1d1b1e</color>
 
-    <color name="md_theme_dark_tertiary">#58c8f2</color>
-    <color name="md_theme_dark_onTertiary">#173640</color>
-    <color name="md_theme_dark_tertiaryContainer">#cff3ff</color>
-    <color name="md_theme_dark_onTertiaryContainer">#154d60</color>
+    <color name="md_theme_dark_tertiary">#cff3ff</color>
+    <color name="md_theme_dark_onTertiary">#154d60</color>
+    <color name="md_theme_dark_tertiaryContainer">#58c8f2</color>
+    <color name="md_theme_dark_onTertiaryContainer">#173640</color>
 
     <color name="md_theme_dark_error">#FFB4AB</color>
     <color name="md_theme_dark_errorContainer">#93000A</color>

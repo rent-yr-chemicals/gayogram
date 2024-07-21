@@ -3189,12 +3189,12 @@ public class ConversationFragment extends XmppFragment
             binding.textinputSubject.setHintTextColor(ColorStateList.valueOf(colors.getOnAccentContainer()).withAlpha(115));
             binding.textinput.setHintTextColor(ColorStateList.valueOf(colors.getOnAccentContainer()).withAlpha(115));
         } else {
-            cursord.setTintList(ColorStateList.valueOf(MaterialColors.getColor(binding.textinput, com.google.android.material.R.attr.colorOnTertiaryContainer)));
-            binding.inputLayout.setBackgroundTintList(ColorStateList.valueOf(MaterialColors.getColor(binding.inputLayout, com.google.android.material.R.attr.colorTertiaryContainer)));
-            binding.textinputSubject.setTextColor(MaterialColors.getColor(binding.textinputSubject, com.google.android.material.R.attr.colorOnTertiaryContainer));
-            binding.textinput.setTextColor(MaterialColors.getColor(binding.textinput, com.google.android.material.R.attr.colorOnTertiaryContainer));
-            binding.textinputSubject.setHintTextColor(R.color.hint_on_tertiary_container);
-            binding.textinput.setHintTextColor(R.color.hint_on_tertiary_container);
+            cursord.setTintList(ColorStateList.valueOf(MaterialColors.getColor(binding.textinput, com.google.android.material.R.attr.colorOnSurfaceVariant)));
+            binding.inputLayout.setBackgroundTintList(ColorStateList.valueOf(MaterialColors.getColor(binding.inputLayout, com.google.android.material.R.attr.colorSurfaceVariant)));
+            binding.textinputSubject.setTextColor(MaterialColors.getColor(binding.textinputSubject, com.google.android.material.R.attr.colorOnSurfaceVariant));
+            binding.textinput.setTextColor(MaterialColors.getColor(binding.textinput, com.google.android.material.R.attr.colorOnSurfaceVariant));
+            binding.textinputSubject.setHintTextColor(getResources().getColor(R.color.hint_on_tertiary_container));
+            binding.textinput.setHintTextColor(getResources().getColor(R.color.hint_on_tertiary_container));
         }
         if (Build.VERSION.SDK_INT >= 29) {
             binding.textinputSubject.setTextCursorDrawable(cursord);

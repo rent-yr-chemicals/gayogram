@@ -95,7 +95,7 @@
                         android:layout_toStartOf="@+id/textSendButton"
                         android:layout_toEndOf="@+id/thread_identicon_layout"
                         android:background="@drawable/background_message_bubble"
-                        android:backgroundTint="?colorTertiaryContainer"
+                        android:backgroundTint="?colorSurfaceVariant"
                         android:orientation="vertical"
                         android:paddingHorizontal="16dp"
                         android:paddingVertical="8dp">
@@ -107,7 +107,7 @@
                             android:layout_marginBottom="8sp"
                             android:maxLines="1"
                             android:textAppearance="?textAppearanceBodySmall"
-                            android:textColor="?colorOnTertiaryContainer"
+                            android:textColor="?colorOnSurfaceVariant"
                             android:visibility="visible"
                             tools:text="@string/private_message_to" />
 
@@ -128,7 +128,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Subject"
-                            android:textColor="?colorOnTertiaryContainer"
+                            android:textColor="?colorOnSurfaceVariant"
                             android:textColorHint="@color/hint_on_tertiary_container"
                             android:textCursorDrawable="@drawable/cursor_on_tertiary_container"
                             android:maxLines="1"
@@ -147,7 +147,7 @@
                             android:inputType="textShortMessage|textMultiLine|textCapSentences"
                             android:maxLines="8"
                             android:minHeight="32dp"
-                            android:textColor="?colorOnTertiaryContainer"
+                            android:textColor="?colorOnSurfaceVariant"
                             android:textColorHint="@color/hint_on_tertiary_container"
                             android:textCursorDrawable="@drawable/cursor_on_tertiary_container"
                             android:minLines="1">

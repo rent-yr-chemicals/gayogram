@@ -1,3 +1,3 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:alpha="0.45" android:color="?colorOnTertiaryContainer" />
+    <item android:alpha="0.45" android:color="#ccc4cf" />
 </selector>
