@@ -106,7 +106,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="8sp"
                             android:maxLines="1"
-                            android:textAppearance="?textAppearanceBodySmall"
+                            android:textAppearance="?textAppearanceBodyMedium"
                             android:textColor="?colorOnSurfaceVariant"
                             android:visibility="visible"
                             tools:text="@string/private_message_to" />
@@ -159,8 +159,8 @@
 
                     <RelativeLayout
                         android:id="@+id/thread_identicon_layout"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
+                        android:layout_width="32dp"
+                        android:layout_height="32dp"
                         android:layout_alignParentStart="true"
                         android:layout_alignParentLeft="true"
                         android:layout_centerVertical="true"
@@ -258,7 +258,7 @@
                         android:layout_centerVertical="true"
                         android:layout_marginStart="24dp"
                         android:layout_toStartOf="@+id/snackbar_action"
-                        android:textColor="?colorOnSurfaceInverse"
+                        android:textColor="?colorOnTertiary"
                         tools:text="@string/conference_kicked" />
 
                     <TextView
@@ -272,7 +272,7 @@
                         android:paddingRight="24dp"
                         android:paddingBottom="16dp"
                         android:textAllCaps="true"
-                        android:textColor="?colorOnSurfaceInverse"
+                        android:textColor="?colorOnTertiary"
                         android:textStyle="bold"
                         tools:text="@string/leave" />
                 </RelativeLayout>

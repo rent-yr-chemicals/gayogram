@@ -55,7 +55,7 @@
             android:layout_marginTop="4dp"
             android:autoLink="web"
             android:longClickable="false"
-            android:textAppearance="?textAppearanceBodyMedium" />
+            android:textAppearance="?textAppearanceBodyLarge" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/download_button"

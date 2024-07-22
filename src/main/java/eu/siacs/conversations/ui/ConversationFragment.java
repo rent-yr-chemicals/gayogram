@@ -78,6 +78,7 @@ import androidx.annotation.StringRes;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.pm.ShortcutInfoCompat;
 import androidx.core.content.pm.ShortcutManagerCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.ColorUtils;
 import androidx.core.view.inputmethod.InputConnectionCompat;
 import androidx.core.view.inputmethod.InputContentInfoCompat;
@@ -3192,9 +3193,11 @@ public class ConversationFragment extends XmppFragment
             cursord.setTintList(ColorStateList.valueOf(MaterialColors.getColor(binding.textinput, com.google.android.material.R.attr.colorOnSurfaceVariant)));
             binding.inputLayout.setBackgroundTintList(ColorStateList.valueOf(MaterialColors.getColor(binding.inputLayout, com.google.android.material.R.attr.colorSurfaceVariant)));
             binding.textinputSubject.setTextColor(MaterialColors.getColor(binding.textinputSubject, com.google.android.material.R.attr.colorOnSurfaceVariant));
+            binding.textinputSubject.setHintTextColor(ContextCompat.getColor(activity, R.color.hint_on_tertiary_container));
+            binding.textinputSubject.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
             binding.textinput.setTextColor(MaterialColors.getColor(binding.textinput, com.google.android.material.R.attr.colorOnSurfaceVariant));
-            binding.textinputSubject.setHintTextColor(getResources().getColor(R.color.hint_on_tertiary_container));
-            binding.textinput.setHintTextColor(getResources().getColor(R.color.hint_on_tertiary_container));
+            binding.textinput.setHintTextColor(ContextCompat.getColor(activity, R.color.hint_on_tertiary_container));
+            binding.textinput.setTextAppearance(com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
         }
         if (Build.VERSION.SDK_INT >= 29) {
             binding.textinputSubject.setTextCursorDrawable(cursord);
