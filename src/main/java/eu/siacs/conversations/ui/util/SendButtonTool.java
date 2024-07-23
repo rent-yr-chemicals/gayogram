@@ -118,10 +118,8 @@ public class SendButtonTool {
         return switch (status) {
             case OFFLINE -> MaterialColors.getColor(
                     view, com.google.android.material.R.attr.colorOnSurface);
-            case ONLINE, CHAT -> MaterialColors.harmonizeWithPrimary(
-                    view.getContext(),
-                    ContextCompat.getColor(
-                            view.getContext(), nightMode ? R.color.green_300 : R.color.green_800));
+            case ONLINE, CHAT -> MaterialColors.getColor(
+                    view, com.google.android.material.R.attr.colorTertiaryContainer);
             case AWAY -> MaterialColors.harmonizeWithPrimary(
                     view.getContext(),
                     ContextCompat.getColor(

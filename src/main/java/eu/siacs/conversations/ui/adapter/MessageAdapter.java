@@ -1629,7 +1629,7 @@ public class MessageAdapter extends ArrayAdapter<Message> {
             textView.setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, 18);
         } else {
             textView.setTextAppearance(
-                    com.google.android.material.R.style.TextAppearance_Material3_BodyLarge);
+                    com.google.android.material.R.style.TextAppearance_Material3_BodyMedium);
         }
     }
 
