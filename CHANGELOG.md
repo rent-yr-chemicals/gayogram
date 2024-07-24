@@ -1,5 +1,11 @@
 # Changelog
 
+### Gay version 2.15.3 
+
+* Cuter color schemes
+* Tweak font size for message input
+* OMEMO? More like _oh Mommy_ 🥺👉👈
+
 ### Version 2.15.3
 
 * fix call integration on some Android 14 devices
