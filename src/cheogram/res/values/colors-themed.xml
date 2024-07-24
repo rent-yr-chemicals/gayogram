@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="md_theme_light_primary">#5800a0</color>
-    <color name="md_theme_light_onPrimary">#ffffff</color>
-    <color name="md_theme_light_primaryContainer">#8427de</color>
-    <color name="md_theme_light_onPrimaryContainer">#ffffff</color>
+    <color name="md_theme_light_primary">#eda4b2</color>
+    <color name="md_theme_light_onPrimary">#804971</color>
+    <color name="md_theme_light_primaryContainer">#cc6696</color>
+    <color name="md_theme_light_onPrimaryContainer">#4c2c44</color>
 
-    <color name="md_theme_light_secondary">#1e0036</color>
-    <color name="md_theme_light_onSecondary">#ffffff</color>
-    <color name="md_theme_light_secondaryContainer">#f2daff</color>
-    <color name="md_theme_light_onSecondaryContainer">#2a0c41</color>
+    <color name="md_theme_light_secondary">#cc6696</color>
+    <color name="md_theme_light_onSecondary">#173640</color>
+    <color name="md_theme_light_secondaryContainer">#eda4b2</color>
+    <color name="md_theme_light_onSecondaryContainer">#1d1b1e</color>
 
-    <color name="md_theme_light_tertiary">#765b00</color>
-    <color name="md_theme_light_onTertiary">#ffffff</color>
-    <color name="md_theme_light_tertiaryContainer">#ffdf94</color>
-    <color name="md_theme_light_onTertiaryContainer">#251a00</color>
+    <color name="md_theme_light_tertiary">#cff3ff</color>
+    <color name="md_theme_light_onTertiary">#154d60</color>
+    <color name="md_theme_light_tertiaryContainer">#58c8f2</color>
+    <color name="md_theme_light_onTertiaryContainer">#173640</color>
 
     <color name="md_theme_light_error">#BA1A1A</color>
     <color name="md_theme_light_errorContainer">#FFDAD6</color>
