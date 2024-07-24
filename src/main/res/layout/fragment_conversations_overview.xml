@@ -19,6 +19,9 @@
             android:layout_gravity="end|bottom"
             android:layout_margin="16dp"
             android:text="@string/start_chat"
-            app:icon="@drawable/ic_chat_24dp" />
+            app:icon="@drawable/ic_chat_24dp"
+            app:backgroundTint="?colorPrimary"
+            app:iconTint="?colorOnPrimary"
+            android:textColor="?colorOnPrimary"/>
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </layout>
